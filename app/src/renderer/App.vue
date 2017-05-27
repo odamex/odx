@@ -1,7 +1,10 @@
 <template>
-  <div id="app">
-    <router-view></router-view>
-  </div>
+    <div id="app">
+      <div class="menu-bar-left"></div>
+      <div class="draggable-container">
+        <router-view></router-view>
+      </div>
+    </div>
 </template>
 
 <script>
@@ -15,11 +18,6 @@
   @import url(https://fonts.googleapis.com/css?family=Lato:300);
 
   * {
-    margin: 0;
-    padding: 0;
-    -webkit-box-sizing: border-box;
-    -moz-box-sizing: border-box;
-    box-sizing: border-box;
   	outline: 0 none !important;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
@@ -28,34 +26,51 @@
 
 
   html,
-  body { height: 100%; }
+  body { 
+    height: 100%; 
+    background-color: rgba(50, 50, 50, 1);
+    background-position: center;    
+  }
 
   body {
-    align-items: center;
-    background:
-      radial-gradient(
-        ellipse at center,
-        rgba(100, 100, 100, 1) 0%,
-        rgba(40, 40, 40, 1) 100%
-      );
-    background-position: center;
+    align-items: stretch;
     display: flex;
     font-family: Lato, Helvetica, sans-serif;
     justify-content: center;
     text-align: center;
-    height: calc(100vh - 1px);
     border:2px solid #704b1b;
     overflow:hidden;
     cursor:default;
   }
 
+  #app {
+    -webkit-app-region: no-drag;
+    display:flex;
+    flex-direction: row;
+    flex: 1 1 100%;
+    height: calc(100vh - 5px);
+  }
+
+  .menu-bar-left {
+    width: 72px;
+    background-color: rgba(30,30,30,1);
+    flex: 1 1 72px;
+  }
+
   .draggable-container {
+    flex: 0 1 100%;
     display:flex;
     justify-content:center;
     align-items:center;
     -webkit-app-region: drag;
-    width:calc(100vw - 2px);
-    height:calc(100vh - 2px); 
+    /*background:
+      radial-gradient(
+        ellipse at center,
+        rgba(100, 100, 100, 1) 0%,
+        rgba(40, 40, 40, 1) 100%
+      );*/
+    background-color: rgba(80, 80, 80, 1);   
+    position: relative; 
   }
 
   a, link, button, textarea, input, .no-drag {
@@ -72,7 +87,4 @@
       user-select: text !important;
   }
 
-  #app {
-    -webkit-app-region: no-drag;
-  }
 </style>

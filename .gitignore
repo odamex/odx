@@ -5,6 +5,7 @@ app/dist/renderer.js
 app/dist/styles.css
 builds/*
 dist/*
+work/*
 coverage
 node_modules/
 npm-debug.log

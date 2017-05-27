@@ -6,6 +6,9 @@ import Router from 'vue-router';
 import App from './App';
 import routes from './routes';
 
+import 'bootstrap/dist/css/bootstrap.css';
+import 'font-awesome/css/font-awesome.css';
+
 Vue.use(Electron);
 Vue.use(Resource);
 Vue.use(Router);
