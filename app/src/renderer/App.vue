@@ -18,28 +18,27 @@
   import store from 'renderer/vuex/store';
 
   /**
-    [ML] Currently this causes warnings if the screen is refreshed. 
-    Screen refreshing should be outright disabled
+    [ML] Currently this causes warnings if the screen is refreshed.
+    Screen refreshing should be outright disabled.
   **/
-  {
-    const w = require('electron').remote.getCurrentWindow();
 
-    w.on('minimize', () => {
-      document.querySelector('body').className = 'minimized';
-    });
-    w.on('maximize', () => {
-      document.querySelector('body').className = 'maximized';
-    });
-    w.on('unmaximize', () => {
-      document.querySelector('body').className = '';
-    });
-    w.on('enter-html-fullscreen', () => {
-      document.querySelector('body').className = 'fullscreen';
-    });
-    w.on('leave-html-fullscreen', () => {
-      document.querySelector('body').className = '';
-    });
-  }
+  const w = require('electron').remote.getCurrentWindow();
+
+  w.on('minimize', () => {
+    document.querySelector('body').className = 'minimized';
+  });
+  w.on('maximize', () => {
+    document.querySelector('body').className = 'maximized';
+  });
+  w.on('unmaximize', () => {
+    document.querySelector('body').className = '';
+  });
+  w.on('enter-html-fullscreen', () => {
+    document.querySelector('body').className = 'fullscreen';
+  });
+  w.on('leave-html-fullscreen', () => {
+    document.querySelector('body').className = '';
+  });
 
   export default {
     store,
