@@ -29,9 +29,6 @@ function createWindow() {
     mainWindow = null;
   });
 
-  mainWindow.on('minimized', () => {});
-  mainWindow.on('maximized', () => {});
-  mainWindow.on('fullscreen', () => {});
 
   // eslint-disable-next-line no-console
   console.log('mainWindow opened');
