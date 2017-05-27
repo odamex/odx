@@ -1,0 +1,16 @@
+{
+  "orientation": "portrait",
+  "display": "fullscreen",
+  "icons": [
+    {
+      "src": "logo_icon.png",
+      "sizes": "256x256",
+      "type": "image/png"
+    }
+  ],
+  "name": "OdamexSystem",
+  "start_url": "/",
+  "description": "Odamex System",
+  "theme_color": "#666666",
+  "background_color": "#666666"
+}

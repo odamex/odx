@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Odamex System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <link rel="manifest" href="./manifest.json">    
+    <% if (htmlWebpackPlugin.options.appModules) { %>
+      <!-- Add `app/node_modules` to global paths so `require` works properly in development -->
+      <script>
+        require('module').globalPaths.push('<%= htmlWebpackPlugin.options.appModules.replace(/\\/g, '\\\\') %>')
+      </script>
+    <% } %>
+  </head>
+  <body>
+    <div class="draggable-container">
+      <div id="app"></div>
+      <!-- webpack builds are automatically injected -->
+    </div>
+  </body>
+</html>
