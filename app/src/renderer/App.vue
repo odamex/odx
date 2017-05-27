@@ -38,7 +38,7 @@
     font-family: Lato, Helvetica, sans-serif;
     justify-content: center;
     text-align: center;
-    border:2px solid #704b1b;
+    border:3px solid #2a4956;
     overflow:hidden;
     cursor:default;
   }
@@ -48,7 +48,7 @@
     display:flex;
     flex-direction: row;
     flex: 1 1 100%;
-    height: calc(100vh - 5px);
+    height: calc(100vh - 6px);
   }
 
   .menu-bar-left {

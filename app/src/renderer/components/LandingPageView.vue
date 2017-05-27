@@ -49,7 +49,7 @@
   };
 </script>
 
-<style scoped>
+<style scoped lang="scss">
   img {
     margin-top: -25px;
     width: 450px;
@@ -59,21 +59,20 @@
     position:absolute;
     top:2rem;
     right:2rem;
-  }
 
+    a {
+      color: #F0F0F0;
+      margin-right: 1em;
+      opacity: .6;
 
-  .app-window-controls a {
-    color: #F0F0F0;
-    margin-right: 1em;
-    opacity: .6;
-  }
+      &:last-child {
+        margin-right: 0;
+      }
 
-  .app-window-controls a:last-child {
-    margin-right: 0;
-  }
-
-  .app-window-controls a:hover {
-    opacity: 1;
+      &:hover {
+        opacity: 1;
+      }
+    }
   }
 
   .temp-body {color: #F0F0F0;}
