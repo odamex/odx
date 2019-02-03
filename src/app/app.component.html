@@ -1,1 +1,16 @@
-<router-outlet></router-outlet>
+<div id="app">
+	<div class="menu-bar-left">
+		<img src="assets/logo_icon.png" style="width:100%" />
+	</div>
+	<div class="draggable-container">
+		<div class="app-window-controls">
+			<a href="#" (click)="winToggleFullscreen"><i class="fas fa-arrows-alt"></i></a>
+			<a href="#" (click)="winMinimize"><i class="far fa-window-minimize"></i></a>
+			<a href="#" (click)="winUnmaximize" class="visible-maximized-inline"><i class="far fa-window-restore"></i></a>
+			<a href="#" (click)="winMaximize" class="hidden-maximized"><i class="far fa-window-maximize"></i></a>
+			<a href="#" (click)="winClose"><i class="fas fa-times" style="font-size: 1.4em;vertical-align:bottom;margin-left:-4px;"></i></a>
+		</div>
+		<router-outlet></router-outlet>
+	</div>
+</div>
+

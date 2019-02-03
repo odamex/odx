@@ -1,7 +1,76 @@
 /* You can add global styles to this file, and also import other style files */
+
+
+@import '../node_modules/bootstrap/dist/css/bootstrap.css';
+@import '../node_modules/@fortawesome/fontawesome-free/css/all.min.css';
+
+
 html, body {
   margin: 0;
   padding: 0;
 
   height: 100%;
+}
+@import url(https://fonts.googleapis.com/css?family=Lato:300);
+
+* {
+  outline: 0 none !important;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+
+html,
+body {
+  height: 100vh;
+  background-color: rgba(50, 50, 50, 1);
+  background-position: center;
+}
+
+body {
+  align-items: stretch;
+  display: flex;
+  font-family: Lato, Helvetica, sans-serif;
+  justify-content: center;
+  text-align: center;
+  /*border:3px solid #2a4956;*/
+  overflow:hidden;
+  cursor:default;
+
+  [class^=visible-maximized], {
+    display: none;
+  }
+
+  &.maximized {
+    .hidden-maximized {
+      display: none !important;
+    }
+
+    .visible-maximized {
+      display: block;
+    }
+
+    .visible-maximized-inline {
+      display:inline;
+    }
+
+    .visible-maximized-inline-block {
+      display:inline-block;
+    }
+  }
+}
+
+a, link, button, textarea, input, .no-drag {
+  -webkit-app-region: no-drag !important;
+}
+
+a, link, button, input[type=submit], input[type=reset] {
+  cursor:pointer;
+}
+
+input, textarea, .selectable {
+    -webkit-touch-callout: text !important;
+    -webkit-user-select: text !important;
+    user-select: text !important;
 }
