@@ -1,16 +1,28 @@
 <div id="app">
-	<div class="menu-bar-left">
-		<img src="assets/logo_icon.png" style="width:100%" />
-	</div>
-	<div class="draggable-container">
-		<div class="app-window-controls">
-			<a href="#" (click)="winToggleFullscreen"><i class="fas fa-arrows-alt"></i></a>
-			<a href="#" (click)="winMinimize"><i class="far fa-window-minimize"></i></a>
-			<a href="#" (click)="winUnmaximize" class="visible-maximized-inline"><i class="far fa-window-restore"></i></a>
-			<a href="#" (click)="winMaximize" class="hidden-maximized"><i class="far fa-window-maximize"></i></a>
-			<a href="#" (click)="winClose"><i class="fas fa-times" style="font-size: 1.4em;vertical-align:bottom;margin-left:-4px;"></i></a>
+	<header class="titlebar">
+		<div class="titlebar-region">
+			<div class="titlebar-icon">
+				<img src="assets/logo_icon.png" />
+			</div>
+			<div class="titlebar-title">
+				ODX :: Classic Launcher
+			</div>
+			<div class="titlebar-menu">
+
+			</div>
 		</div>
+		<div class="app-window-controls no-drag">
+			<a href="#" (click)="winMinimize($event)" class="btn-minimize"><span>&#xE921;</span></a>
+			<a href="#" (click)="winMaximize($event)" class="btn-maximize hidden-maximized"><span>&#xE922;</span></a>
+			<a href="#" (click)="winUnmaximize($event)" class="btn-restore visible-maximized-flex"><span>&#xE923;</span></a>
+			<a href="#" (click)="winClose($event)" class="btn-close"><span>&#xE8BB;</span></a>
+		</div>
+	</header>
+	<main>
 		<router-outlet></router-outlet>
-	</div>
+	</main>
+	<footer>
+
+	</footer>
 </div>
 

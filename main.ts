@@ -2,7 +2,8 @@ import { app, BrowserView, BrowserWindow, screen, ipcMain } from 'electron';
 import * as path from 'path';
 import * as url from 'url';
 
-let win, view, serve;
+let win, serve;
+// let view;
 const args = process.argv.slice(1);
 serve = args.some(val => val === '--serve');
 
@@ -33,30 +34,32 @@ function createWindow() {
 		}
 	});
 
+	/*
 	view = new BrowserView({
-		/*webPreferences: {
+		webPreferences: {
 			nodeIntegration: false
-		}*/
+		}
 	});
 
 	win.setBrowserView(view);
 	view.setBounds({ x: 0, y: 0, width: baseWidth, height: baseHeight });
 	view.setAutoResize({width: true, height: true});
+	*/
 
 	if (serve) {
 		require('electron-reload')(__dirname, {
 			electron: require(`${__dirname}/node_modules/electron`)
 		});
-		view.webContents.loadURL('http://localhost:4200');
+		win.loadURL('http://localhost:4200');
 	} else {
-		view.webContents.loadURL(url.format({
+		win.loadURL(url.format({
 			pathname: path.join(__dirname, 'dist/index.html'),
 			protocol: 'file:',
 			slashes: true
 		}));
 	}
 
-	view.webContents.openDevTools();
+	win.webContents.openDevTools();
 
 	// Emitted when the window is closed.
 	win.on('closed', () => {
@@ -75,7 +78,13 @@ function createWindow() {
 	});
 
 	ipcMain.on('maximize-main-window', () => {
+		console.log('Maximize main window');
 		win.maximize();
+	});
+
+	ipcMain.on('unmaximize-main-window', () => {
+		console.log('Unmaximize main window');
+		win.unmaximize();
 	});
 
 	ipcMain.on('fullscreen-main-window', (e, arg) => {
@@ -102,7 +111,7 @@ try {
 		// On OS X it is common for applications and their menu bar
 		// to stay active until the user quits explicitly with Cmd + Q
 		if (process.platform !== 'darwin') {
-		app.quit();
+			app.quit();
 		}
 	});
 
@@ -110,7 +119,7 @@ try {
 		// On OS X it's common to re-create a window in the app when the
 		// dock icon is clicked and there are no other windows open.
 		if (win === null) {
-		createWindow();
+			createWindow();
 		}
 	});
 

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { ipcRenderer } from 'electron';
 import { ElectronService } from './providers/electron.service';
 import { TranslateService } from '@ngx-translate/core';
@@ -9,7 +9,7 @@ import { AppConfig } from '../environments/environment';
 	templateUrl: './app.component.html',
 	styleUrls: ['./app.component.scss']
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
 
 	ipc: typeof ipcRenderer;
 
@@ -32,6 +32,7 @@ export class AppComponent {
 
 	isFullScreen = false;
 
+
 	/* Window state change methods */
 	winMaximize(e) {
 		e.preventDefault();
@@ -45,6 +46,7 @@ export class AppComponent {
 
 	winClose(e) {
 		e.preventDefault();
+		console.log('Close main window');
 		this.ipc.send('close-main-window');
 	}
 
@@ -64,5 +66,20 @@ export class AppComponent {
 
 		const flag = !(this.isFullScreen);
 		this.ipc.send('fullscreen-main-window', flag);
+	}
+
+	ngOnInit() {
+		if (this.electronService.isElectron()) {
+			const w = window.require('electron').remote.getCurrentWindow();
+			w.on('minimize', () => {
+				document.querySelector('body').className = 'minimized';
+			});
+			w.on('maximize', () => {
+				document.querySelector('body').className = 'maximized';
+			});
+			w.on('unmaximize', () => {
+				document.querySelector('body').className = '';
+			});
+		}
 	}
 }
