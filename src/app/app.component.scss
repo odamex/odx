@@ -19,15 +19,18 @@
 	.titlebar-region {
 		flex: 1 1 100%;
 		display:flex;
-		padding: 4px;
+		margin: 4px;
+		-webkit-app-region: drag;
 	}
 
 	.titlebar-icon {
 		width: 32px;
-		-webkit-app-region: drag;
+		display:flex;
+		align-items: center;
 
 		img {
-			width: 24px;
+			margin: auto;
+			width: 20px;
 			vertical-align: inherit;
 		}
 	}
@@ -35,14 +38,22 @@
 	.titlebar-title {
 		flex: 1 1 100%;
 		text-align: left;
-		-webkit-app-region: drag;
 		font-size: 12px;
 		overflow:hidden;
-		padding-top: .05rem;
-		margin-left: 8px;
-		min-width: 150px;
+		min-width: 120px;
 		white-space:nowrap;
 		text-overflow: ellipsis;
+		text-align: center;
+		align-self: center;
+		padding-bottom:1px; /* Not sure why it won't "center". Adding padding-bottom > 0 fixes it */
+	}
+}
+
+/deep/ .maximized .titlebar-region {
+	margin: 0 !important;
+
+	.titlebar-icon {
+		margin-left: 4px;
 	}
 }
 
@@ -59,6 +70,7 @@
 		text-decoration: none;
 		display:flex;
 		justify-content: center;
+		cursor: default;
 
 		&:hover {
 			background: rgba(255,255,255,0.2);
@@ -90,6 +102,6 @@ main {
 }
 
 footer {
-	height: 1rem;
-	background-color: #F0F0F0;
+	height: 1.25rem;
+	background-color: #E0E0E0;
 }

@@ -12,10 +12,10 @@
 			</div>
 		</div>
 		<div class="app-window-controls no-drag">
-			<a href="#" (click)="winMinimize($event)" class="btn-minimize"><span>&#xE921;</span></a>
-			<a href="#" (click)="winMaximize($event)" class="btn-maximize hidden-maximized"><span>&#xE922;</span></a>
-			<a href="#" (click)="winUnmaximize($event)" class="btn-restore visible-maximized-flex"><span>&#xE923;</span></a>
-			<a href="#" (click)="winClose($event)" class="btn-close"><span>&#xE8BB;</span></a>
+			<a href="#" draggable="false" (click)="winMinimize($event)" class="btn-minimize"><span>&#xE921;</span></a>
+			<a href="#" draggable="false" (click)="winMaximize($event)" class="btn-maximize hidden-maximized"><span>&#xE922;</span></a>
+			<a href="#" draggable="false" (click)="winUnmaximize($event)" class="btn-restore visible-maximized"><span>&#xE923;</span></a>
+			<a href="#" draggable="false" (click)="winClose($event)" class="btn-close"><span>&#xE8BB;</span></a>
 		</div>
 	</header>
 	<main>
