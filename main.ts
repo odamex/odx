@@ -69,6 +69,17 @@ function createWindow() {
 		win = null;
 	});
 
+	// Set up Windows "flash frame"
+	// TODO: Bounce the MAC dock icon
+	ipcMain.on('flash-main-window', () => {
+		win.flashFrame(true);
+	});
+
+	ipcMain.on('unflash-main-window', () => {
+		win.flashFrame(false);
+	});
+
+
 	ipcMain.on('close-main-window', () => {
 		app.quit();
 	});

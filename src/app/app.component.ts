@@ -80,6 +80,9 @@ export class AppComponent implements OnInit {
 			w.on('unmaximize', () => {
 				document.querySelector('body').className = '';
 			});
+
+			this.ipc.send('flash-main-window');
+			w.on('focus', () => this.ipc.send('unflash-main-window'));
 		}
 	}
 }
