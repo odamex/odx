@@ -6,9 +6,13 @@ let win, serve;
 // let view;
 const args = process.argv.slice(1);
 serve = args.some(val => val === '--serve');
+// Windows gets custom treatment, the rest it's best to just let the OS handle the chrome
+const showFrame = (!(process.platform === 'win32'));
 
 const baseWidth = 800; // size.width;
 const baseHeight = 600; // size.height;
+const minWidth = 320;
+const minHeight = 200;
 
 function createWindow() {
 
@@ -21,9 +25,9 @@ function createWindow() {
 		y: 0,
 		width: baseWidth,
 		height: baseHeight,
-		minHeight: 200,
-		minWidth: 320,
-		frame: false,
+		minHeight: minHeight,
+		minWidth: minWidth,
+		frame: showFrame,
 		// titleBarStyle: 'hidden',
 		webPreferences: {
 			// Disable auxclick event
