@@ -12,6 +12,7 @@ import { AppConfig } from '../environments/environment';
 export class AppComponent implements OnInit {
 
 	ipc: typeof ipcRenderer;
+	windowTitle: String | string;
 
 	constructor(public electronService: ElectronService,
 		private translate: TranslateService) {
@@ -22,16 +23,18 @@ export class AppComponent implements OnInit {
 		if (electronService.isElectron()) {
 			this.ipc = electronService.ipcRenderer;
 
+			this.windowTitle = electronService.remote.getCurrentWindow().getTitle();
+
 			console.log('Mode electron');
 			console.log('Electron ipcRenderer', this.ipc);
 			console.log('NodeJS childProcess', electronService.childProcess);
 		} else {
 			console.log('Mode web');
+			this.windowTitle = 'ODX :: Classic Launcher';
 		}
 	}
 
 	isFullScreen = false;
-
 
 	/* Window state change methods */
 	winMaximize(e) {

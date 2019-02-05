@@ -28,6 +28,7 @@ function createWindow() {
 		minHeight: minHeight,
 		minWidth: minWidth,
 		frame: showFrame,
+		title: 'ODX :: Classic Launcher',
 		// titleBarStyle: 'hidden',
 		webPreferences: {
 			// Disable auxclick event

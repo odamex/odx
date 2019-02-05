@@ -46,6 +46,13 @@
 		text-align: center;
 		align-self: center;
 		padding-bottom:1px; /* Not sure why it won't "center". Adding padding-bottom > 0 fixes it */
+		display:flex;
+		justify-content: flex-end;
+
+		span {
+			width: calc(100% - 96px);
+			text-align: center;
+		}
 	}
 }
 
