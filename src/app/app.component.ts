@@ -84,6 +84,11 @@ export class AppComponent implements OnInit {
 				document.querySelector('body').className = '';
 			});
 
+			// Prevent drag/drop of links that navigate away
+			document.addEventListener('dragover', event => event.preventDefault());
+			document.addEventListener('drop', event => event.preventDefault());
+
+			// Flash window initially, stop on focus
 			this.ipc.send('flash-main-window');
 			w.on('focus', () => this.ipc.send('unflash-main-window'));
 		}
