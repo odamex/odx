@@ -1,5 +1,5 @@
 
-#app {
+.app {
   display:flex;
   flex-direction: column;
   flex: 1 1 100%;
@@ -11,7 +11,7 @@
 	height: 32px;
 	display: flex;
 	flex-direction: row;
-	background-color: #757575;
+	background-color: #454545;
 	color: #FFF;
 	user-select: none;
 	cursor: default;

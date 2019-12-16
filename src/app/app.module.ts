@@ -16,12 +16,12 @@ import { ElectronService } from './providers/electron.service';
 
 import { WebviewDirective } from './directives/webview.directive';
 
-// ng-bootstrap
-import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
-
 // ODX
+import { MaterialModule } from './components/shared/material.module';
 import { AppComponent } from './app.component';
-import { HomeComponent } from './components/home/home.component';
+import { WinTitleBarComponent } from './components/classic/win-titlebar/win-titlebar.component';
+import { ClassicLauncherComponent } from './components/classic/launcher.component';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 // AoT requires an exported function for factories
 export function HttpLoaderFactory(http: HttpClient) {
@@ -31,7 +31,8 @@ export function HttpLoaderFactory(http: HttpClient) {
 @NgModule({
 	declarations: [
 		AppComponent,
-		HomeComponent,
+		WinTitleBarComponent,
+		ClassicLauncherComponent,
 		WebviewDirective
 	],
 	imports: [
@@ -39,14 +40,15 @@ export function HttpLoaderFactory(http: HttpClient) {
 		FormsModule,
 		HttpClientModule,
 		AppRoutingModule,
-		NgbModule,
+		MaterialModule,
 		TranslateModule.forRoot({
 		loader: {
 			provide: TranslateLoader,
 			useFactory: (HttpLoaderFactory),
 			deps: [HttpClient]
 		}
-		})
+		}),
+		BrowserAnimationsModule
 	],
 	providers: [ElectronService],
 	bootstrap: [AppComponent]

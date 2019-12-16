@@ -12,7 +12,9 @@ import { AppConfig } from '../environments/environment';
 export class AppComponent implements OnInit {
 
 	ipc: typeof ipcRenderer;
-	windowTitle: String | string;
+	windowTitle = '';
+	isFullScreen = false;
+	winStateClass = '';
 
 	constructor(public electronService: ElectronService,
 		private translate: TranslateService) {
@@ -33,8 +35,6 @@ export class AppComponent implements OnInit {
 			this.windowTitle = 'ODX :: Classic Launcher';
 		}
 	}
-
-	isFullScreen = false;
 
 	/* Window state change methods */
 	winMaximize(e) {
@@ -65,24 +65,40 @@ export class AppComponent implements OnInit {
 			console.log(event);
 			console.log(arg);
 		});
-		this.ipc.send('check-fullscreen');
+		this.ipc.send('check-fullscreen', (event, arg) => {
+			console.log(event);
+			console.log(arg);
+		});
 
 		const flag = !(this.isFullScreen);
+		console.log('Flag is ', flag);
 		this.ipc.send('fullscreen-main-window', flag);
+	}
+
+	winCheckFullscreen(e) {
+		let flag: boolean;
+		this.ipc.send('check-fullscreen', flag);
+		console.log(flag);
 	}
 
 	ngOnInit() {
 		if (this.electronService.isElectron()) {
 			const w = window.require('electron').remote.getCurrentWindow();
 			w.on('minimize', () => {
-				document.querySelector('body').className = 'minimized';
+				this.winStateClass = 'minimized';
 			});
 			w.on('maximize', () => {
-				document.querySelector('body').className = 'maximized';
+				this.winStateClass = 'maximized';
 			});
 			w.on('unmaximize', () => {
-				document.querySelector('body').className = '';
+				this.winStateClass = '';
 			});
+			w.on('setFullscreen', (e) => {
+				console.log('on Set FullScreen');
+			});
+			w.on('checkFullscreen', (e) => {
+				console.log("Check fullscreen");
+			})
 
 			// Prevent drag/drop of links that navigate away
 			document.addEventListener('dragover', event => event.preventDefault());

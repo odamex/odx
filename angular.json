@@ -21,7 +21,7 @@
               "src/favicon.ico",
               "src/favicon.png",
               "src/favicon.icns",
-              "src/favicon.256x256.png"
+              "src/assets/favicon.256x256.png"
             ],
             "styles": [
               "src/styles.scss"
@@ -101,7 +101,7 @@
               "src/favicon.ico",
               "src/favicon.png",
               "src/favicon.icns",
-              "src/favicon.256x256.png"
+              "src/assets/favicon.256x256.png"
             ]
           }
         },
