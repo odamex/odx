@@ -56,7 +56,7 @@
 	}
 }
 
-/deep/ .maximized .titlebar-region {
+::ng-deep .maximized .titlebar-region {
 	margin: 0 !important;
 
 	.titlebar-icon {

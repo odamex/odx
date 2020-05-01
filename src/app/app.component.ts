@@ -93,12 +93,9 @@ export class AppComponent implements OnInit {
 			w.on('unmaximize', () => {
 				this.winStateClass = '';
 			});
-			w.on('setFullscreen', (e) => {
+			w.on('enter-full-screen', (e) => {
 				console.log('on Set FullScreen');
 			});
-			w.on('checkFullscreen', (e) => {
-				console.log("Check fullscreen");
-			})
 
 			// Prevent drag/drop of links that navigate away
 			document.addEventListener('dragover', event => event.preventDefault());
