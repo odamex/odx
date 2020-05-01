@@ -36,6 +36,7 @@ function createWindow() {
 			disableBlinkFeatures: 'Auxclick',
 			// Enable, among other things, the ResizeObserver
 			experimentalFeatures: true,
+			nodeIntegration: true
 		}
 	});
 
