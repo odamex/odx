@@ -1,20 +1,22 @@
-import { app, BrowserView, BrowserWindow, screen, ipcMain } from 'electron';
+import { app, BrowserView, BrowserWindow, screen, ipcMain, Menu, shell, dialog } from 'electron';
 import * as path from 'path';
 import * as url from 'url';
+
+import { menuTemplate } from './src/app/core/electron-menu';
 
 let win, serve;
 // let view;
 const args = process.argv.slice(1);
 serve = args.some(val => val === '--serve');
 // Windows gets custom treatment, the rest it's best to just let the OS handle the chrome
-const showFrame = (!(process.platform === 'win32'));
+const showFrame = true; //(!(process.platform === 'win32'));
 
 const baseWidth = 800; // size.width;
 const baseHeight = 600; // size.height;
-const minWidth = 320;
-const minHeight = 200;
 
 function createWindow() {
+
+	makeSingleInstance();
 
 	const electronScreen = screen;
 	const size = electronScreen.getPrimaryDisplay().workAreaSize;
@@ -25,10 +27,11 @@ function createWindow() {
 		y: 0,
 		width: baseWidth,
 		height: baseHeight,
-		minHeight: minHeight,
-		minWidth: minWidth,
+		minHeight: baseHeight,
+		minWidth: baseWidth,
 		frame: showFrame,
 		title: 'ODX Classic Launcher',
+		icon: path.join(__dirname, 'assets/logo_icon.png'),
 		// titleBarStyle: 'hidden',
 		webPreferences: {
 			// Disable auxclick event
@@ -39,18 +42,6 @@ function createWindow() {
 			nodeIntegration: true
 		}
 	});
-
-	/*
-	view = new BrowserView({
-		webPreferences: {
-			nodeIntegration: false
-		}
-	});
-
-	win.setBrowserView(view);
-	view.setBounds({ x: 0, y: 0, width: baseWidth, height: baseHeight });
-	view.setAutoResize({width: true, height: true});
-	*/
 
 	if (serve) {
 		require('electron-reload')(__dirname, {
@@ -65,14 +56,16 @@ function createWindow() {
 		}));
 	}
 
-	win.webContents.openDevTools();
-
 	// Emitted when the window is closed.
 	win.on('closed', () => {
 		// Dereference the window object, usually you would store window
 		// in an array if your app supports multi windows, this is the time
 		// when you should delete the corresponding element.
 		win = null;
+	});
+
+	win.on('focus', () => {
+		win.flashFrame(false);
 	});
 
 	// Set up Windows "flash frame"
@@ -113,6 +106,9 @@ function createWindow() {
 		win.webContents.send('fullScreenResponse', win.isFullScreen());
 	});
 
+	// Set standard application menu
+	Menu.setApplicationMenu(Menu.buildFromTemplate(menuTemplate));
+
 	console.log('mainWindow opened');
 }
 
@@ -143,4 +139,29 @@ try {
 } catch (e) {
 	// Catch Error
 	// throw e;
+}
+
+
+// Make this app a single instance app.
+//
+// The main window will be restored and focused instead of a second window
+// opened when a person attempts to launch a second instance.
+//
+// Returns true if the current version of the app should quit instead of
+// launching.
+function makeSingleInstance(): void {
+	if (process.mas) {
+		return;
+	}
+
+	app.requestSingleInstanceLock()
+
+	app.on('second-instance', () => {
+		if (win) {
+			if (win.isMinimized()) {
+				win.restore();
+				win.focus();
+			}
+		}
+	});
 }

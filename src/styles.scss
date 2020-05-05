@@ -1,3 +1,6 @@
+@import '~@swimlane/ngx-datatable/index.scss';
+@import '~@swimlane/ngx-datatable/themes/material.scss';
+@import '~@swimlane/ngx-datatable/assets/icons.css';
 
 // Custom Theming for Angular Material
 // For more information: https://material.angular.io/guide/theming
@@ -52,7 +55,6 @@ body {
 	display: flex;
 	justify-content: center;
 	align-items: stretch;
-	text-align: center;
 	/*border:3px solid #2a4956;*/
 	overflow:hidden;
 	cursor:default;

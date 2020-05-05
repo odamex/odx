@@ -7,91 +7,6 @@
   width: 100vw;
 }
 
-.titlebar {
-	height: 32px;
-	display: flex;
-	flex-direction: row;
-	background-color: #454545;
-	color: #FFF;
-	user-select: none;
-	cursor: default;
-
-	.titlebar-region {
-		flex: 1 1 100%;
-		display:flex;
-		margin: 4px;
-		-webkit-app-region: drag;
-	}
-
-	.titlebar-icon {
-		width: 32px;
-		display:flex;
-		align-items: center;
-
-		img {
-			margin: auto;
-			width: 20px;
-			vertical-align: inherit;
-		}
-	}
-
-	.titlebar-title {
-		flex: 1 1 100%;
-		text-align: left;
-		font-size: 12px;
-		overflow:hidden;
-		min-width: 120px;
-		white-space:nowrap;
-		text-overflow: ellipsis;
-		text-align: center;
-		align-self: center;
-		padding-bottom:1px; /* Not sure why it won't "center". Adding padding-bottom > 0 fixes it */
-		display:flex;
-		justify-content: flex-end;
-
-		span {
-			width: calc(100% - 96px);
-			text-align: center;
-		}
-	}
-}
-
-::ng-deep .maximized .titlebar-region {
-	margin: 0 !important;
-
-	.titlebar-icon {
-		margin-left: 4px;
-	}
-}
-
-.app-window-controls {
-	display:flex;
-	flex-direction: row;
-	font-size: 10px;
-
-	font-family: "Segoe MDL2 Assets";
-
-	a {
-		width: 46px;
-		color: #FFFFFF;
-		text-decoration: none;
-		display:flex;
-		justify-content: center;
-		cursor: default;
-
-		&:hover {
-			background: rgba(255,255,255,0.2);
-		}
-
-		&.btn-close:hover {
-			background: #E81123;
-		}
-
-		& > span {
-			margin: auto;
-		}
-	}
-}
 
 main {
 	flex: 0 1 100%;
@@ -106,9 +21,4 @@ main {
 		);
 	background-color: rgba(80, 80, 80, 1);*/
 	position: relative;
-}
-
-footer {
-	height: 1.25rem;
-	background-color: #E0E0E0;
 }

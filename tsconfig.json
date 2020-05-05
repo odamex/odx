@@ -18,7 +18,13 @@
       "es2016",
       "es2015",
       "dom"
-    ]
+    ],
+    "paths": {
+      "odalpapi-node": [
+        "dist/odalpapi-node/odalpapi-node",
+        "dist/odalpapi-node"
+      ]
+    }
   },
   "include": [
     "main.ts",

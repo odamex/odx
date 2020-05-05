@@ -5,23 +5,29 @@ import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { HttpClientModule, HttpClient } from '@angular/common/http';
-
 import { AppRoutingModule } from './app-routing.module';
 
 // NG Translate
 import { TranslateModule, TranslateLoader } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 
-import { ElectronService } from './providers/electron.service';
+import { ElectronService } from './shared/providers/electron.service';
+import { WebviewDirective } from './core/directives/webview.directive';
 
-import { WebviewDirective } from './directives/webview.directive';
+// ngx-datatable
+import { NgxDatatableModule } from '@swimlane/ngx-datatable';
 
 // ODX
-import { MaterialModule } from './components/shared/material.module';
+import { MaterialModule } from './shared/material.module';
 import { AppComponent } from './app.component';
-import { WinTitleBarComponent } from './components/classic/win-titlebar/win-titlebar.component';
-import { ClassicLauncherComponent } from './components/classic/launcher.component';
+import { WinTitleBarComponent } from './core/components/win-titlebar/win-titlebar.component';
+import { ClassicLauncherComponent } from './classic/components/launcher/launcher.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { ServerListComponent } from './classic/components/server-list/server-list.component';
+import { ServerInfoComponent } from './classic/components/server-info/server-info.component';
+import { ToolbarComponent } from './classic/components/toolbar/toolbar.component';
+import { PlayerListComponent } from './classic/components/player-list/player-list.component';
+import { FooterComponent } from './classic/components/footer/footer.component';
 
 // AoT requires an exported function for factories
 export function HttpLoaderFactory(http: HttpClient) {
@@ -33,7 +39,12 @@ export function HttpLoaderFactory(http: HttpClient) {
 		AppComponent,
 		WinTitleBarComponent,
 		ClassicLauncherComponent,
-		WebviewDirective
+		WebviewDirective,
+		ServerListComponent,
+		ServerInfoComponent,
+		ToolbarComponent,
+		PlayerListComponent,
+		FooterComponent
 	],
 	imports: [
 		BrowserModule,
@@ -41,6 +52,7 @@ export function HttpLoaderFactory(http: HttpClient) {
 		HttpClientModule,
 		AppRoutingModule,
 		MaterialModule,
+		NgxDatatableModule,
 		TranslateModule.forRoot({
 		loader: {
 			provide: TranslateLoader,

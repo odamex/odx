@@ -155,6 +155,46 @@
           }
         }
       }
+    },
+    "odalpapi-node": {
+      "projectType": "library",
+      "root": "projects/odalpapi-node",
+      "sourceRoot": "projects/odalpapi-node/src",
+      "prefix": "lib",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-ng-packagr:build",
+          "options": {
+            "tsConfig": "projects/odalpapi-node/tsconfig.lib.json",
+            "project": "projects/odalpapi-node/ng-package.json"
+          },
+          "configurations": {
+            "production": {
+              "tsConfig": "projects/odalpapi-node/tsconfig.lib.prod.json"
+            }
+          }
+        },
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "main": "projects/odalpapi-node/src/test.ts",
+            "tsConfig": "projects/odalpapi-node/tsconfig.spec.json",
+            "karmaConfig": "projects/odalpapi-node/karma.conf.js"
+          }
+        },
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": [
+              "projects/odalpapi-node/tsconfig.lib.json",
+              "projects/odalpapi-node/tsconfig.spec.json"
+            ],
+            "exclude": [
+              "**/node_modules/**"
+            ]
+          }
+        }
+      }
     }
   },
   "defaultProject": "odamex-system",

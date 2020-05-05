@@ -1,0 +1,7 @@
+{
+  "$schema": "../../node_modules/ng-packagr/ng-package.schema.json",
+  "dest": "../../dist/odalpapi-node",
+  "lib": {
+    "entryFile": "src/public-api.ts"
+  }
+}

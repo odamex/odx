@@ -1,4 +1,4 @@
-import { ClassicLauncherComponent } from './components/classic/launcher.component';
+import { ClassicLauncherComponent } from './classic//components/launcher/launcher.component';
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 

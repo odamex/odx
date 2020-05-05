@@ -1,28 +1,6 @@
 <div class="app" [ngClass]="winStateClass" [class.fullscreen]="isFullScreen" [class.focused]="true">
-	<header class="titlebar">
-		<div class="titlebar-region">
-			<div class="titlebar-icon">
-				<img src="assets/logo_icon.png" />
-			</div>
-			<div class="titlebar-title">
-				<span>{{windowTitle}}</span>
-			</div>
-			<div class="titlebar-menu">
-
-			</div>
-		</div>
-		<div class="app-window-controls no-drag">
-			<a href="#" draggable="false" (click)="winMinimize($event)" class="btn-minimize"><span>&#xE921;</span></a>
-			<a href="#" draggable="false" (click)="winMaximize($event)" class="btn-maximize hidden-maximized"><span>&#xE922;</span></a>
-			<a href="#" draggable="false" (click)="winUnmaximize($event)" class="btn-restore visible-maximized"><span>&#xE923;</span></a>
-			<a href="#" draggable="false" (click)="winClose($event)" class="btn-close"><span>&#xE8BB;</span></a>
-		</div>
-	</header>
 	<main>
 		<router-outlet></router-outlet>
 	</main>
-	<footer>
-
-	</footer>
 </div>
 

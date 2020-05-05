@@ -1,6 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { ipcRenderer } from 'electron';
-import { ElectronService } from './providers/electron.service';
+import { ElectronService } from './shared/providers/electron.service';
 import { TranslateService } from '@ngx-translate/core';
 import { AppConfig } from '../environments/environment';
 
@@ -9,17 +9,19 @@ import { AppConfig } from '../environments/environment';
 	templateUrl: './app.component.html',
 	styleUrls: ['./app.component.scss']
 })
-export class AppComponent implements OnInit {
+export class AppComponent implements OnInit, OnDestroy {
 
 	ipc: typeof ipcRenderer;
 	windowTitle = '';
 	isFullScreen = false;
 	winStateClass = '';
 
-	constructor(public electronService: ElectronService,
-		private translate: TranslateService) {
+	constructor(
+		public electronService: ElectronService,
+		private translate: TranslateService,
+		private cdr: ChangeDetectorRef) {
 
-		translate.setDefaultLang('en');
+		this.translate.setDefaultLang('en');
 		console.log('AppConfig', AppConfig);
 
 		if (electronService.isElectron()) {
@@ -37,28 +39,30 @@ export class AppComponent implements OnInit {
 	}
 
 	/* Window state change methods */
-	winMaximize(e) {
+	btnMaximize(e) {
 		e.preventDefault();
+		console.log('Calling maximize ipc');
 		this.ipc.send('maximize-main-window');
 	}
 
-	winMinimize(e) {
+	btnMinimize(e) {
 		e.preventDefault();
 		this.ipc.send('minimize-main-window');
 	}
 
-	winClose(e) {
+	btnClose(e) {
 		e.preventDefault();
 		console.log('Close main window');
 		this.ipc.send('close-main-window');
 	}
 
-	winUnmaximize(e) {
+	btnUnmaximize(e) {
 		e.preventDefault();
+		console.log('Calling restore ipc');
 		this.ipc.send('unmaximize-main-window');
 	}
 
-	winToggleFullscreen(e) {
+	btnToggleFullscreen(e) {
 		e.preventDefault();
 
 		this.ipc.once('fullScreenResponse', (event, arg) => {
@@ -75,23 +79,20 @@ export class AppComponent implements OnInit {
 		this.ipc.send('fullscreen-main-window', flag);
 	}
 
-	winCheckFullscreen(e) {
-		let flag: boolean;
-		this.ipc.send('check-fullscreen', flag);
-		console.log(flag);
-	}
-
-	ngOnInit() {
+	ngOnInit(): void {
 		if (this.electronService.isElectron()) {
 			const w = window.require('electron').remote.getCurrentWindow();
 			w.on('minimize', () => {
 				this.winStateClass = 'minimized';
+				this.cdr.detectChanges();
 			});
 			w.on('maximize', () => {
 				this.winStateClass = 'maximized';
+				this.cdr.detectChanges();
 			});
 			w.on('unmaximize', () => {
 				this.winStateClass = '';
+				this.cdr.detectChanges();
 			});
 			w.on('enter-full-screen', (e) => {
 				console.log('on Set FullScreen');
@@ -103,7 +104,22 @@ export class AppComponent implements OnInit {
 
 			// Flash window initially, stop on focus
 			this.ipc.send('flash-main-window');
-			w.on('focus', () => this.ipc.send('unflash-main-window'));
+		}
+
+		console.log('initing...');
+	}
+
+	ngOnDestroy(): void {
+		if (this.electronService.isElectron()) {
+			console.log('Destroying window...');
+			const w = window.require('electron').remote.getCurrentWindow();
+			w.off('focus', () => {});
+			w.off('minimize', () => {});
+			w.off('maximize', () => {
+				this.winStateClass = 'maximized';
+				this.cdr.detectChanges();
+			});
+			w.off('unmaximize', () => {});
 		}
 	}
 }
