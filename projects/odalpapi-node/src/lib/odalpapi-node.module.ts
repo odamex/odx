@@ -1,12 +1,10 @@
 import { NgModule } from '@angular/core';
-import { OdalpapiNodeComponent } from './odalpapi-node.component';
-
 
 
 @NgModule({
-  declarations: [OdalpapiNodeComponent],
-  imports: [
-  ],
-  exports: [OdalpapiNodeComponent]
+	declarations: [],
+	imports: [
+	],
+	exports: []
 })
 export class OdalpapiNodeModule { }

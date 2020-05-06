@@ -3,5 +3,4 @@
  */
 
 export * from './lib/odalpapi-node.service';
-export * from './lib/odalpapi-node.component';
 export * from './lib/odalpapi-node.module';

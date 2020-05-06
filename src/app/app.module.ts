@@ -17,6 +17,9 @@ import { WebviewDirective } from './core/directives/webview.directive';
 // ngx-datatable
 import { NgxDatatableModule } from '@swimlane/ngx-datatable';
 
+// Odalpapi Node
+import { OdalpapiNodeService } from '../../dist/odalpapi-node';
+
 // ODX
 import { MaterialModule } from './shared/material.module';
 import { AppComponent } from './app.component';
@@ -62,7 +65,7 @@ export function HttpLoaderFactory(http: HttpClient) {
 		}),
 		BrowserAnimationsModule
 	],
-	providers: [ElectronService],
+	providers: [ElectronService, OdalpapiNodeService],
 	bootstrap: [AppComponent]
 })
 export class AppModule { }
