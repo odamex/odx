@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { MasterQueryService } from '../../../shared/providers/masterserver.service';
 
 @Component({
 	selector: 'app-classic-launcher',
@@ -7,9 +8,14 @@ import { Component, OnInit } from '@angular/core';
 })
 export class ClassicLauncherComponent implements OnInit {
 
-	constructor() { }
+
+
+	constructor(
+		private master: MasterQueryService
+	) { }
 
 	ngOnInit() {
+		this.master.query();
 	}
 
 }

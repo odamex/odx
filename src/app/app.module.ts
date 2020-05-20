@@ -17,8 +17,8 @@ import { WebviewDirective } from './core/directives/webview.directive';
 // ngx-datatable
 import { NgxDatatableModule } from '@swimlane/ngx-datatable';
 
-// Odalpapi Node
-import { OdalpapiNodeService } from '../../dist/odalpapi-node';
+
+import { NgxElectronModule } from 'ngx-electron';
 
 // ODX
 import { MaterialModule } from './shared/material.module';
@@ -56,6 +56,7 @@ export function HttpLoaderFactory(http: HttpClient) {
 		AppRoutingModule,
 		MaterialModule,
 		NgxDatatableModule,
+		NgxElectronModule,
 		TranslateModule.forRoot({
 		loader: {
 			provide: TranslateLoader,
@@ -65,7 +66,7 @@ export function HttpLoaderFactory(http: HttpClient) {
 		}),
 		BrowserAnimationsModule
 	],
-	providers: [ElectronService, OdalpapiNodeService],
+	providers: [ElectronService],
 	bootstrap: [AppComponent]
 })
 export class AppModule { }

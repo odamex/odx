@@ -22,7 +22,6 @@ export class AppComponent implements OnInit, OnDestroy {
 		private cdr: ChangeDetectorRef) {
 
 		this.translate.setDefaultLang('en');
-		console.log('AppConfig', AppConfig);
 
 		if (electronService.isElectron()) {
 			this.ipc = electronService.ipcRenderer;
@@ -30,12 +29,12 @@ export class AppComponent implements OnInit, OnDestroy {
 			this.windowTitle = electronService.remote.getCurrentWindow().getTitle();
 
 			console.log('Mode electron');
-			console.log('Electron ipcRenderer', this.ipc);
 			console.log('NodeJS childProcess', electronService.childProcess);
 		} else {
 			console.log('Mode web');
 			this.windowTitle = 'ODX :: Classic Launcher';
 		}
+
 	}
 
 	/* Window state change methods */
@@ -81,22 +80,6 @@ export class AppComponent implements OnInit, OnDestroy {
 
 	ngOnInit(): void {
 		if (this.electronService.isElectron()) {
-			const w = window.require('electron').remote.getCurrentWindow();
-			w.on('minimize', () => {
-				this.winStateClass = 'minimized';
-				this.cdr.detectChanges();
-			});
-			w.on('maximize', () => {
-				this.winStateClass = 'maximized';
-				this.cdr.detectChanges();
-			});
-			w.on('unmaximize', () => {
-				this.winStateClass = '';
-				this.cdr.detectChanges();
-			});
-			w.on('enter-full-screen', (e) => {
-				console.log('on Set FullScreen');
-			});
 
 			// Prevent drag/drop of links that navigate away
 			document.addEventListener('dragover', event => event.preventDefault());
