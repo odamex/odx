@@ -1,4 +1,10 @@
-import { timingSafeEqual } from "crypto";
+export const TAG_ID = 0xAD0;
+
+export function VERSIONMAJOR(V) { return Math.floor(V / 256); }
+export function VERSIONMINOR(V) { return Math.floor((V % 256) / 10); }
+export function VERSIONPATCH(V) { return Math.floor((V % 256) % 10); }
+export function VERSION() { return Math.floor(0 * 256 + 83); }
+export const PROTOCOL_VERSION = 8;
 
 export namespace OdalPapi {
 
@@ -12,7 +18,7 @@ export namespace OdalPapi {
 		port: number;
 	}
 
-	enum CvarType {
+	export enum CvarType {
 		CVARTYPE_NONE = 0, // Used for no sends
 		CVARTYPE_BOOL,
 		CVARTYPE_BYTE,
@@ -24,10 +30,27 @@ export namespace OdalPapi {
 		CVARTYPE_MAX = 255
 	}
 
+	export enum GameType {
+		GT_Cooperative = 0,
+		GT_Deathmatch,
+		GT_TeamDeathmatch,
+		GT_CaptureTheFlag,
+		GT_Max
+	}
+
 	export interface Cvar {
 		name: string;
 		value: string;
-		cType: number;
+		cType: CvarType;
+
+		// TODO: Can we remove these?
+		i32?: number;
+		ui32?: number;
+		i16?: number;
+		ui16?: number;
+		i8?: number;
+		ui8?: number;
+		b?: boolean;
 	}
 
 	export interface Team {
@@ -51,14 +74,6 @@ export namespace OdalPapi {
 	export interface Wad {
 		name: string;
 		hash: string;
-	}
-
-	enum GameType {
-		GT_Cooperative = 0,
-		GT_Deathmatch,
-		GT_TeamDeathmatch,
-		GT_CaptureTheFlag,
-		GT_Max
 	}
 
 	export class ServerInfo {
@@ -86,6 +101,7 @@ export namespace OdalPapi {
 		versionPatch: number = null;
 		maxClients: number = null; // Launcher specific: Maximum clients
 		maxPlayers: number = null; // Launcher specific: Maximum players
+		responded = false;
 
 		constructor() {}
 	}

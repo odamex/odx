@@ -30,6 +30,11 @@ export class MasterQueryService {
 	}*/
 
 	query() {
+		this.odal.serverList.subscribe((list) => {
+			console.log(list.length, list);
+		});
+
+
 		this.odal.queryMasterServer(masterList[0]);
 	}
 }
