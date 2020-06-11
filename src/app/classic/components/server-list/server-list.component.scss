@@ -13,3 +13,18 @@ td.mat-column-private {
 tr.table-row-dense {
 	height: 40px;
 }
+
+tr.mat-row {
+	cursor: pointer;
+	&:hover {
+		background-color: rgba(0,0,0,0.05);
+	}
+
+	&.is-selected {
+		background-color: rgba(0,0,0,0.666);
+
+		.mat-cell {
+			color: rgba(255,255,255,1);
+		}
+	}
+}

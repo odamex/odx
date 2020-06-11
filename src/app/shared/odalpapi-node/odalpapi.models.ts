@@ -12,6 +12,7 @@ export namespace OdalPapi {
 	export const MASTER_RESPONSE  = 777123;
 	export const SERVER_CHALLENGE = 0xAD011002;
 	export const SERVER_VERSION_CHALLENGE = 0xAD011001;
+	export const PING_CHALLENGE = 1;
 
 	export interface MasterResponse {
 		ip: string;
@@ -102,6 +103,8 @@ export namespace OdalPapi {
 		maxClients: number = null; // Launcher specific: Maximum clients
 		maxPlayers: number = null; // Launcher specific: Maximum players
 		responded = false;
+
+		ping = 0;
 
 		constructor() {}
 	}

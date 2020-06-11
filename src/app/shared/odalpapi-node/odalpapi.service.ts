@@ -1,307 +1,306 @@
 // tslint:disable: no-bitwise
-import { Injectable, OnInit, OnDestroy } from '@angular/core';
+import { Injectable } from '@angular/core';
 import * as dgram from 'dgram';
+// import { DgramAsPromised } from 'dgram-as-promised';
+import * as ping from 'ping';
+import { BehaviorSubject } from 'rxjs';
 
 import { VERSION, VERSIONMAJOR, VERSIONMINOR, VERSIONPATCH, TAG_ID, OdalPapi } from './odalpapi.models';
-import { BehaviorSubject, Subject, Subscription, Observable, of } from 'rxjs';
-import { first, tap } from 'rxjs/operators';
+
+export interface PingObject {
+	start: number;
+	end: number;
+};
 
 @Injectable({providedIn: 'root'})
-export class OdalPapiService implements OnInit, OnDestroy {
-	masterResponse: Subject<OdalPapi.MasterResponse[]> = new Subject();
-	serverList: Subject<OdalPapi.ServerInfo[]> = new Subject();
+export class OdalPapiService {
+	public servers$: BehaviorSubject<OdalPapi.ServerInfo[]> = new BehaviorSubject([]);
+	public serverCount = 0;
+
 	private servers: OdalPapi.ServerInfo[] = [];
-	private subs = new Subscription();
 	private currentIndex = 0;
 
-	public get serverCount(): number {
-		return this.servers.length;
-	}
+	constructor() {}
 
-	constructor() {
-		this.subs.add(
-			this.masterResponse.subscribe((list) => this.processServerList(list))
-		);
-	}
-
-	ngOnInit() {
-		console.log('init');
-	}
-
-	async queryMasterServer(ip: string) {
-
+	queryMasterServer(ip: string, callback) {
+		console.log('Querying master server...');
 		const cb = Buffer.alloc(4);
 		cb.writeUInt32LE(OdalPapi.MASTER_CHALLENGE, 0);
+		let baseList = [];
 
-		dgram.createSocket('udp4', (response, info) => {
-			this.processMasterResponse(response, info);
-		}).send(cb, 15000, ip, (error, bytes) => {
-			// Do something while message is processing or throw an error.
+		const socket = dgram.createSocket('udp4', (response, info) => {
+			baseList = this.processMasterResponse(response, info);
+			this.serverCount = baseList.length;
+
+			callback(baseList);
 		});
+
+		socket.send(cb, 15000, ip, (error, bytes) => {});
 	}
 
-	async queryGameServer(serverIdentity: OdalPapi.MasterResponse): Promise<OdalPapi.ServerInfo> {
+	pingGameServer(serverIdentity: OdalPapi.MasterResponse, callback) {
+
+		const pingObj = {
+			start: Date.now(),
+			end: 0
+		};
+
+		const pingBuf = Buffer.alloc(4);
+		pingBuf.writeUInt32LE(OdalPapi.PING_CHALLENGE, 0);
+
+		dgram.createSocket('udp4', () => {
+			pingObj.end = Date.now();
+			const pingResponse = pingObj.end - pingObj.start;
+			callback(pingResponse);
+		}).send(pingBuf, serverIdentity.port, serverIdentity.ip);
+	}
+
+	queryGameServer(serverIdentity: OdalPapi.MasterResponse, single: boolean = false, callback) {
+		// console.log('Querying game server ', JSON.stringify(serverIdentity));
+
+		const pingObj = {
+			start: Date.now(),
+			end: 0
+		};
 
 		const cb = Buffer.alloc(4);
 		cb.writeUInt32LE(OdalPapi.SERVER_CHALLENGE, 0);
-
-		const result = await new Promise<OdalPapi.ServerInfo>((resolve, reject) => {
-
-			const server = new OdalPapi.ServerInfo();
-
-			dgram.createSocket('udp4', (response, info) => {
-				server.address = {ip: info.address, port: info.port};
-				this.currentIndex = 0;
-
-				const r = this.read32(response);
-
-				const tagId = ((r >> 20) & 0x0FFF);
-				const tagApplication = ((r >> 16) & 0x0F);
-				const tagQRId = ((r >> 12) & 0x0F);
-				const tagPacketType = (r & 0xFFFF0FFF);
-				let validResponse = false;
-
-				if (tagId === TAG_ID) {
-					const tResult = this.translateResponse(tagId, tagApplication, tagQRId, tagPacketType);
-					validResponse = tResult ? true : false;
-				}
-
-				if (!validResponse) {
-					console.log('Received invalid response from', server.address.ip + ':' + server.address.port);
-					reject('Error encountered');
-					return false;
-				}
-
-				const SvVersion = this.read32(response);
-				const SvProtocolVersion = this.read32(response);
-
-				// Prevent possible divide by zero
-				if (SvVersion === 0) {
-					reject('Version issue');
-					return false;
-				}
-
-				server.versionMajor = VERSIONMAJOR(SvVersion);
-				server.versionMinor = VERSIONMINOR(SvVersion);
-				server.versionPatch = VERSIONPATCH(SvVersion);
-				server.versionProtocol = SvProtocolVersion;
-
-				if ((VERSIONMAJOR(SvVersion) < VERSIONMAJOR(VERSION())) ||
-				(VERSIONMAJOR(SvVersion) <= VERSIONMAJOR(VERSION()) && VERSIONMINOR(SvVersion) < VERSIONMINOR(VERSION()))) {
-					// Server is an older version
-					console.log('Server %s is version %d.%d.%d which is not supported\n',
-							`${info.address}:${info.port}`,
-							VERSIONMAJOR(SvVersion),
-							VERSIONMINOR(SvVersion),
-							VERSIONPATCH(SvVersion));
-					reject('Server is not supported');
-					return false;
-				}
-
-				// Passed version checks, we'll count it
-				server.responded = true;
-
-				server.pTime = this.read32(response);
-
-				server.versionRealProtocol = this.read32(response);
-
-				// TODO: Remove guard if not needed
-				if (server.versionRealProtocol >= 7) {
-					server.versionRevStr = this.readString(response);
-
-				} else {
-					server.versionRevision = this.read32(response);
-				}
-
-				// Process CVARs
-				const cvarCount = this.read8(response);
-
-				for (let i = 0; i < cvarCount; i++) {
-					const cvar: OdalPapi.Cvar = { name: '', value: '', cType: 0 };
-
-					cvar.name = this.readString(response);
-					cvar.cType = this.read8(response);
-
-					switch (cvar.cType) {
-						case OdalPapi.CvarType.CVARTYPE_BOOL:
-							cvar.b = true;
-						break;
-						case OdalPapi.CvarType.CVARTYPE_BYTE:
-							cvar.ui8 = this.read8(response);
-						break;
-						case OdalPapi.CvarType.CVARTYPE_WORD:
-							cvar.ui16 = this.read16(response);
-						break;
-						case OdalPapi.CvarType.CVARTYPE_INT:
-							cvar.i32 = this.read32(response);
-						break;
-						case OdalPapi.CvarType.CVARTYPE_FLOAT:
-						case OdalPapi.CvarType.CVARTYPE_STRING:
-							cvar.value = this.readString(response);
-						break;
-
-						case OdalPapi.CvarType.CVARTYPE_NONE:
-						case OdalPapi.CvarType.CVARTYPE_MAX:
-						default:
-						break;
-					}
-
-					// Traverse CVAR values for server info
-
-					if (cvar.name === 'sv_hostname') {
-						server.name = cvar.value;
-						continue;
-					}
-
-					if (cvar.name === 'sv_maxplayers') {
-						server.maxPlayers = cvar.ui8;
-						continue;
-					}
-
-					if (cvar.name === 'sv_maxclients') {
-						server.maxClients = cvar.ui8;
-						continue;
-					}
-
-					if (cvar.name === 'sv_gametype') {
-						server.gameType = cvar.ui8;
-						continue;
-					}
-
-					if (cvar.name === 'sv_scorelimit') {
-						server.scoreLimit = cvar.ui8;
-						continue;
-					}
-
-					if (cvar.name === 'sv_timelimit') {
-						// Add this to the cvar list as well
-						server.timeLimit = cvar.ui16;
-					}
-
-					server.cvars.push(cvar);
-				}
-
-				// Get password hash (private server)
-				server.passwordHash = this.readHexString(response);
-
-				// Get current map
-				server.currentMap = this.readString(response);
-
-				// Get Time left
-				if (server.timeLimit > 0) {
-					server.timeLeft = this.read16(response);
-				}
-
-				// Teams
-				if (server.gameType === OdalPapi.GameType.GT_TeamDeathmatch ||
-					server.gameType === OdalPapi.GameType.GT_CaptureTheFlag) {
-
-					const teamCount = this.read8(response);
-
-					for (let i = 0; i < teamCount; ++i) {
-						const team: OdalPapi.Team = {name: '', color: 0, score: 0 };
-
-						team.name = this.readString(response);
-						team.color = this.read32(response);
-						team.score = this.read16(response);
-
-						server.teams.push(team);
-					}
-				}
-
-				// Dehacked/Bex files
-				const patchCount = this.read8(response);
-
-				for (let i = 0; i < patchCount; ++i) {
-					let patch = '';
-
-					patch = this.readString(response);
-
-					server.patches.push(patch);
-				}
-
-				// Wad files
-				const wadCount = this.read8(response);
-
-				for (let i = 0; i < wadCount; ++i) {
-					const wad: OdalPapi.Wad = {name: '', hash: ''};
-
-					wad.name = this.readString(response);
-					wad.hash = this.readHexString(response);
-
-					server.wads.push(wad);
-				}
-
-				// Player information
-				const playerCount = this.read8(response);
-
-				for (let i = 0; i < playerCount; ++i) {
-					const player: OdalPapi.Player = {
-						name: '', color: 0, kills: 0, ping: 0, deaths: 0, frags: 0, spectator: false, time: 0, team: 0
-					};
-
-					player.name = this.readString(response);
-					player.color = this.read32(response);
-
-					if (server.gameType === OdalPapi.GameType.GT_TeamDeathmatch ||
-							server.gameType === OdalPapi.GameType.GT_CaptureTheFlag) {
-						player.team = this.read8(response);
-					}
-
-					player.ping = this.read16(response);
-					player.time = this.read16(response);
-					player.spectator = (this.read8(response) > 0);
-					player.frags = this.read16(response);
-					player.kills = this.read16(response);
-					player.deaths = this.read16(response);
-					server.players.push(player);
-				}
-
-			}).send(cb, serverIdentity.port, serverIdentity.ip, (error, bytes) => {
-				// Do something while message is processing or throw an error.
-				if (error !== null) {
-					console.log(error);
-					reject('Error encountered');
-				}
-			});
-
-			resolve(server);
+		const socket = dgram.createSocket('udp4')
+		.on('message', (response, info) => {
+			pingObj.end = Date.now();
+			const pingDivisor = single === true ? 1 : 2;
+			const pingResponse = Math.ceil((pingObj.end - pingObj.start) / pingDivisor);
+			const server = this.processGameServerResponse(response, info);
+			callback(server, pingResponse);
+		})
+		.on('error', (err) => {
+			console.log(err);
+			this.serverCount--;
 		});
 
-		// console.log(result);
-		return result;
+		socket.send(cb, serverIdentity.port, serverIdentity.ip, (error, bytes) => {
+			// Do something while message is processing or throw an error.
+			if (error !== null) {
+				console.log(error);
+			}
+		});
 	}
 
-	async processServerList(data: OdalPapi.MasterResponse[]) {
-		if (data.length === 0) {
-			return;
+	private processGameServerResponse(response: Buffer, info: dgram.RemoteInfo): OdalPapi.ServerInfo {
+		const server = new OdalPapi.ServerInfo();
+
+		try {
+			server.address = {ip: info.address, port: info.port};
+			this.currentIndex = 0;
+
+			const r = this.read32(response);
+
+			const tagId = ((r >> 20) & 0x0FFF);
+			const tagApplication = ((r >> 16) & 0x0F);
+			const tagQRId = ((r >> 12) & 0x0F);
+			const tagPacketType = (r & 0xFFFF0FFF);
+			let validResponse = false;
+
+			if (tagId === TAG_ID) {
+				const tResult = this.translateResponse(tagId, tagApplication, tagQRId, tagPacketType);
+				validResponse = tResult ? true : false;
+			}
+
+			if (!validResponse) {
+				throw new Error(`Received invalid response from', ${server.address.ip}:${server.address.port}`);
+			}
+
+			const SvVersion = this.read32(response);
+			const SvProtocolVersion = this.read32(response);
+
+			// Prevent possible divide by zero
+			if (SvVersion === 0) {
+				throw new Error('Version issue');
+			}
+
+			server.versionMajor = VERSIONMAJOR(SvVersion);
+			server.versionMinor = VERSIONMINOR(SvVersion);
+			server.versionPatch = VERSIONPATCH(SvVersion);
+			server.versionProtocol = SvProtocolVersion;
+
+			if ((VERSIONMAJOR(SvVersion) < VERSIONMAJOR(VERSION())) ||
+			(VERSIONMAJOR(SvVersion) <= VERSIONMAJOR(VERSION()) && VERSIONMINOR(SvVersion) < VERSIONMINOR(VERSION()))) {
+				// Server is an older version
+				throw new Error(`Server ${info.address}:${info.port} is version ${VERSIONMAJOR(SvVersion)}.${VERSIONMINOR(SvVersion)}.${VERSIONPATCH(SvVersion)} which is not supported`);
+			}
+
+			// Passed version checks, we'll count it
+			server.responded = true;
+
+			server.pTime = this.read32(response);
+
+			server.versionRealProtocol = this.read32(response);
+
+			// TODO: Remove guard if not needed
+			if (server.versionRealProtocol >= 7) {
+				server.versionRevStr = this.readString(response);
+
+			} else {
+				server.versionRevision = this.read32(response);
+			}
+
+			// Process CVARs
+			const cvarCount = this.read8(response);
+
+			for (let i = 0; i < cvarCount; i++) {
+				const cvar: OdalPapi.Cvar = { name: '', value: '', cType: 0 };
+
+				cvar.name = this.readString(response);
+				cvar.cType = this.read8(response);
+
+				switch (cvar.cType) {
+					case OdalPapi.CvarType.CVARTYPE_BOOL:
+						cvar.b = true;
+					break;
+					case OdalPapi.CvarType.CVARTYPE_BYTE:
+						cvar.ui8 = this.read8(response);
+					break;
+					case OdalPapi.CvarType.CVARTYPE_WORD:
+						cvar.ui16 = this.read16(response);
+					break;
+					case OdalPapi.CvarType.CVARTYPE_INT:
+						cvar.i32 = this.read32(response);
+					break;
+					case OdalPapi.CvarType.CVARTYPE_FLOAT:
+					case OdalPapi.CvarType.CVARTYPE_STRING:
+						cvar.value = this.readString(response);
+					break;
+
+					case OdalPapi.CvarType.CVARTYPE_NONE:
+					case OdalPapi.CvarType.CVARTYPE_MAX:
+					default:
+					break;
+				}
+
+				// Traverse CVAR values for server info
+
+				if (cvar.name === 'sv_hostname') {
+					server.name = cvar.value;
+					continue;
+				}
+
+				if (cvar.name === 'sv_maxplayers') {
+					server.maxPlayers = cvar.ui8;
+					continue;
+				}
+
+				if (cvar.name === 'sv_maxclients') {
+					server.maxClients = cvar.ui8;
+					continue;
+				}
+
+				if (cvar.name === 'sv_gametype') {
+					server.gameType = cvar.ui8;
+					continue;
+				}
+
+				if (cvar.name === 'sv_scorelimit') {
+					server.scoreLimit = cvar.ui8;
+					continue;
+				}
+
+				if (cvar.name === 'sv_timelimit') {
+					// Add this to the cvar list as well
+					server.timeLimit = cvar.ui16;
+				}
+
+				server.cvars.push(cvar);
+			}
+
+			// Get password hash (private server)
+			server.passwordHash = this.readHexString(response);
+
+			// Get current map
+			server.currentMap = this.readString(response);
+
+			// Get Time left
+			if (server.timeLimit > 0) {
+				server.timeLeft = this.read16(response);
+			}
+
+			// Teams
+			if (server.gameType === OdalPapi.GameType.GT_TeamDeathmatch ||
+				server.gameType === OdalPapi.GameType.GT_CaptureTheFlag) {
+
+				const teamCount = this.read8(response);
+
+				for (let i = 0; i < teamCount; ++i) {
+					const team: OdalPapi.Team = {name: '', color: 0, score: 0 };
+
+					team.name = this.readString(response);
+					team.color = this.read32(response);
+					team.score = this.read16(response);
+
+					server.teams.push(team);
+				}
+			}
+
+			// Dehacked/Bex files
+			const patchCount = this.read8(response);
+
+			for (let i = 0; i < patchCount; ++i) {
+				let patch = '';
+
+				patch = this.readString(response);
+
+				server.patches.push(patch);
+			}
+
+			// Wad files
+			const wadCount = this.read8(response);
+
+			for (let i = 0; i < wadCount; ++i) {
+				const wad: OdalPapi.Wad = {name: '', hash: ''};
+
+				wad.name = this.readString(response);
+				wad.hash = this.readHexString(response);
+
+				server.wads.push(wad);
+			}
+
+			// Player information
+			const playerCount = this.read8(response);
+
+			for (let i = 0; i < playerCount; ++i) {
+				const player: OdalPapi.Player = {
+					name: '', color: 0, kills: 0, ping: 0, deaths: 0, frags: 0, spectator: false, time: 0, team: 0
+				};
+
+				player.name = this.readString(response);
+				player.color = this.read32(response);
+
+				if (server.gameType === OdalPapi.GameType.GT_TeamDeathmatch ||
+						server.gameType === OdalPapi.GameType.GT_CaptureTheFlag) {
+					player.team = this.read8(response);
+				}
+
+				player.ping = this.read16(response);
+				player.time = this.read16(response);
+				player.spectator = (this.read8(response) > 0);
+				player.frags = this.read16(response);
+				player.kills = this.read16(response);
+				player.deaths = this.read16(response);
+				server.players.push(player);
+			}
+		} catch (e) {
+			console.log(e);
+			this.serverCount--;
 		}
 
-		const list = [];
-
-		const result = await new Promise<OdalPapi.ServerInfo>((resolve, reject) => {
-			data.forEach((serverIdentity) => {
-				this.queryGameServer(serverIdentity).then(
-					(value: OdalPapi.ServerInfo) => {
-						list.push(value);
-					},
-					(reason) => {
-						console.log(reason);
-					}
-				).catch((e) => {
-					console.log(e);
-				}).finally(() => {
-					resolve();
-				});
-			});
-		});
-
-		this.serverList.next(list);
+		return server;
 	}
 
-	private processMasterResponse(response: Buffer, info: dgram.RemoteInfo): void {
+	private processMasterResponse(response: Buffer, info: dgram.RemoteInfo): OdalPapi.MasterResponse[] {
+
+		console.log('Processing master response...');
+
 		let start = 0;
-		const list: OdalPapi.MasterResponse[] = [];
+		const baseList: OdalPapi.MasterResponse[] = [];
 
 		// Get the master response token
 		const masterResponse = response.readUInt32LE(start);
@@ -320,7 +319,7 @@ export class OdalPapiService implements OnInit, OnDestroy {
 			serverIPstring += response.readUInt8(start + 2) + '.';
 			serverIPstring += response.readUInt8(start + 3);
 
-			list.push({
+			baseList.push({
 				ip: serverIPstring,
 				port: response.readUInt16LE(start + 4)
 			});
@@ -328,12 +327,7 @@ export class OdalPapiService implements OnInit, OnDestroy {
 			start += 6;
 		}
 
-		this.masterResponse.next(list);
-	}
-
-	private processServerResponse(response: Buffer, info: dgram.RemoteInfo): void {
-
-		console.log(info, response);
+		return baseList;
 	}
 
 	private translateResponse(tagId: number, tagApplication: number, tagQRId: number, tagPacketType: number): boolean {
@@ -430,9 +424,5 @@ export class OdalPapiService implements OnInit, OnDestroy {
 		}
 
 		return r;
-	}
-
-	ngOnDestroy() {
-		this.subs.unsubscribe();
 	}
 }
