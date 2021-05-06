@@ -9,4 +9,5 @@ export interface ServerRow {
 	ping: number;
 	private: boolean;
 	players: string;
+	hidden: boolean;
 }

@@ -1,5 +1,5 @@
 <app-classic-toolbar class="toolbar"></app-classic-toolbar>
-<div class="server-list"> <button (click)="queryMasterServers()">Sync Server</button>  <span *ngIf="loading$ | async">Loading...</span>
+<div class="server-list"> <button (click)="queryMasterServers()">Sync Servers</button>  <span *ngIf="loading$ | async">Loading...</span>
 	<app-classic-server-list [data]="serverList$ | async" [columns]="displayedColumns" (rowSelected)="handleRowSelection($event)"></app-classic-server-list>
 </div>
 <!--<app-classic-server-info class="server-info"></app-classic-server-info>-->

@@ -7,17 +7,9 @@
 		<th mat-header-cell *matHeaderCellDef mat-sort-header> Name </th>
 		<td mat-cell *matCellDef="let server"> {{server.name}} </td>
 	  </ng-container>
-	  <ng-container matColumnDef="ping">
-		<th mat-header-cell *matHeaderCellDef mat-sort-header> Ping </th>
-		<td mat-cell *matCellDef="let server"> {{server.ping}} </td>
-	  </ng-container>
 	  <ng-container matColumnDef="players">
 		<th mat-header-cell *matHeaderCellDef mat-sort-header> Players </th>
 		<td mat-cell *matCellDef="let server"> {{server.players}} </td>
-	  </ng-container>
-	  <ng-container matColumnDef="wads">
-		<th mat-header-cell *matHeaderCellDef mat-sort-header> WADs </th>
-		<td mat-cell *matCellDef="let server"> {{server.wads}} </td>
 	  </ng-container>
 	  <ng-container matColumnDef="map">
 		<th mat-header-cell *matHeaderCellDef mat-sort-header> Map </th>
@@ -31,10 +23,6 @@
 		<th mat-header-cell *matHeaderCellDef mat-sort-header> Game </th>
 		<td mat-cell *matCellDef="let server"> {{server.iwad}} </td>
 	  </ng-container>
-	  <ng-container matColumnDef="ip">
-		<th mat-header-cell *matHeaderCellDef mat-sort-header> Address </th>
-		<td mat-cell *matCellDef="let server"> {{server.ip}} </td>
-	  </ng-container>
 
 	<tr mat-header-row *matHeaderRowDef="columns; sticky: true"></tr>
 	<tr
@@ -43,6 +31,7 @@
 		class="table-row-dense"
 		(click)="selectRow(row)"
 		[class.is-selected]="isRowSelected(row)"
+		[hidden]="row.hidden"
 	></tr>
 </table>
 <!--<mat-paginator [pageSizeOptions]="[5, 10, 25, 100]"></mat-paginator>-->

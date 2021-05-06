@@ -20,6 +20,7 @@ export class ServerListComponent implements OnInit, OnChanges {
 	@Input() data: ServerRow[];
 	@Input() columns: string[];
 	@Output() rowSelected = new EventEmitter();
+	@Output() rowActivated = new EventEmitter();
 	selection: SelectionModel<ServerRow> = new SelectionModel<ServerRow>(false, []);
 
 	dataSource: MatTableDataSourceWithCustomSort<ServerRow>;
@@ -52,5 +53,9 @@ export class ServerListComponent implements OnInit, OnChanges {
 
 	isRowSelected(row: ServerRow): boolean {
 		return this.selection.isSelected(row);
+	}
+
+	activateRow(row: ServerRow): void {
+		this.rowActivated.emit(row);
 	}
 }

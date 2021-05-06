@@ -1,10 +1,10 @@
 export const TAG_ID = 0xAD0;
 
+export const PROTOCOL_VERSION = 8;
 export function VERSIONMAJOR(V) { return Math.floor(V / 256); }
 export function VERSIONMINOR(V) { return Math.floor((V % 256) / 10); }
 export function VERSIONPATCH(V) { return Math.floor((V % 256) % 10); }
-export function VERSION() { return Math.floor(0 * 256 + 83); }
-export const PROTOCOL_VERSION = 8;
+export function VERSION() { return Math.floor(0 * 256 + (PROTOCOL_VERSION*10)); }
 
 export namespace OdalPapi {
 
