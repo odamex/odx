@@ -103,8 +103,8 @@ export class ClassicLauncherComponent implements OnInit, OnChanges, OnDestroy {
 		});
 
 		if (index !== -1) {
-			console.log(this.servers.splice(index,1));
-			console.log(this.serverList.splice(index,1));
+			this.servers.splice(index,1);
+			this.serverList.splice(index,1);
 		}
 
 		this.serverList$.next([...this.serverList.slice()]);

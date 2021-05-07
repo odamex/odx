@@ -1,6 +1,6 @@
 export const TAG_ID = 0xAD0;
 
-export const PROTOCOL_VERSION = 8;
+export const PROTOCOL_VERSION = 9;
 export function VERSIONMAJOR(V) { return Math.floor(V / 256); }
 export function VERSIONMINOR(V) { return Math.floor((V % 256) / 10); }
 export function VERSIONPATCH(V) { return Math.floor((V % 256) % 10); }
@@ -102,6 +102,8 @@ export namespace OdalPapi {
 		versionPatch: number = null;
 		maxClients: number = null; // Launcher specific: Maximum clients
 		maxPlayers: number = null; // Launcher specific: Maximum players
+		lives: number = null;
+		sides: number = null;
 		responded = false;
 
 		ping = 0;

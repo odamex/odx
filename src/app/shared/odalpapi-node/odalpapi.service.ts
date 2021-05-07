@@ -262,8 +262,15 @@ export class OdalPapiService {
 				}
 
 				if (cvar.name === 'sv_timelimit') {
-					// Add this to the cvar list as well
-					server.timeLimit = cvar.ui16;
+					//server.timeLimit = cvar.ui16;
+					server.timeLimit = parseFloat(cvar.value);
+				}
+				if (cvar.name == "g_lives") {
+					server.lives = cvar.ui16;
+				}
+				else if(cvar.name == "g_sides")
+				{
+					server.sides = cvar.ui16;
 				}
 
 				server.cvars.push(cvar);
@@ -280,14 +287,12 @@ export class OdalPapiService {
 				server.timeLeft = this.read16(response);
 			}
 
-			//console.log("Gametype:", OdalPapi.GameType[server.gameType]);
-
 			// Teams
+
 			if (server.gameType === OdalPapi.GameType.GT_TeamDeathmatch ||
 				server.gameType === OdalPapi.GameType.GT_CaptureTheFlag) {
 
 				const teamCount = this.read8(response);
-				//console.log(teamCount);
 
 				for (let i = 0; i < teamCount; ++i) {
 					const team: OdalPapi.Team = {name: '', color: 0, score: 0 };
@@ -326,6 +331,7 @@ export class OdalPapiService {
 				//console.log(server.wads);
 			}
 
+
 			// Player information
 			const playerCount = this.read8(response);
 
@@ -351,7 +357,6 @@ export class OdalPapiService {
 				server.players.push(player);
 			}
 		} catch (e) {
-			console.log(server);
 			console.error("Server response parsing error:", e);
 		}
 
