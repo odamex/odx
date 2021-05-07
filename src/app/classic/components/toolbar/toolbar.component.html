@@ -1,20 +1,9 @@
 <mat-toolbar>
 	<span>
-		<button mat-icon-button title="Sync Server List"><i class="fas fa-sync"></i></button>
-		<button mat-icon-button title="Refresh Selected Server"><i class="fas fa-redo-alt"></i></button>
-		<button mat-icon-button title="Join Server" disabled><i class="fas fa-play"></i></button>
+		<ng-content select="[toolbar-left]"></ng-content>
 	</span>
 	<span class="spacer"></span>
 	<span>
-		<button mat-icon-button><i class="fas fa-filter"></i></button>
-		<button mat-icon-button [matMenuTriggerFor]="appMenu"><i class="fas fa-ellipsis-v"></i></button>
+		<ng-content select="[toolbar-right]"></ng-content>
 	</span>
 </mat-toolbar>
-
-<mat-menu #appMenu="matMenu">
-	<button mat-menu-item><i class="fas fa-server"></i> &nbsp;&nbsp;<span>Manually Connect...</span></button>
-	<button mat-menu-item><i class="fas fa-list"></i> &nbsp;&nbsp;<span>Custom Servers</span></button>
-	<mat-divider></mat-divider>
-	<button mat-menu-item><i class="fas fa-cog"></i> &nbsp;&nbsp;<span>Settings</span></button>
-	<button mat-menu-item><i class="fas fa-sign-out-alt"></i> &nbsp;&nbsp;<span>Exit</span></button>
-</mat-menu>
