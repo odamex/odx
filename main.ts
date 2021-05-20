@@ -1,4 +1,4 @@
-import { app, BrowserView, BrowserWindow, screen, ipcMain, Menu, shell, dialog } from 'electron';
+import { app, BrowserView, BrowserWindow, globalShortcut, screen, nativeTheme, ipcMain, Menu, shell, dialog } from 'electron';
 import * as path from 'path';
 import * as url from 'url';
 
@@ -9,7 +9,7 @@ let win, serve;
 const args = process.argv.slice(1);
 serve = args.some(val => val === '--serve');
 // Windows gets custom treatment, the rest it's best to just let the OS handle the chrome
-const showFrame = true; // (!(process.platform === 'win32'));
+const showFrame = false; // (!(process.platform === 'win32'));
 
 const baseWidth = 800; // size.width;
 const baseHeight = 600; // size.height;
@@ -29,10 +29,14 @@ function createWindow() {
 		height: baseHeight,
 		minHeight: baseHeight,
 		minWidth: baseWidth,
-		frame: showFrame,
+		/*
+		fullscreen: true,
+		frame: false,
+		transparent:true,
+		*/
 		title: 'ODX Classic Launcher',
 		icon: path.join(__dirname, 'assets/logo_icon.png'),
-		// titleBarStyle: 'hidden',
+		titleBarStyle: 'hidden',
 		webPreferences: {
 			// Disable auxclick event
 			// See https://developers.google.com/web/updates/2016/10/auxclick
@@ -42,6 +46,8 @@ function createWindow() {
 			nodeIntegration: true
 		}
 	});
+
+	nativeTheme.themeSource = 'dark';
 
 	if (serve) {
 		require('electron-reload')(__dirname, {
@@ -66,6 +72,14 @@ function createWindow() {
 
 	win.on('focus', () => {
 		win.flashFrame(false);
+	});
+
+	ipcMain.on('activate-window', () => {
+		win.setIgnoreMouseEvents(false);
+	});
+
+	ipcMain.on('deactivate-window', () => {
+		win.setIgnoreMouseEvents(true);
 	});
 
 	// Set up Windows "flash frame"
@@ -107,7 +121,8 @@ function createWindow() {
 	});
 
 	// Set standard application menu
-	Menu.setApplicationMenu(Menu.buildFromTemplate(menuTemplate));
+	//Menu.setApplicationMenu(Menu.buildFromTemplate(menuTemplate));
+	Menu.setApplicationMenu(null);
 
 	console.log('mainWindow opened');
 }
@@ -135,6 +150,28 @@ try {
 			createWindow();
 		}
 	});
+
+	app.whenReady().then(() => {
+		// Register a 'CommandOrControl+Shift+O' shortcut listener.
+		const ret = globalShortcut.register('CommandOrControl+Shift+O', () => {
+		  console.log('CommandOrControl+Shift+O is pressed')
+		})
+
+		if (!ret) {
+		  console.log('registration failed')
+		}
+
+		// Check whether a shortcut is registered.
+		console.log(globalShortcut.isRegistered('CommandOrControl+Shift+O'))
+	  })
+
+	  app.on('will-quit', () => {
+		// Unregister a shortcut.
+		globalShortcut.unregister('CommandOrControl+Shift+O')
+
+		// Unregister all shortcuts.
+		globalShortcut.unregisterAll()
+	  })
 
 } catch (e) {
 	// Catch Error

@@ -1,4 +1,5 @@
 import { ClassicLauncherComponent } from './classic//components/launcher/launcher.component';
+import { OverlayComponent } from './overlay/overlay.component';
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 

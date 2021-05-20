@@ -5,6 +5,7 @@ import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { HttpClientModule, HttpClient } from '@angular/common/http';
+import { DragDropModule } from '@angular/cdk/drag-drop';
 import { AppRoutingModule } from './app-routing.module';
 
 // NG Translate
@@ -31,6 +32,7 @@ import { ServerInfoComponent } from './classic/components/server-info/server-inf
 import { ToolbarComponent } from './classic/components/toolbar/toolbar.component';
 import { PlayerListComponent } from './classic/components/player-list/player-list.component';
 import { FooterComponent } from './classic/components/footer/footer.component';
+import { OverlayComponent } from './overlay/overlay.component';
 
 // AoT requires an exported function for factories
 export function HttpLoaderFactory(http: HttpClient) {
@@ -47,13 +49,15 @@ export function HttpLoaderFactory(http: HttpClient) {
 		ServerInfoComponent,
 		ToolbarComponent,
 		PlayerListComponent,
-		FooterComponent
+		FooterComponent,
+		OverlayComponent
 	],
 	imports: [
 		BrowserModule,
 		FormsModule,
 		HttpClientModule,
 		AppRoutingModule,
+		DragDropModule,
 		MaterialModule,
 		NgxDatatableModule,
 		NgxElectronModule,

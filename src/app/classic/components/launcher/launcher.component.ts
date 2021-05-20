@@ -36,6 +36,8 @@ export class ClassicLauncherComponent implements OnInit, OnChanges, OnDestroy {
 		return this.servers.length;
 	}
 
+	public playerCount = 0;
+
 	private subs: Subscription = new Subscription();
 	public serverList: ServerRow[] = [];
 	private masterCount = 0;
@@ -138,6 +140,7 @@ export class ClassicLauncherComponent implements OnInit, OnChanges, OnDestroy {
 	}
 
 	private translateOdalPapi(server: OdalPapi.ServerInfo, hidden?: boolean): ServerRow {
+		this.playerCount += server?.players.length || 0;
 		return {
 			private: (server.passwordHash != null && server.passwordHash.length > 0),
 			name: server.name,
@@ -154,7 +157,6 @@ export class ClassicLauncherComponent implements OnInit, OnChanges, OnDestroy {
 
 	handleRowSelection(row: ServerRow) {
 		console.log('Handling selection of row', row);
-		this.cdr.detectChanges();
 		const ident: OdalPapi.MasterResponse = {ip: row.ip.split(':')[0], port: parseInt(row.ip.split(':')[1], 10)};
 		this.queryGameServer(ident, true);
 	}

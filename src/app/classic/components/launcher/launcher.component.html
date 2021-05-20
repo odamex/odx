@@ -13,8 +13,15 @@
 	<app-classic-server-list [data]="serverList$ | async" [columns]="displayedColumns" (rowSelected)="handleRowSelection($event)"></app-classic-server-list>
 </div>
 <!--<app-classic-server-info class="server-info"></app-classic-server-info>-->
-<app-classic-footer class="footer">
-	{{serverCount}}
+<app-classic-footer>
+	<div class="footer">
+		<span>
+			Connected to master1.odamex.net
+		</span>
+		<span>
+			<span>{{serverCount}} Servers</span> <mat-divider [vertical]="true"></mat-divider> <span>{{playerCount}} Players</span>
+		</span>
+	</div>
 </app-classic-footer>
 
 

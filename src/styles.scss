@@ -22,7 +22,7 @@ $odamex-system-accent: mat-palette($mat-orange, A200, A100, A700);
 $odamex-system-warn: mat-palette($mat-red);
 
 // Create the theme object (a Sass map containing all of the palettes).
-$odamex-system-theme: mat-light-theme($odamex-system-primary, $odamex-system-accent, $odamex-system-warn);
+$odamex-system-theme: mat-dark-theme($odamex-system-primary, $odamex-system-accent, $odamex-system-warn);
 
 // Include theme styles for core and each component used in your app.
 // Alternatively, you can import and @include the theme mixins for each component
@@ -48,8 +48,8 @@ html, body {
 
 body {
 	height: 100vh;
-	/*background-color: rgba(50, 50, 50, 1);*/
 	background-color: #FFFFFF;
+	background-color: rgba(50, 50, 50, 0.5);
 	background-position: center;
 	font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
 	display: flex;
@@ -92,4 +92,8 @@ input, textarea, .selectable {
 			display: none !important;
 		}
 	}
+}
+
+.mat-divider {
+	border-color: #AAAAAA;
 }

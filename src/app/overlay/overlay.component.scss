@@ -1,0 +1,40 @@
+:host {
+	width: 100vw;
+	height: 100vh;
+	position: relative;
+	flex: 1 1 100%;
+	display: flex;
+}
+
+.odamex-logo {
+	margin: 5vh auto;
+	display: inline-block;
+
+	img {
+		transform: scale(1.5);
+		filter: grayscale(30%);
+	}
+}
+
+.overlay-box {
+
+	position: absolute;
+	border: 4px solid #444444;
+	display: flex;
+	flex-flow: column nowrap;
+	overflow: hidden;
+
+	.title {
+		padding: .25rem;
+		background-color: #444444;
+		color: #FFFFFF;
+		font-weight: 500;
+	}
+
+	&.launcher {
+		width: 40vw;
+		height: 45vh;
+		left: 20%;
+		top: 20%;
+	}
+}

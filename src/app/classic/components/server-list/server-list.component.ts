@@ -28,9 +28,7 @@ export class ServerListComponent implements OnInit, OnChanges {
 	// @ViewChild(MatPaginator, {static: true}) paginator: MatPaginator;
 	@ViewChild(MatSort, {static: true}) sort: MatSort;
 
-	constructor(
-		private cdr: ChangeDetectorRef
-	) {}
+	constructor() {}
 
 	ngOnInit(): void {
 		// Assign the data to the data source for the table to render

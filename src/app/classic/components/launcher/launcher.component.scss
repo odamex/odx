@@ -13,3 +13,21 @@
 	overflow-x: hidden;
 }
 
+
+.footer {
+	flex: 1 1 100%;
+	display: flex;
+	flex-flow: row nowrap;
+	justify-content: space-between;
+	font-size: .85rem;
+
+	.mat-divider {
+		height: 32px;
+		margin: 0 1rem;
+	}
+	& > span {
+		display: flex;
+		flex-flow: nowrap;
+		align-items: center;
+	}
+}
