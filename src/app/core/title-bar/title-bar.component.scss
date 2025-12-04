@@ -1,0 +1,90 @@
+.title-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 32px;
+  background: #1a1a1a;
+  border-bottom: 1px solid #333;
+  user-select: none;
+  -webkit-app-region: drag;
+}
+
+.title-drag-area {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding-left: 12px;
+}
+
+.title-text {
+  font-size: 12px;
+  font-weight: 500;
+  color: #aaa;
+}
+
+.network-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  color: #4a9eff;
+  font-size: 14px;
+  transition: color 0.3s ease;
+  -webkit-app-region: no-drag;
+  cursor: help;
+  
+  &.offline {
+    color: #ff4a4a;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  
+  ng-icon {
+    display: flex;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.window-controls {
+  display: flex;
+  -webkit-app-region: no-drag;
+}
+
+.window-control-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: #aaa;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+  
+  ng-icon {
+    font-size: 14px;
+  }
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+  }
+
+  &:active {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  &.close:hover {
+    background: #e81123;
+    color: #fff;
+  }
+
+  &.close:active {
+    background: #c0000e;
+  }
+}

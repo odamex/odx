@@ -1,17 +1,30 @@
 # See http://help.github.com/ignore-files/ for more about ignoring files.
 
 # compiled output
-/dist
+node_modules/
+dist/
+dist-electron/
+release/
+out-tsc/
+*.log
+*.pid
+*.seed
+*.pid.lock
+.DS_Store
+Thumbs.db
+.vscode/
+.angular/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.env
 /tmp
-/out-tsc
 /app-builds
-/release
-main.js
-src/**/*.js
 *.js.map
 
-# dependencies
-/node_modules
 
 # IDEs and editors
 /.idea

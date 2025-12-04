@@ -1,0 +1,673 @@
+// @ts-nocheck
+import { app, BrowserWindow, ipcMain, Menu, Tray, screen, nativeTheme, dialog } from 'electron';
+import { autoUpdater } from 'electron-updater';
+import * as path from 'path';
+import * as url from 'url';
+import * as dotenv from 'dotenv';
+import { OdalPapiMainService } from './odalpapi-main';
+import { FileManagerService } from './file-manager-main';
+import { IWADManager } from './iwad-manager';
+
+// Load environment variables from .env file
+dotenv.config({ path: path.join(__dirname, '..', '.env') });
+
+const isDevelopment = process.argv.includes('--serve');
+
+// Configure auto-updater
+autoUpdater.autoDownload = false; // Manual download control
+autoUpdater.autoInstallOnAppQuit = true; // Install when app quits
+if (!isDevelopment) {
+  autoUpdater.allowPrerelease = false;
+}
+
+// Configure logging - only use electron-log in development
+let log: any;
+if (isDevelopment) {
+  // Dynamic import for development only
+  const electronLog = require('electron-log');
+  log = electronLog.default || electronLog;
+  log.transports.file.level = 'info';
+  autoUpdater.logger = log;
+} else {
+  // Simple console logger for production
+  log = {
+    info: console.log,
+    warn: console.warn,
+    error: console.error,
+    debug: console.debug
+  };
+  // electron-updater will use its own internal logger in production
+}
+
+let mainWindow: BrowserWindow | null = null;
+let tray: Tray | null = null;
+let isQuitting = false;
+const odalPapiService = new OdalPapiMainService();
+const fileManager = new FileManagerService();
+const iwadManager = new IWADManager(
+  fileManager.getWadsDirectory(),
+  fileManager.getConfigDirectory()
+);
+
+const baseWidth = 1200;
+const baseHeight = 800;
+
+function createWindow(): void {
+  const electronScreen = screen;
+  const primaryDisplay = electronScreen.getPrimaryDisplay();
+  const { width, height } = primaryDisplay.workAreaSize;
+
+  // Create the browser window with borderless frame
+  mainWindow = new BrowserWindow({
+    x: Math.floor((width - baseWidth) / 2),
+    y: Math.floor((height - baseHeight) / 2),
+    width: baseWidth,
+    height: baseHeight,
+    minWidth: 960,
+    minHeight: 600,
+    frame: false, // Borderless window
+    transparent: false,
+    backgroundColor: '#2c2c2c',
+    title: 'ODX',
+    icon: path.join(__dirname, '../public/icon.png'),
+    show: false, // Don't show until ready
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js'),
+    }
+  });
+
+  // Set dark theme
+  nativeTheme.themeSource = 'dark';
+
+  // Load the app
+  if (isDevelopment) {
+    mainWindow.loadURL('http://localhost:4200').catch(err => {
+      console.error('Failed to load dev URL:', err);
+    });
+    mainWindow.webContents.openDevTools();
+  } else {
+    // In production, dist is packaged inside app.asar
+    const indexPath = path.join(__dirname, '../dist/browser/index.html');
+    mainWindow.loadURL(
+      url.format({
+        pathname: indexPath,
+        protocol: 'file:',
+        slashes: true
+      })
+    ).catch(err => {
+      console.error('Failed to load production URL:', err);
+      console.error('Attempted path:', indexPath);
+    });
+  }
+
+  // Show window when ready
+  mainWindow.once('ready-to-show', () => {
+    console.log('Window ready to show');
+    mainWindow?.show();
+  });
+
+  // Log any loading failures
+  mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
+    console.error('Failed to load:', errorCode, errorDescription);
+  });
+
+  // Handle close button - minimize to tray instead of quit
+  mainWindow.on('close', (event) => {
+    if (!isQuitting) {
+      event.preventDefault();
+      mainWindow?.hide();
+      return false;
+    }
+    return true;
+  });
+
+  mainWindow.on('closed', () => {
+    mainWindow = null;
+  });
+
+  // Window flash on focus (for respawn notifications, etc.)
+  mainWindow.on('focus', () => {
+    mainWindow?.flashFrame(false);
+  });
+}
+
+function createTray(): void {
+  const trayIconPath = isDevelopment 
+    ? path.join(__dirname, '../public/tray-icon.png')
+    : path.join(process.resourcesPath, 'tray-icon.png');
+  tray = new Tray(trayIconPath);
+
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: 'Show ODX',
+      click: () => {
+        mainWindow?.show();
+        mainWindow?.focus();
+      }
+    },
+    { type: 'separator' },
+    {
+      label: 'Quick Launch Server',
+      click: () => {
+        // TODO: Implement quick server launch
+        mainWindow?.webContents.send('quick-launch-server');
+      }
+    },
+    { type: 'separator' },
+    {
+      label: 'Auto-Update',
+      type: 'checkbox',
+      checked: true,
+      click: (menuItem) => {
+        // TODO: Save auto-update preference
+        mainWindow?.webContents.send('toggle-auto-update', menuItem.checked);
+      }
+    },
+    { type: 'separator' },
+    {
+      label: 'Quit',
+      click: () => {
+        isQuitting = true;
+        app.quit();
+      }
+    }
+  ]);
+
+  tray.setToolTip('ODX');
+  tray.setContextMenu(contextMenu);
+
+  tray.on('double-click', () => {
+    mainWindow?.show();
+    mainWindow?.focus();
+  });
+}
+
+// IPC Handlers for window controls
+ipcMain.on('window-minimize', () => {
+  mainWindow?.minimize();
+});
+
+ipcMain.on('window-maximize', () => {
+  if (mainWindow?.isMaximized()) {
+    mainWindow.unmaximize();
+  } else {
+    mainWindow?.maximize();
+  }
+});
+
+ipcMain.on('window-close', () => {
+  mainWindow?.close();
+});
+
+ipcMain.on('window-restore', () => {
+  mainWindow?.show();
+  mainWindow?.focus();
+});
+
+ipcMain.on('app-quit', () => {
+  isQuitting = true;
+  app.quit();
+});
+
+// Flash window for notifications
+ipcMain.on('flash-window', () => {
+  if (!mainWindow?.isFocused()) {
+    mainWindow?.flashFrame(true);
+  }
+});
+
+// Show system notification
+ipcMain.on('show-notification', (_event, title: string, body: string) => {
+  const { Notification } = require('electron');
+  if (Notification.isSupported()) {
+    const notification = new Notification({
+      title,
+      body,
+      icon: path.join(__dirname, '..', 'build', 'icon.png')
+    });
+    
+    notification.show();
+    
+    // Focus window when notification is clicked
+    notification.on('click', () => {
+      if (mainWindow) {
+        if (mainWindow.isMinimized()) mainWindow.restore();
+        mainWindow.show();
+        mainWindow.focus();
+      }
+    });
+  }
+});
+
+// Check for updates
+ipcMain.on('check-for-updates', () => {
+  if (!isDevelopment) {
+    autoUpdater.checkForUpdatesAndNotify();
+  }
+});
+
+// Download update
+ipcMain.on('download-update', () => {
+  if (!isDevelopment) {
+    autoUpdater.downloadUpdate();
+  }
+});
+
+// Install update and restart
+ipcMain.handle('quit-and-install', async () => {
+  if (!isDevelopment) {
+    isQuitting = true;
+    setImmediate(() => autoUpdater.quitAndInstall(false, true));
+  }
+});
+
+// Auto-updater events
+autoUpdater.on('checking-for-update', () => {
+  mainWindow?.webContents.send('update-checking');
+});
+
+autoUpdater.on('update-available', (info) => {
+  mainWindow?.webContents.send('update-available', info);
+});
+
+autoUpdater.on('update-not-available', (info) => {
+  mainWindow?.webContents.send('update-not-available', info);
+});
+
+autoUpdater.on('error', (err) => {
+  mainWindow?.webContents.send('update-error', err);
+});
+
+autoUpdater.on('download-progress', (progressObj) => {
+  mainWindow?.webContents.send('update-download-progress', progressObj);
+});
+
+autoUpdater.on('update-downloaded', (info) => {
+  mainWindow?.webContents.send('update-downloaded', info);
+});
+
+// App lifecycle
+app.on('ready', () => {
+  // Set app user model ID for Windows notifications
+  if (process.platform === 'win32') {
+    app.setAppUserModelId('com.odamex.odx-launcher');
+  }
+  
+  createWindow();
+  createTray();
+
+  // Check for updates after 3 seconds
+  if (!isDevelopment) {
+    setTimeout(() => {
+      autoUpdater.checkForUpdatesAndNotify();
+    }, 3000);
+  }
+});
+
+app.on('window-all-closed', () => {
+  // On macOS, keep the app running in the background
+  if (process.platform !== 'darwin') {
+    app.quit();
+  }
+});
+
+app.on('activate', () => {
+  if (mainWindow === null) {
+    createWindow();
+  } else {
+    mainWindow.show();
+  }
+});
+
+app.on('before-quit', () => {
+  isQuitting = true;
+  
+  // In development mode, kill all processes when quitting
+  if (isDevelopment) {
+    process.exit(0);
+  }
+});
+
+// OdalPapi IPC handlers
+ipcMain.handle('odalpapi:query-master', async (event, ip: string) => {
+  try {
+    const result = await odalPapiService.queryMasterServer(ip);
+    return result;
+  } catch (err: any) {
+    console.error(`[IPC] Failed to query master server ${ip}:`, err.message);
+    throw new Error(err.message || 'Failed to query master server');
+  }
+});
+
+ipcMain.handle('odalpapi:query-server', async (event, serverAddr: {ip: string, port: number}) => {
+  try {
+    const result = await odalPapiService.queryGameServer(serverAddr);
+    return result;
+  } catch (err: any) {
+    console.error(`[IPC] Failed to query game server ${serverAddr.ip}:${serverAddr.port}:`, err.message);
+    throw new Error(err.message || 'Failed to query game server');
+  }
+});
+
+ipcMain.handle('odalpapi:ping-server', async (_event, serverAddr: {ip: string, port: number}) => {
+  try {
+    const result = await odalPapiService.pingGameServer(serverAddr);
+    return result;
+  } catch (err: any) {
+    console.error(`[IPC] Failed to ping server ${serverAddr.ip}:${serverAddr.port}:`, err.message);
+    throw new Error(err.message || 'Failed to ping server');
+  }
+});
+
+// File Manager IPC handlers
+ipcMain.handle('file:get-installation-info', async (_event, customPath?: string) => {
+  try {
+    return fileManager.getInstallationInfo(customPath);
+  } catch (err: any) {
+    console.error('[IPC] Failed to get installation info:', err.message);
+    throw new Error(err.message || 'Failed to get installation info');
+  }
+});
+
+ipcMain.handle('file:check-updates', async (_event, currentVersion: string | null) => {
+  try {
+    const result = await fileManager.checkForUpdates(currentVersion);
+    return result;
+  } catch (err: any) {
+    console.error('[IPC] Failed to check for updates:', err.message);
+    throw new Error(err.message || 'Failed to check for updates');
+  }
+});
+
+ipcMain.handle('file:compare-versions', (_event, v1: string, v2: string) => {
+  try {
+    return fileManager.compareVersions(v1, v2);
+  } catch (err: any) {
+    console.error('[IPC] Failed to compare versions:', err.message);
+    throw new Error(err.message || 'Failed to compare versions');
+  }
+});
+
+ipcMain.handle('file:get-latest-release', async () => {
+  try {
+    const result = await fileManager.getLatestRelease();
+    return result;
+  } catch (err: any) {
+    console.error('[IPC] Failed to fetch latest release:', err.message);
+    throw new Error(err.message || 'Failed to fetch latest release');
+  }
+});
+
+ipcMain.handle('file:get-all-releases', async () => {
+  try {
+    const result = await fileManager.getAllReleases();
+    return result;
+  } catch (err: any) {
+    console.error('[IPC] Failed to fetch releases:', err.message);
+    throw new Error(err.message || 'Failed to fetch releases');
+  }
+});
+
+ipcMain.handle('file:download', async (event, url: string, filename: string) => {
+  const destPath = path.join(fileManager.getBinDirectory(), filename);
+  
+  try {
+    await fileManager.downloadFile(url, destPath, (progress) => {
+      event.sender.send('file:download-progress', progress);
+    });
+    return destPath;
+  } catch (err: any) {
+    console.error(`[IPC] Download failed for ${filename}:`, err.message);
+    throw new Error(err.message || 'Download failed');
+  }
+});
+
+ipcMain.handle('file:extract-zip', async (_event, zipPath: string) => {
+  try {
+    await fileManager.extractZip(zipPath, fileManager.getBinDirectory());
+  } catch (err: any) {
+    console.error(`[IPC] Failed to extract ZIP ${zipPath}:`, err.message);
+    throw new Error(err.message || 'Failed to extract ZIP');
+  }
+});
+
+ipcMain.handle('file:run-installer', async (_event, installerPath: string, installDir?: string) => {
+  try {
+    await fileManager.runInstaller(installerPath, installDir);
+  } catch (err: any) {
+    console.error(`[IPC] Installer failed for ${installerPath}:`, err.message);
+    throw new Error(err.message || 'Installer failed');
+  }
+});
+
+ipcMain.handle('file:find-installer-asset', async (_event, release: any) => {
+  try {
+    return fileManager.findInstallerAsset(release);
+  } catch (err: any) {
+    console.error('[IPC] Failed to find installer asset:', err.message);
+    throw new Error(err.message || 'Failed to find installer asset');
+  }
+});
+
+ipcMain.handle('file:save-version', async (_event, version: string) => {
+  try {
+    fileManager.saveVersionInfo(version);
+  } catch (err: any) {
+    console.error(`[IPC] Failed to save version ${version}:`, err.message);
+    throw new Error(err.message || 'Failed to save version');
+  }
+});
+
+ipcMain.handle('file:get-directories', async () => {
+  try {
+    return {
+      odx: fileManager.getOdxDirectory(),
+      bin: fileManager.getBinDirectory(),
+      wads: fileManager.getWadsDirectory(),
+      config: fileManager.getConfigDirectory()
+    };
+  } catch (err: any) {
+    console.error('[IPC] Failed to get directories:', err.message);
+    throw new Error(err.message || 'Failed to get directories');
+  }
+});
+
+ipcMain.handle('file:list-wads', async () => {
+  try {
+    return fileManager.listWadFiles();
+  } catch (err: any) {
+    console.error('[IPC] Failed to list WAD files:', err.message);
+    throw new Error(err.message || 'Failed to list WAD files');
+  }
+});
+
+ipcMain.handle('file:open-directory', async (_event, dirPath: string) => {
+  try {
+    await fileManager.openDirectory(dirPath);
+  } catch (err: any) {
+    console.error(`[IPC] Failed to open directory ${dirPath}:`, err.message);
+    throw new Error(err.message || 'Failed to open directory');
+  }
+});
+
+ipcMain.handle('file:pick-directory', async () => {
+  try {
+    const result = await dialog.showOpenDialog(mainWindow!, {
+      properties: ['openDirectory'],
+      title: 'Select WAD Directory'
+    });
+    
+    if (result.canceled || result.filePaths.length === 0) {
+      return null;
+    }
+    
+    return result.filePaths[0];
+  } catch (err: any) {
+    console.error('[IPC] Failed to pick directory:', err.message);
+    throw new Error(err.message || 'Failed to pick directory');
+  }
+});
+
+ipcMain.handle('file:get-platform-asset', async () => {
+  try {
+    return fileManager.getPlatformAssetName();
+  } catch (err: any) {
+    console.error('[IPC] Failed to get platform asset:', err.message);
+    throw new Error(err.message || 'Failed to get platform asset');
+  }
+});
+
+ipcMain.handle('file:has-configured', async () => {
+  try {
+    return fileManager.hasConfiguredInstallation();
+  } catch (err: any) {
+    console.error('[IPC] Failed to check configuration:', err.message);
+    throw new Error(err.message || 'Failed to check configuration');
+  }
+});
+
+ipcMain.handle('file:save-first-run', async (_event, source: 'odx' | 'system' | 'custom', customPath?: string) => {
+  try {
+    fileManager.saveFirstRunChoice(source, customPath);
+  } catch (err: any) {
+    console.error(`[IPC] Failed to save first run choice (${source}):`, err.message);
+    throw new Error(err.message || 'Failed to save first run choice');
+  }
+});
+
+ipcMain.handle('file:reset-first-run', async () => {
+  try {
+    fileManager.resetFirstRunConfig();
+  } catch (err: any) {
+    console.error('[IPC] Failed to reset first run config:', err.message);
+    throw new Error(err.message || 'Failed to reset first run config');
+  }
+});
+
+ipcMain.handle('file:launch-odamex', async (_event, args: string[]) => {
+  try {
+    await fileManager.launchOdamex(args);
+  } catch (err: any) {
+    console.error('[IPC] Failed to launch Odamex:', err.message);
+    throw new Error(err.message || 'Failed to launch Odamex');
+  }
+});
+
+// IWAD Manager IPC handlers
+ipcMain.handle('iwad:detect', async () => {
+  try {
+    return await iwadManager.detectIWADs();
+  } catch (err: any) {
+    console.error('[IPC] Failed to detect IWADs:', err.message);
+    throw new Error(err.message || 'Failed to detect IWADs');
+  }
+});
+
+ipcMain.handle('iwad:verify', async (_event, filePath: string) => {
+  try {
+    return await iwadManager.verifyIWAD(filePath);
+  } catch (err: any) {
+    console.error(`[IPC] Failed to verify IWAD ${filePath}:`, err.message);
+    throw new Error(err.message || 'Failed to verify IWAD');
+  }
+});
+
+ipcMain.handle('iwad:get-directories', async () => {
+  try {
+    return iwadManager.getWADDirectories();
+  } catch (err: any) {
+    console.error('[IPC] Failed to get WAD directories:', err.message);
+    throw new Error(err.message || 'Failed to get WAD directories');
+  }
+});
+
+ipcMain.handle('iwad:add-directory', async (_event, directory: string) => {
+  try {
+    return iwadManager.addWADDirectory(directory);
+  } catch (err: any) {
+    console.error(`[IPC] Failed to add WAD directory ${directory}:`, err.message);
+    throw new Error(err.message || 'Failed to add WAD directory');
+  }
+});
+
+ipcMain.handle('iwad:remove-directory', async (_event, directory: string) => {
+  try {
+    iwadManager.removeWADDirectory(directory);
+  } catch (err: any) {
+    console.error(`[IPC] Failed to remove WAD directory ${directory}:`, err.message);
+    throw new Error(err.message || 'Failed to remove WAD directory');
+  }
+});
+
+ipcMain.handle('iwad:set-steam-scan', async (_event, enabled: boolean) => {
+  try {
+    iwadManager.setSteamScan(enabled);
+  } catch (err: any) {
+    console.error(`[IPC] Failed to set Steam scan to ${enabled}:`, err.message);
+    throw new Error(err.message || 'Failed to set Steam scan');
+  }
+});
+
+ipcMain.handle('iwad:has-directories', async () => {
+  try {
+    return iwadManager.hasWADDirectories();
+  } catch (err: any) {
+    console.error('[IPC] Failed to check WAD directories:', err.message);
+    throw new Error(err.message || 'Failed to check WAD directories');
+  }
+});
+
+ipcMain.handle('iwad:rescan', async (_event, forceRescan: boolean = false) => {
+  try {
+    return await iwadManager.detectIWADs(forceRescan);
+  } catch (err: any) {
+    console.error('[IPC] Failed to rescan IWADs:', err.message);
+    throw new Error(err.message || 'Failed to rescan IWADs');
+  }
+});
+
+ipcMain.handle('iwad:get-metadata', async () => {
+  try {
+    return iwadManager.getGameMetadata();
+  } catch (err: any) {
+    console.error('[IPC] Failed to get game metadata:', err.message);
+    throw new Error(err.message || 'Failed to get game metadata');
+  }
+});
+
+ipcMain.handle('iwad:get-cache-stats', async () => {
+  try {
+    return iwadManager.getCacheStats();
+  } catch (err: any) {
+    console.error('[IPC] Failed to get cache stats:', err.message);
+    throw new Error(err.message || 'Failed to get cache stats');
+  }
+});
+
+ipcMain.handle('iwad:clear-cache', async () => {
+  try {
+    iwadManager.clearCache();
+  } catch (err: any) {
+    console.error('[IPC] Failed to clear cache:', err.message);
+    throw new Error(err.message || 'Failed to clear cache');
+  }
+});
+
+// Ensure single instance
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) {
+        mainWindow.restore();
+      }
+      mainWindow.show();
+      mainWindow.focus();
+    }
+  });
+}

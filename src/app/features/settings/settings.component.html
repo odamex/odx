@@ -1,0 +1,511 @@
+
+    <div class="page-container">
+      <h1>Settings</h1>
+      
+      <!-- Loading spinner - viewport-centered -->
+      @if (initializing()) {
+        <app-loading-spinner [fixed]="true" message="Loading settings..." />
+      }
+      
+      <div class="settings-layout" [class.initializing]="initializing()">
+        <!-- Vertical Nav Pills -->
+        <ul ngbNav #nav="ngbNav" [(activeId)]="activeTab" class="nav-pills flex-column settings-nav" [class.disabled]="initializing()">
+          <li [ngbNavItem]="1">
+            <button ngbNavLink [disabled]="initializing()">
+              <i class="bi bi-box-seam"></i>
+              <span>Installation</span>
+            </button>
+            <ng-template ngbNavContent>
+              <div class="content-section">
+                <h2>Odamex Installation</h2>
+        @if (storeLoading()) {
+          <div class="spinner-border text-warning" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        } @else if (error() || storeError()) {
+          <div class="alert alert-danger">{{ error() || storeError() }}</div>
+        } @else {
+          @if (installationInfo() && installationInfo()!.installed) {
+            <div class="info-card success">
+              <div class="info-row">
+                <span class="label">Status:</span>
+                <span class="value text-success">✓ Installed</span>
+              </div>
+              <div class="info-row">
+                <span class="label">Source:</span>
+                <span class="value">
+                  @if (installationInfo()!.source === 'odx') {
+                    ODX Directory (Managed)
+                  } @else if (installationInfo()!.source === 'system') {
+                    System Installation
+                  } @else if (installationInfo()!.source === 'custom') {
+                    Custom Path
+                  }
+                </span>
+              </div>
+              <div class="info-row">
+                <span class="label">Version:</span>
+                <span class="value">
+                  {{ installationInfo()!.version || 'Unknown' }}
+                  @if (installationInfo()!.needsUpdate) {
+                    <span class="badge bg-warning ms-2">Update Available</span>
+                  }
+                  @if (!installationInfo()!.needsUpdate && installationInfo()!.version) {
+                    <span class="badge bg-success ms-2">Up to Date</span>
+                  }
+                </span>
+              </div>
+              @if (installationInfo()!.needsUpdate && installationInfo()!.latestVersion) {
+                <div class="info-row">
+                  <span class="label">Latest Version:</span>
+                  <span class="value text-warning">{{ installationInfo()!.latestVersion }}</span>
+                </div>
+              }
+              <div class="info-row">
+                <span class="label">Install Path:</span>
+                <span class="value">{{ installationInfo()!.path }}</span>
+              </div>
+              <div class="info-row">
+                <span class="label">Client Path:</span>
+                <span class="value">{{ installationInfo()!.clientPath }}</span>
+              </div>
+              <div class="info-row">
+                <span class="label">Server Path:</span>
+                <span class="value">{{ installationInfo()!.serverPath }}</span>
+              </div>
+            </div>
+
+            <!-- System install detected -->
+            @if (installationInfo()!.source === 'system' && installationInfo()!.systemInstallPath) {
+              <div class="alert alert-info mt-3">
+                <strong>System Installation Detected</strong>
+                <p class="mb-0">
+                  Using existing Odamex installation at {{ installationInfo()!.systemInstallPath }}.
+                  You can download a separate copy to the ODX directory if you prefer.
+                </p>
+              </div>
+            }
+          } @else {
+            <div class="info-card warning">
+              <p class="text-warning">⚠ Odamex is not installed</p>
+              <p>Click "Download Latest" below to install Odamex to the ODX directory</p>
+            </div>
+          }
+
+          <!-- Custom Path Option -->
+          <div class="mt-3">
+            <div class="form-check">
+              <input 
+                class="form-check-input" 
+                type="checkbox" 
+                id="useCustomPath"
+                [checked]="useCustomPath()"
+                (change)="toggleCustomPath()">
+              <label class="form-check-label" for="useCustomPath">
+                Use custom Odamex installation path (for power users)
+              </label>
+            </div>
+            @if (useCustomPath()) {
+              <div class="input-group mt-2">
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  placeholder="C:\Path\To\Odamex"
+                  [value]="customPath()"
+                  (input)="updateCustomPath($any($event.target).value)">
+                <button class="btn btn-outline-secondary" type="button" (click)="loadData()">
+                  Refresh
+                </button>
+              </div>
+              <small class="text-muted">
+                Enter the directory containing odamex.exe (Windows) or odamex binary (Mac/Linux)
+              </small>
+            }
+          </div>
+
+          @if (latestRelease()) {
+            <div class="mt-3">
+              <h3>Latest Release: {{ latestRelease()!.tag_name }}</h3>
+              <p>{{ latestRelease()!.name }}</p>
+              @if (installationInfo()?.installed && !installationInfo()?.needsUpdate) {
+                <p class="mb-0">
+                  <i class="bi bi-check-circle-fill text-success"></i>
+                  <span class="ms-2">You're up to date!</span>
+                </p>
+              } @else {
+                <button 
+                  class="btn btn-success"
+                  [disabled]="downloading()"
+                  (click)="downloadLatest()">
+                  @if (downloading()) {
+                    <i class="bi bi-arrow-clockwise"></i>
+                  <span class="ms-2">Downloading...</span>
+                  } @else if (installationInfo()?.needsUpdate) {
+                    <i class="bi bi-{{ getPlatformIcon() }}"></i>
+                    <span>Update to {{ latestRelease()!.tag_name }}</span>
+                  } @else {
+                    <i class="bi bi-{{ getPlatformIcon() }}"></i>
+                    <span>{{ getPlatformDownloadText() }}</span>
+                  }
+                </button>
+              }
+            </div>
+          }
+
+          @if (downloadProgress(); as progress) {
+            <div class="mt-3">
+              <div class="progress">
+                <div 
+                  class="progress-bar progress-bar-striped progress-bar-animated"
+                  [style.width.%]="progress.percent">
+                  {{ progress.percent.toFixed(1) }}%
+                </div>
+              </div>
+              <small class="text-muted">
+                {{ formatBytes(progress.transferred) }} / {{ formatBytes(progress.total) }}
+                ({{ formatBytes(progress.bytesPerSecond) }}/s)
+              </small>
+            </div>
+          }
+
+                <!-- Directories Info -->
+                <div class="mt-4">
+                  <h3>Directories</h3>
+                @if (directories()) {
+                  <div class="info-card">
+                    <div class="info-row">
+                      <span class="label">ODX Directory:</span>
+                      <span class="value">{{ directories()!.odx }}</span>
+                      <button class="btn btn-sm btn-secondary" (click)="openDir(directories()!.odx)">
+                        Open
+                      </button>
+                    </div>
+                    <div class="info-row">
+                      <span class="label">Binaries:</span>
+                      <span class="value">{{ directories()!.bin }}</span>
+                      <button class="btn btn-sm btn-secondary" (click)="openDir(directories()!.bin)">
+                        Open
+                      </button>
+                    </div>
+                    <div class="info-row">
+                      <span class="label">WADs:</span>
+                      <span class="value">{{ directories()!.wads }}</span>
+                      <button class="btn btn-sm btn-secondary" (click)="openDir(directories()!.wads)">
+                        Open
+                      </button>
+                    </div>
+                    <div class="info-row">
+                      <span class="label">Config:</span>
+                      <span class="value">{{ directories()!.config }}</span>
+                      <button class="btn btn-sm btn-secondary" (click)="openDir(directories()!.config)">
+                        Open
+                      </button>
+                    </div>
+                  </div>
+                }
+                </div>
+        }
+              </div>
+            </ng-template>
+          </li>
+
+          <li [ngbNavItem]="2">
+            <button ngbNavLink>
+              <i class="bi bi-controller"></i>
+              <span>Games</span>
+            </button>
+            <ng-template ngbNavContent>
+              <div class="content-section">
+                <h2>Games</h2>
+                <p class="text-muted">Manage your DOOM game library</p>
+                
+                <!-- WAD Directories Section -->
+                <div class="mb-4">
+                  <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4>WAD Directories</h4>
+                    <button class="btn btn-success btn-sm" (click)="addDirectory()">
+                      <i class="bi bi-folder-plus"></i> Add Directory
+                    </button>
+                  </div>
+                  
+                  <div class="list-group">
+                    @for (dir of wadDirectories().directories; track dir) {
+                      <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-folder me-2"></i>{{ dir }}</span>
+                        <button class="btn btn-sm btn-danger" 
+                                (click)="removeWADDirectory(dir)"
+                                title="Remove directory">
+                          <i class="bi bi-trash"></i>
+                        </button>
+                      </div>
+                    }
+                  </div>
+                  
+                  <div class="form-check mt-3">
+                    <input class="form-check-input" 
+                           type="checkbox" 
+                           id="scanSteam"
+                           [checked]="wadDirectories().scanSteam"
+                           (change)="toggleSteamScan($event)">
+                    <label class="form-check-label" for="scanSteam">
+                      Scan Steam installation directories
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Detected IWADs Section -->
+                <div class="mb-4">
+                  <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4>Detected IWADs</h4>
+                    <button class="btn btn-primary btn-sm" 
+                            (click)="rescanIWADs()"
+                            [disabled]="iwadService.loading()">
+                      @if (iwadService.loading()) {
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                        Scanning...
+                      } @else {
+                        <i class="bi bi-arrow-clockwise"></i> Rescan
+                      }
+                    </button>
+                  </div>
+                  
+                  <div [style.opacity]="iwadService.loading() ? 0.5 : 1" 
+                       [style.pointer-events]="iwadService.loading() ? 'none' : 'auto'"
+                       [style.transition]="'opacity 0.2s'">
+                    <!-- Debug info -->
+                    <div class="alert alert-secondary mb-3">
+                      <small>
+                        <strong>Debug:</strong> {{ detectedIWADs().length }} total IWADs detected, 
+                        {{ groupedIWADs().length }} unique games
+                      </small>
+                    </div>
+                    
+                    @if (groupedIWADs().length === 0) {
+                      <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        <span class="ms-2">No IWADs detected. Add WAD directories above to scan for game files.</span>
+                      </div>
+                    } @else {
+                      <div class="games-grid">
+                        @for (group of groupedIWADs(); track group.metadata?.type) {
+                          <div class="game-card">
+                            <div class="game-icon">
+                              <img [src]="'assets/games/' + group.metadata?.imageFilename" 
+                                   [alt]="group.metadata?.displayName"
+                                   onerror="this.style.display='none'">
+                            </div>
+                            <div class="game-info">
+                              <h5>{{ group.metadata?.displayName }}</h5>
+                              <div class="game-meta">
+                                <small class="text-muted">{{ group.metadata?.description }}</small>
+                              </div>
+                              <div class="game-path">
+                                @if (group.iwads.length === 1) {
+                                  <small><strong>File:</strong> {{ group.iwads[0].entry.name }}</small><br>
+                                  <small class="text-muted">{{ group.iwads[0].path }}</small>
+                                } @else {
+                                  <small><strong>{{ group.iwads.length }} versions found</strong></small><br>
+                                  @for (iwad of group.iwads; track iwad.path) {
+                                    <small class="text-muted d-block">{{ iwad.entry.name }} - {{ iwad.path }}</small>
+                                  }
+                                }
+                              </div>
+                            </div>
+                          </div>
+                        }
+                      </div>
+                    }
+                  </div>
+                </div>
+              </div>
+            </ng-template>
+          </li>
+
+          <li [ngbNavItem]="3">
+            <button ngbNavLink>
+              <i class="bi bi-gear"></i>
+              <span>Application</span>
+            </button>
+            <ng-template ngbNavContent>
+              <div class="content-section">
+                <h2>Application Settings</h2>
+        <div class="form-check form-switch">
+          <input 
+            class="form-check-input" 
+            type="checkbox" 
+            id="autoUpdateCheck"
+            [checked]="updatesService.isCheckEnabled()"
+            (change)="toggleAutoUpdateCheck()">
+          <label class="form-check-label" for="autoUpdateCheck">
+            Check for updates on startup
+          </label>
+        </div>
+        <small class="text-muted d-block mt-2">
+          When enabled, ODX will check for Odamex updates each time the launcher starts
+        </small>
+        
+        <div class="form-check form-switch mt-3">
+          <input 
+            class="form-check-input" 
+            type="checkbox" 
+            id="filterByVersion"
+            [checked]="filterByVersion()"
+            (change)="toggleFilterByVersion()">
+          <label class="form-check-label" for="filterByVersion">
+            Filter servers by current major version
+          </label>
+        </div>
+        <small class="text-muted d-block mt-2">
+          When enabled, only servers matching your Odamex major version will be shown (recommended)
+        </small>
+        @if (!filterByVersion()) {
+          <div class="alert alert-warning mt-2 mb-0">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <strong>Warning:</strong> Connecting to servers with different major versions may cause compatibility issues or connection failures.
+          </div>
+        }
+        
+        <div class="form-check form-switch mt-3">
+          <input 
+            class="form-check-input" 
+            type="checkbox" 
+            id="autoRefresh"
+            [checked]="autoRefreshEnabled()"
+            (change)="toggleAutoRefresh()">
+          <label class="form-check-label" for="autoRefresh">
+            Auto-refresh server list
+          </label>
+        </div>
+        <div class="mt-2" [class.opacity-50]="!autoRefreshEnabled()">
+          <div class="d-flex align-items-center gap-2">
+            <label for="autoRefreshMinutes" class="mb-0 small text-muted">Refresh every</label>
+            <input 
+              type="number" 
+              class="form-control form-control-sm" 
+              id="autoRefreshMinutes"
+              style="width: 80px;"
+              min="1"
+              max="60"
+              [value]="autoRefreshMinutes()"
+              [disabled]="!autoRefreshEnabled()"
+              (input)="updateAutoRefreshMinutes(+$any($event.target).value)">
+            <label for="autoRefreshMinutes" class="mb-0 small text-muted">minutes</label>
+          </div>
+        </div>
+        <small class="text-muted d-block mt-2">
+          When enabled, the server list will automatically refresh at the specified interval
+        </small>
+        
+        <h3 class="mt-4">Notifications</h3>
+        
+        <div class="form-check form-switch">
+          <input 
+            class="form-check-input" 
+            type="checkbox" 
+            id="notificationsEnabled"
+            [checked]="notificationsEnabled()"
+            (change)="toggleNotifications()">
+          <label class="form-check-label" for="notificationsEnabled">
+            <strong>Enable system notifications</strong>
+          </label>
+        </div>
+        <small class="text-muted d-block mt-2">
+          Master switch for all system notifications
+        </small>
+        
+        <div class="ms-4 mt-3">
+          <div class="form-check form-switch">
+            <input 
+              class="form-check-input" 
+              type="checkbox" 
+              id="notificationsServerActivity"
+              [checked]="notificationsServerActivity()"
+              [disabled]="!notificationsEnabled()"
+              (change)="toggleServerActivityNotifications()">
+            <label class="form-check-label" for="notificationsServerActivity">
+              Show notifications for server activity
+            </label>
+          </div>
+          <small class="text-muted d-block mt-2">
+            Notifies when new servers appear or players join/leave
+          </small>
+          
+          <div class="form-check form-switch mt-3">
+            <input 
+              class="form-check-input" 
+              type="checkbox" 
+              id="notificationsUpdates"
+              [checked]="notificationsUpdates()"
+              [disabled]="!notificationsEnabled()"
+              (change)="toggleUpdateNotifications()">
+            <label class="form-check-label" for="notificationsUpdates">
+              Show notifications for available updates
+            </label>
+          </div>
+          <small class="text-muted d-block mt-2">
+            Notifies when Odamex or ODX updates are available
+          </small>
+        </div>
+        
+        <h3 class="mt-4">Update Checking</h3>
+        
+        <div class="form-check form-switch">
+          <input 
+            class="form-check-input" 
+            type="checkbox" 
+            id="periodicUpdateCheck"
+            [checked]="periodicUpdateEnabled()"
+            (change)="togglePeriodicUpdateCheck()">
+          <label class="form-check-label" for="periodicUpdateCheck">
+            Check for updates periodically
+          </label>
+        </div>
+        <small class="text-muted d-block mt-2">
+          Automatically check for Odamex and ODX updates in the background
+        </small>
+        
+        <div class="d-flex align-items-center gap-2 mt-3">
+          <label for="periodicUpdateInterval" class="mb-0">Check every</label>
+          <input 
+            type="number" 
+            id="periodicUpdateInterval" 
+            class="form-control form-control-sm" 
+            style="width: 80px;"
+            min="15"
+            max="1440"
+            [value]="periodicUpdateInterval()"
+            [disabled]="!periodicUpdateEnabled()"
+            (input)="updatePeriodicUpdateInterval(+$any($event.target).value)">
+          <label for="periodicUpdateInterval" class="mb-0 small text-muted">minutes</label>
+        </div>
+        <small class="text-muted d-block mt-2">
+          Recommended: 60 minutes (1 hour). Minimum: 15 minutes
+        </small>
+
+        <div class="mt-4">
+          <h3>Installation Configuration</h3>
+          <p class="text-muted">Reset your installation preferences to reconfigure the Odamex installation path</p>
+          <button class="btn btn-warning" (click)="resetFirstRunConfig()">
+            <i class="bi bi-arrow-clockwise"></i>
+            <span class="ms-2">Reset Configuration</span>
+          </button>
+          <small class="text-muted d-block mt-2">
+            This will show the first run dialog again on next startup
+          </small>
+        </div>
+              </div>
+            </ng-template>
+          </li>
+        </ul>
+
+        <!-- Content Display Area -->
+        <div class="settings-content" [ngbNavOutlet]="nav"></div>
+      </div>
+    </div>
+    
+    <!-- Game Selection Dialog -->
+    <app-game-selection-dialog
+      [visible]="showGameSelection()"
+      (completed)="onGameSelectionComplete()"
+      (cancelled)="onGameSelectionCancel()" />
+  

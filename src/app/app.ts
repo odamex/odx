@@ -1,0 +1,434 @@
+import { Component, OnInit, inject, signal, viewChild } from '@angular/core';
+import { Router, RouterOutlet } from '@angular/router';
+import { TitleBarComponent } from './core/title-bar/title-bar.component';
+import { NavigationComponent } from './core/navigation/navigation';
+import { SplashComponent } from './core/splash/splash.component';
+import { UpdateBannerComponent } from './core/update-banner/update-banner.component';
+import { FirstRunDialogComponent, FirstRunChoice } from './core/first-run-dialog/first-run-dialog.component';
+import { GameSelectionDialogComponent } from './core/game-selection-dialog/game-selection-dialog.component';
+import { SplashService } from './core/splash/splash.service';
+import { FileManagerService } from './shared/services/file-manager/file-manager.service';
+import { OdalPapiService } from './shared/services/odalpapi/odalpapi.service';
+import { ServersStore } from './shared/services/odalpapi/servers.store';
+import { UpdatesService } from './shared/services/updates/updates.service';
+import { IWADService, type DetectedIWAD } from './shared/services/iwad/iwad.service';
+import { ServerRefreshService } from './shared/services/server-refresh/server-refresh.service';
+import { NetworkStatusService } from './shared/services/network-status/network-status.service';
+import { PeriodicUpdateService } from './shared/services/periodic-update/periodic-update.service';
+import { AutoUpdateService } from './shared/services/auto-update/auto-update.service';
+import versions from '../_versions';
+
+@Component({
+  selector: 'app-root',
+  imports: [RouterOutlet, TitleBarComponent, NavigationComponent, SplashComponent, UpdateBannerComponent, FirstRunDialogComponent, GameSelectionDialogComponent],
+  templateUrl: './app.html',
+  styleUrl: './app.scss'
+})
+export class App implements OnInit {
+  private splashService = inject(SplashService);
+  private fileManager = inject(FileManagerService);
+  private odalPapi = inject(OdalPapiService);
+  private serversStore = inject(ServersStore);
+  private updatesService = inject(UpdatesService);
+  private iwadService = inject(IWADService);
+  private refreshService = inject(ServerRefreshService); // Initialize auto-refresh service
+  private networkStatus = inject(NetworkStatusService);
+  private periodicUpdate = inject(PeriodicUpdateService); // Initialize periodic update checker
+  private autoUpdateService = inject(AutoUpdateService); // Initialize ODX auto-updater
+  private router = inject(Router);
+
+  readonly splashVisible = this.splashService.visible;
+  readonly splashMessage = this.splashService.message;
+  readonly splashSubMessage = this.splashService.subMessage;
+  readonly splashProgress = this.splashService.progress;
+  readonly splashFadeOut = this.splashService.fadeOut;
+  readonly version = versions.version;
+
+  showFirstRunDialog = signal(false);
+  showGameSelectionDialog = signal(false);
+  firstRunDialog = viewChild<FirstRunDialogComponent>('firstRunDialog');
+
+  async ngOnInit() {
+    // Always start at home
+    this.router.navigate(['/']);
+    await this.initializeApp();
+  }
+
+  private async initializeApp() {
+    try {
+      // Step 1: Initialize file system
+      this.splashService.setMessages('Initializing...', 'Setting up file system');
+      await this.delay(500);
+
+      // Step 2: Check for existing installation
+      this.splashService.setMessages('Checking installation...', 'Looking for Odamex');
+      const installInfo = await this.fileManager.getInstallationInfo();
+      await this.delay(300);
+
+      // Check if this is first run (no installation configured)
+      const isFirstRun = await this.checkIfFirstRun();
+      console.log('First run check:', isFirstRun);
+      
+      if (isFirstRun) {
+        console.log('Showing first run dialog');
+        this.splashService.hide();
+        this.showFirstRunDialog.set(true);
+        
+        // Set detected path in dialog if found
+        setTimeout(() => {
+          const dialog = this.firstRunDialog();
+          console.log('First run dialog component:', dialog);
+          if (dialog && installInfo.systemInstallPath) {
+            console.log('Setting detected path:', installInfo.systemInstallPath);
+            dialog.setDetectedPath(installInfo.systemInstallPath);
+          }
+        }, 100);
+        
+        // Wait for user choice before continuing
+        return;
+      }
+
+      // Step 3: Check for updates if installed
+      if (installInfo.installed && installInfo.version) {
+        // Only check for updates if online
+        if (this.networkStatus.isOnline()) {
+          this.splashService.setMessages('Checking for updates...', `Current version: ${installInfo.version}`);
+          await this.updatesService.checkForUpdates();
+          
+          const updateInfo = this.updatesService.updateDetails();
+          if (updateInfo.available && updateInfo.latestVersion) {
+            this.splashService.setSubMessage(`Update available: ${updateInfo.latestVersion}`);
+          } else {
+            this.splashService.setSubMessage('You have the latest version');
+          }
+          await this.delay(800);
+        } else {
+          this.splashService.setMessages('Offline mode', `Version: ${installInfo.version}`);
+          this.splashService.setSubMessage('Update check skipped - offline mode');
+          await this.delay(500);
+        }
+      }
+
+      // Step 3.5: Check for configured WAD directories
+      const hasDirectories = await this.iwadService.hasWADDirectories();
+      if (!hasDirectories) {
+        // Show game selection dialog
+        this.splashService.hide();
+        this.showGameSelectionDialog.set(true);
+        return; // Wait for game selection before continuing
+      }
+
+      // Step 3.6: Detect IWADs
+      this.splashService.setMessages('Scanning for IWADs...', 'Detecting installed games');
+      await this.iwadService.getWADDirectories();
+      const detected = await this.iwadService.detectIWADs();
+      this.splashService.setSubMessage(`${detected.length} IWAD${detected.length !== 1 ? 's' : ''} detected`);
+      await this.delay(500);
+
+      // Step 4: Query master server (only if online)
+      if (this.networkStatus.isOnline()) {
+        this.splashService.setMessages('Connecting to master server...', 'Checking for available servers');
+        this.serversStore.setLoading(true);
+        try {
+          const masterList = await this.odalPapi.queryMasterServer('master.odamex.net');
+          const serverCount = masterList.length;
+          this.splashService.setSubMessage(`Found ${serverCount} server${serverCount !== 1 ? 's' : ''} online`);
+          
+          // Query game servers in parallel (limit concurrency for performance)
+          const serverPromises = masterList.map(async (serverAddr) => {
+            try {
+              const { server, pong } = await this.odalPapi.queryGameServer(serverAddr);
+              server.ping = pong;
+              return server;
+            } catch (err) {
+              return null;
+            }
+          });
+
+          const results = await Promise.all(serverPromises);
+          const validServers = results.filter((s): s is any => s !== null && s.responded);
+          
+          this.serversStore.setServers(validServers);
+          this.splashService.setSubMessage(`${validServers.length} server${validServers.length !== 1 ? 's' : ''} responding`);
+          await this.delay(800);
+        } catch (err) {
+          console.warn('Failed to query master server:', err);
+          this.serversStore.setError('Unable to reach master server');
+          this.splashService.setSubMessage('Unable to reach master server');
+          await this.delay(500);
+        }
+      } else {
+        this.splashService.setMessages('Offline mode', 'Server browser disabled');
+        this.splashService.setSubMessage('Single player and local servers available');
+        this.serversStore.setServers([]);
+        await this.delay(800);
+      }
+
+      // Step 5: Initialize services
+      this.splashService.setMessages('Starting services...', 'Almost ready');
+      await this.delay(400);
+
+      // Step 6: Ready!
+      this.splashService.setMessages('Ready!', 'Welcome to ODX');
+      await this.delay(600);
+
+      // Hide splash screen
+      this.splashService.hide();
+    } catch (err) {
+      console.error('Initialization error:', err);
+      this.splashService.setMessages('Initialization error', 'Please check the console');
+      await this.delay(2000);
+      this.splashService.hide();
+    }
+  }
+
+  private delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  private async checkIfFirstRun(): Promise<boolean> {
+    // Check if user has completed first run setup
+    const hasConfigured = await this.fileManager.hasConfiguredInstallation();
+    return !hasConfigured;
+  }
+
+  async handleFirstRunChoice(choice: FirstRunChoice) {
+    this.showFirstRunDialog.set(false);
+    this.splashService.show();
+
+    switch (choice.action) {
+      case 'detected':
+        this.splashService.setMessages('Configuring...', 'Using detected installation');
+        await this.fileManager.saveFirstRunChoice('system');
+        break;
+
+      case 'download':
+        this.splashService.setMessages('Configuring...', 'Preparing to download');
+        await this.fileManager.saveFirstRunChoice('odx');
+        
+        // Download and install during startup
+        try {
+          this.splashService.setMessages('Downloading Odamex...', 'Fetching latest release');
+          const release = await this.fileManager.getLatestRelease();
+          
+          if (!release) {
+            throw new Error('Could not fetch latest release');
+          }
+
+          // Find the appropriate installer/package
+          const isWindows = navigator.platform.toLowerCase().includes('win');
+          let assetName: string;
+          let assetObj: any;
+
+          if (isWindows) {
+            assetName = await this.fileManager.findInstallerAsset(release) || '';
+            if (!assetName) {
+              throw new Error('Could not find Windows installer in release assets');
+            }
+          } else {
+            assetName = await this.fileManager.getPlatformAssetName();
+          }
+
+          assetObj = release.assets.find((a: any) => a.name === assetName);
+          
+          if (!assetObj) {
+            throw new Error(`Could not find asset ${assetName} in release`);
+          }
+
+          this.splashService.setMessages('Downloading Odamex...', `Downloading ${assetName}`);
+          
+          // Subscribe to download progress
+          const progressSubscription = this.fileManager.downloadProgress();
+          const checkProgress = setInterval(() => {
+            const progress = this.fileManager.downloadProgress();
+            if (progress) {
+              this.splashService.setProgress(progress.percent);
+              this.splashService.setSubMessage(`${progress.percent.toFixed(1)}% - ${this.formatBytes(progress.bytesPerSecond)}/s`);
+            }
+          }, 100);
+
+          const downloadPath = await this.fileManager.downloadFile(
+            assetObj.browser_download_url,
+            assetName
+          );
+
+          clearInterval(checkProgress);
+          this.splashService.setProgress(null);
+          this.fileManager.clearDownloadProgress();
+
+          // Install
+          if (isWindows && assetName.endsWith('.exe')) {
+            this.splashService.setMessages('Installing Odamex...', 'Running installer (this may take a moment)');
+            await this.fileManager.runInstaller(downloadPath);
+          } else if (assetName.endsWith('.zip')) {
+            this.splashService.setMessages('Installing Odamex...', 'Extracting files');
+            await this.fileManager.extractZip(downloadPath);
+          }
+
+          // Save version info
+          await this.fileManager.saveVersion(release.tag_name);
+
+          this.splashService.setMessages('Installation complete!', 'Odamex has been installed successfully');
+          this.splashService.setProgress(null);
+          this.fileManager.clearDownloadProgress();
+          await this.delay(1000);
+        } catch (err: any) {
+          console.error('Download/Install failed:', err);
+          this.splashService.setMessages('Installation failed', err.message || 'Please try again from Settings');
+          this.splashService.setProgress(null);
+          this.fileManager.clearDownloadProgress();
+          await this.delay(3000);
+        }
+        break;
+
+      case 'custom':
+        if (choice.customPath) {
+          this.splashService.setMessages('Configuring...', 'Using custom path');
+          await this.fileManager.saveFirstRunChoice('custom', choice.customPath);
+        }
+        break;
+    }
+
+    await this.delay(500);
+    
+    // Continue with normal initialization
+    await this.continueInitialization();
+  }
+
+  private async continueInitialization() {
+    try {
+      // Re-check installation after first run choice
+      const installInfo = await this.fileManager.getInstallationInfo();
+
+      // Continue with update check if installed
+      if (installInfo.installed && installInfo.version) {
+        this.splashService.setMessages('Checking for updates...', `Current version: ${installInfo.version}`);
+        await this.updatesService.checkForUpdates();
+        
+        const updateInfo = this.updatesService.updateDetails();
+        if (updateInfo.available && updateInfo.latestVersion) {
+          this.splashService.setSubMessage(`Update available: ${updateInfo.latestVersion}`);
+        } else {
+          this.splashService.setSubMessage('You have the latest version');
+        }
+        await this.delay(800);
+      }
+
+      // Check for configured WAD directories
+      const hasDirectories = await this.iwadService.hasWADDirectories();
+      if (!hasDirectories) {
+        // Show game selection dialog
+        this.splashService.hide();
+        this.showGameSelectionDialog.set(true);
+        return; // Wait for game selection before continuing
+      }
+
+      // Query master server
+      await this.queryServers();
+
+      // Initialize services
+      this.splashService.setMessages('Starting services...', 'Almost ready');
+      await this.delay(400);
+
+      // Ready!
+      this.splashService.setMessages('Ready!', 'Welcome to ODX');
+      await this.delay(600);
+
+      // Hide splash screen and navigate to home
+      this.splashService.hide();
+      this.router.navigate(['/']);
+    } catch (err) {
+      console.error('Initialization error:', err);
+      this.splashService.setMessages('Initialization error', 'Please check the console');
+      await this.delay(2000);
+      this.splashService.hide();
+    }
+  }
+
+  async handleGameSelection() {
+    this.showGameSelectionDialog.set(false);
+    this.splashService.show();
+
+    try {
+      this.splashService.setMessages('Scanning for IWADs...', 'Detecting installed games');
+
+      // Scan all configured directories for IWADs
+      const detected = await this.iwadService.detectIWADs();
+
+      this.splashService.setSubMessage(`${detected.length} IWAD${detected.length !== 1 ? 's' : ''} detected`);
+      await this.delay(800);
+
+      // Continue with initialization
+      await this.finishInitialization();
+    } catch (err: any) {
+      console.error('Failed to scan for IWADs:', err);
+      this.splashService.setMessages('Scan error', err.message || 'Please try again');
+      await this.delay(2000);
+      this.splashService.hide();
+    }
+  }
+
+  handleGameSelectionCancelled() {
+    // User cancelled game selection - just continue without games
+    this.showGameSelectionDialog.set(false);
+    this.splashService.show();
+    this.finishInitialization();
+  }
+
+  private async finishInitialization() {
+    // Query master server
+    await this.queryServers();
+
+    // Initialize services
+    this.splashService.setMessages('Starting services...', 'Almost ready');
+    await this.delay(400);
+
+    // Ready!
+    this.splashService.setMessages('Ready!', 'Welcome to ODX');
+    await this.delay(600);
+
+    // Hide splash screen and navigate to home
+    this.splashService.hide();
+    this.router.navigate(['/']);
+  }
+
+  private async queryServers() {
+    this.splashService.setMessages('Connecting to master server...', 'Checking for available servers');
+    this.serversStore.setLoading(true);
+    try {
+      const masterList = await this.odalPapi.queryMasterServer('master.odamex.net');
+      const serverCount = masterList.length;
+      this.splashService.setSubMessage(`Found ${serverCount} server${serverCount !== 1 ? 's' : ''} online`);
+      
+      const serverPromises = masterList.map(async (serverAddr) => {
+        try {
+          const { server, pong } = await this.odalPapi.queryGameServer(serverAddr);
+          server.ping = pong;
+          return server;
+        } catch (err) {
+          return null;
+        }
+      });
+
+      const results = await Promise.all(serverPromises);
+      const validServers = results.filter((s): s is any => s !== null && s.responded);
+      
+      this.serversStore.setServers(validServers);
+      this.splashService.setSubMessage(`${validServers.length} server${validServers.length !== 1 ? 's' : ''} responding`);
+      await this.delay(800);
+    } catch (err) {
+      console.warn('Failed to query master server:', err);
+      this.serversStore.setError('Unable to reach master server');
+      this.splashService.setSubMessage('Unable to reach master server');
+      await this.delay(500);
+    }
+  }
+
+  private formatBytes(bytes: number): string {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`;
+  }
+}

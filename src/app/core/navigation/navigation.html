@@ -1,0 +1,37 @@
+<nav class="nav-sidebar">
+  <div class="nav-top">
+    <!-- User Menu at top -->
+    <a 
+      class="nav-item user-menu"
+      title="User Profile"
+      routerLink="/profile"
+      routerLinkActive="active">
+      <ng-icon name="bootstrapPersonCircle" class="nav-icon" />
+    </a>
+
+    <!-- Main navigation items -->
+    @for (item of topNavItems; track item.path) {
+      <a 
+        class="nav-item"
+        [title]="item.label"
+        [routerLink]="item.path"
+        routerLinkActive="active">
+        <ng-icon [name]="item.icon" class="nav-icon" />
+        <span class="nav-label">{{ item.label }}</span>
+      </a>
+    }
+  </div>
+
+  <div class="nav-bottom">
+    @for (item of bottomNavItems; track item.path) {
+      <a 
+        class="nav-item"
+        [title]="item.label"
+        [routerLink]="item.path"
+        routerLinkActive="active">
+        <ng-icon [name]="item.icon" class="nav-icon" />
+        <span class="nav-label">{{ item.label }}</span>
+      </a>
+    }
+  </div>
+</nav>

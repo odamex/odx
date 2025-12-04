@@ -1,0 +1,408 @@
+import { Component, ChangeDetectionStrategy, signal, computed, OnInit, AfterViewInit, inject } from '@angular/core';
+import { FileManagerService, InstallationInfo, DirectoryInfo } from '../../shared/services/file-manager/file-manager.service';
+import { UpdatesService } from '../../shared/services/updates/updates.service';
+import { IWADService, type GameMetadata, type DetectedIWAD } from '../../shared/services/iwad/iwad.service';
+import { ServerRefreshService } from '../../shared/services/server-refresh/server-refresh.service';
+import { NotificationService } from '../../shared/services/notification/notification.service';
+import { PeriodicUpdateService } from '../../shared/services/periodic-update/periodic-update.service';
+import { NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
+import { GameSelectionDialogComponent } from '../../core/game-selection-dialog/game-selection-dialog.component';
+import { LoadingSpinnerComponent } from '../../shared/components/loading-spinner/loading-spinner.component';
+
+@Component({
+  selector: 'app-settings',
+  imports: [NgbNavModule, GameSelectionDialogComponent, LoadingSpinnerComponent],
+  templateUrl: './settings.component.html',
+  styleUrl: './settings.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
+})
+export class SettingsComponent implements OnInit, AfterViewInit {
+  private fileManager = inject(FileManagerService);
+  protected updatesService = inject(UpdatesService);
+  protected iwadService = inject(IWADService);
+  protected refreshService = inject(ServerRefreshService);
+  protected notificationService = inject(NotificationService);
+  protected periodicUpdateService = inject(PeriodicUpdateService);
+
+  // Use store signals
+  readonly installationInfo = this.fileManager.installationInfo;
+  readonly downloadProgress = this.fileManager.downloadProgress;
+  readonly storeLoading = this.fileManager.loading;
+  readonly storeError = this.fileManager.error;
+
+  // Local component state
+  activeTab = 1; // ng-bootstrap nav uses number IDs
+  latestRelease = signal<any>(null);
+  detectedIWADs = this.iwadService.detectedIWADs;
+  wadDirectories = this.iwadService.wadDirectories;
+  
+  // Group IWADs by game type to avoid long lists
+  readonly groupedIWADs = computed(() => {
+    const iwads = this.detectedIWADs();
+    const groups = new Map<string, { metadata: GameMetadata | undefined, iwads: typeof iwads }>();
+    
+    for (const iwad of iwads) {
+      const gameType = iwad.entry.game;
+      if (!groups.has(gameType)) {
+        groups.set(gameType, {
+          metadata: this.getGameMetadata(gameType),
+          iwads: []
+        });
+      }
+      groups.get(gameType)!.iwads.push(iwad);
+    }
+    
+    const result = Array.from(groups.values()).filter(g => g.metadata);
+    return result;
+  });
+  
+  showGameSelection = signal(false);
+  directories = signal<DirectoryInfo | null>(null);
+  wadFiles = signal<string[]>([]);
+  platformAsset = signal<string>('');
+  customPath = signal<string>('');
+  useCustomPath = signal(false);
+  
+  downloading = signal(false);
+  error = signal<string | null>(null);
+  initializing = signal(true); // Tracks initial data loading
+  
+  // Application settings
+  filterByVersion = signal(true);
+  
+  // Notification settings (computed from services)
+  notificationsEnabled = computed(() => this.notificationService.settings().enabled);
+  notificationsServerActivity = computed(() => this.notificationService.settings().serverActivity);
+  notificationsUpdates = computed(() => this.notificationService.settings().updates);
+  
+  // Periodic update settings (computed from service)
+  periodicUpdateEnabled = computed(() => this.periodicUpdateService.settings().enabled);
+  periodicUpdateInterval = computed(() => this.periodicUpdateService.settings().intervalMinutes);
+
+  ngOnInit() {
+    // Load application settings from localStorage (synchronous - no blocking)
+    const savedFilterByVersion = localStorage.getItem('filterByVersion');
+    if (savedFilterByVersion !== null) {
+      this.filterByVersion.set(savedFilterByVersion === 'true');
+    }
+  }
+  
+  ngAfterViewInit() {
+    // Load data asynchronously without blocking UI
+    // UI is now interactive immediately while data loads in background
+    this.loadDataAsync();
+  }
+  
+  private async loadDataAsync() {
+    try {
+      // Load data in parallel to minimize loading time
+      // Most of this data is cached, so subsequent visits are instant
+      await Promise.all([
+        this.loadData(),
+        this.iwadService.getGameMetadata(),
+        this.iwadService.getWADDirectories()
+      ]);
+      
+      // Detect IWADs after directories are loaded
+      await this.iwadService.detectIWADs();
+    } finally {
+      // Mark initialization complete - UI is now fully interactive
+      this.initializing.set(false);
+    }
+  }
+
+  async loadData() {
+    try {
+      this.error.set(null);
+
+      const customPathValue = this.useCustomPath() ? this.customPath() : undefined;
+
+      const [info, release, dirs, wads, asset] = await Promise.all([
+        this.fileManager.getInstallationInfo(customPathValue),
+        this.fileManager.getLatestRelease(),
+        this.fileManager.getDirectories(),
+        this.fileManager.listWadFiles(),
+        this.fileManager.getPlatformAssetName()
+      ]);
+
+      // Check for updates if installed
+      if (info.installed && info.version) {
+        const updateCheck = await this.fileManager.checkForUpdates(info.version);
+        info.needsUpdate = updateCheck.needsUpdate;
+        info.latestVersion = updateCheck.latestVersion;
+        // Update the store with the enhanced info
+        this.fileManager.getInstallationInfo(customPathValue);
+      }
+
+      this.latestRelease.set(release);
+      this.directories.set(dirs);
+      this.wadFiles.set(wads);
+      this.platformAsset.set(asset);
+    } catch (err) {
+      console.error('Failed to load settings:', err);
+      this.error.set('Failed to load installation information');
+    }
+  }
+
+  toggleCustomPath() {
+    this.useCustomPath.set(!this.useCustomPath());
+    this.loadData();
+  }
+
+  updateCustomPath(path: string) {
+    this.customPath.set(path);
+    if (this.useCustomPath()) {
+      this.loadData();
+    }
+  }
+
+  async downloadLatest() {
+    try {
+      this.downloading.set(true);
+      this.error.set(null);
+
+      const release = this.latestRelease();
+      if (!release) return;
+
+      // On Windows, use installer EXE; on other platforms use appropriate package
+      const isWindows = navigator.platform.toLowerCase().includes('win');
+      let assetName: string;
+      let assetObj: any;
+
+      if (isWindows) {
+        // Find the installer EXE
+        assetName = await this.fileManager.findInstallerAsset(release) || '';
+        if (!assetName) {
+          throw new Error('Could not find Windows installer in release assets');
+        }
+      } else {
+        // Use platform-specific asset for Mac/Linux
+        assetName = this.platformAsset();
+      }
+
+      assetObj = release.assets.find((a: any) => a.name === assetName);
+      
+      if (!assetObj) {
+        throw new Error(`Could not find asset ${assetName} in release`);
+      }
+
+      console.log('Downloading:', assetObj.browser_download_url);
+      const downloadPath = await this.fileManager.downloadFile(
+        assetObj.browser_download_url,
+        assetName
+      );
+
+      console.log('Downloaded to:', downloadPath);
+
+      // Handle installation based on platform and file type
+      if (isWindows && assetName.endsWith('.exe')) {
+        console.log('Running Windows installer silently...');
+        await this.fileManager.runInstaller(downloadPath);
+        console.log('Installation complete');
+      } else if (assetName.endsWith('.zip')) {
+        console.log('Extracting ZIP...');
+        await this.fileManager.extractZip(downloadPath);
+        console.log('Extraction complete');
+      } else if (assetName.endsWith('.dmg')) {
+        console.log('DMG downloaded - manual installation required');
+        // TODO: Handle macOS DMG mounting/installation
+      } else if (assetName.endsWith('.AppImage')) {
+        console.log('AppImage downloaded - making executable');
+        // TODO: Make AppImage executable
+      }
+
+      // Save version info
+      await this.fileManager.saveVersion(release.tag_name);
+
+      // Clear cache to force fresh data on next load
+      this.fileManager.clearReleaseCache();
+      
+      // Clear progress and reload installation info (will fetch fresh data)
+      this.fileManager.clearDownloadProgress();
+      await this.loadData();
+    } catch (err) {
+      console.error('Download failed:', err);
+      this.error.set(`Download failed: ${err}`);
+      this.fileManager.clearDownloadProgress();
+    } finally {
+      this.downloading.set(false);
+    }
+  }
+
+  async openDir(path: string) {
+    try {
+      await this.fileManager.openDirectory(path);
+    } catch (err) {
+      console.error('Failed to open directory:', err);
+    }
+  }
+
+  async refreshWads() {
+    try {
+      const wads = await this.fileManager.listWadFiles();
+      this.wadFiles.set(wads);
+    } catch (err) {
+      console.error('Failed to refresh WAD list:', err);
+    }
+  }
+
+  formatBytes(bytes: number): string {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`;
+  }
+
+  getPlatformIcon(): string {
+    const platform = navigator.platform.toLowerCase();
+    if (platform.includes('win')) return 'windows';
+    if (platform.includes('mac')) return 'apple';
+    return 'tux';
+  }
+
+  getPlatformDownloadText(): string {
+    const version = this.latestRelease()?.tag_name || 'Latest';
+    const platform = navigator.platform.toLowerCase();
+    if (platform.includes('win')) return `${version} Windows Installer`;
+    if (platform.includes('mac')) return `${version} MacOS Installer`;
+    return `${version} Linux Package`;
+  }
+
+  toggleAutoUpdateCheck() {
+    const newValue = !this.updatesService.isCheckEnabled();
+    this.updatesService.setCheckEnabled(newValue);
+  }
+  
+  toggleFilterByVersion() {
+    const newValue = !this.filterByVersion();
+    this.filterByVersion.set(newValue);
+    localStorage.setItem('filterByVersion', newValue.toString());
+  }
+  
+  toggleAutoRefresh() {
+    const newValue = !this.refreshService.isEnabled();
+    this.refreshService.setEnabled(newValue);
+    localStorage.setItem('autoRefreshEnabled', newValue.toString());
+  }
+  
+  updateAutoRefreshMinutes(minutes: number) {
+    if (minutes > 0) {
+      this.refreshService.setMinutes(minutes);
+      localStorage.setItem('autoRefreshMinutes', minutes.toString());
+    }
+  }
+  
+  autoRefreshEnabled(): boolean {
+    return this.refreshService.isEnabled();
+  }
+  
+  autoRefreshMinutes(): number {
+    return this.refreshService.getMinutes();
+  }
+
+  toggleNotifications() {
+    const current = this.notificationService.settings();
+    this.notificationService.updateSettings({ enabled: !current.enabled });
+  }
+  
+  toggleServerActivityNotifications() {
+    const current = this.notificationService.settings();
+    this.notificationService.updateSettings({ serverActivity: !current.serverActivity });
+  }
+  
+  toggleUpdateNotifications() {
+    const current = this.notificationService.settings();
+    this.notificationService.updateSettings({ updates: !current.updates });
+  }
+  
+  togglePeriodicUpdateCheck() {
+    const current = this.periodicUpdateService.settings();
+    this.periodicUpdateService.updateSettings({ enabled: !current.enabled });
+  }
+  
+  updatePeriodicUpdateInterval(minutes: number) {
+    if (minutes > 0) {
+      this.periodicUpdateService.updateSettings({ intervalMinutes: minutes });
+    }
+  }
+
+  async resetFirstRunConfig() {
+    if (confirm('This will reset your installation configuration. The app will restart and show the first run dialog. Continue?')) {
+      try {
+        await this.fileManager.resetFirstRunConfig();
+        // Restart the app
+        window.location.reload();
+      } catch (err) {
+        console.error('Failed to reset config:', err);
+        this.error.set('Failed to reset configuration');
+      }
+    }
+  }
+
+  // Game management methods
+  getGameMetadata(gameType: string): GameMetadata | undefined {
+    return this.iwadService.gameMetadata()[gameType];
+  }
+
+  openGameSelection() {
+    this.showGameSelection.set(true);
+  }
+
+  async addDirectory() {
+    try {
+      const directory = await window.electron.fileManager.pickDirectory();
+      if (directory) {
+        await this.iwadService.addWADDirectory(directory);
+        await this.iwadService.detectIWADs(); // Rescan after adding
+      }
+    } catch (err: any) {
+      console.error('Failed to add directory:', err);
+      alert(`Failed to add directory: ${err.message || err}`);
+    }
+  }
+
+  async onGameSelectionComplete() {
+    this.showGameSelection.set(false);
+    // Rescan for IWADs
+    await this.iwadService.detectIWADs();
+    await this.iwadService.getWADDirectories();
+  }
+
+  onGameSelectionCancel() {
+    this.showGameSelection.set(false);
+  }
+
+  async removeWADDirectory(directory: string) {
+    if (confirm(`Remove directory "${directory}" from WAD search paths?`)) {
+      try {
+        await this.iwadService.removeWADDirectory(directory);
+        await this.iwadService.detectIWADs(); // Rescan after removal
+      } catch (err) {
+        console.error('Failed to remove directory:', err);
+        alert('Failed to remove directory. Please try again.');
+      }
+    }
+  }
+
+  async rescanIWADs() {
+    try {
+      await this.iwadService.rescanIWADs();
+    } catch (err) {
+      console.error('Failed to rescan IWADs:', err);
+      alert('Failed to rescan IWADs. Please try again.');
+    }
+  }
+
+  async toggleSteamScan(event: Event) {
+    const enabled = (event.target as HTMLInputElement).checked;
+    try {
+      await this.iwadService.setSteamScan(enabled);
+      await this.iwadService.detectIWADs(); // Rescan after toggling
+    } catch (err) {
+      console.error('Failed to toggle Steam scan:', err);
+      alert('Failed to update Steam scan setting. Please try again.');
+    }
+  }
+}
+

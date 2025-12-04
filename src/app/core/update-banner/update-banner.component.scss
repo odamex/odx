@@ -1,0 +1,143 @@
+.update-banner {
+  position: fixed;
+  top: 32px; /* Below title bar */
+  left: 0;
+  right: 0;
+  background: linear-gradient(135deg, #4a9eff 0%, #3a8eef 100%);
+  color: white;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  animation: slideDown 0.3s ease-out;
+  z-index: 999;
+  transition: top 0.3s ease;
+  
+  &.odx-update {
+    background: linear-gradient(135deg, #5a4fcf 0%, #4a3fbf 100%);
+    z-index: 1000; /* Higher priority */
+  }
+  
+  &.downloading {
+    background: linear-gradient(135deg, #3a8eef 0%, #2a7edf 100%);
+    
+    &.odx-update {
+      background: linear-gradient(135deg, #4a3fbf 0%, #3a2faf 100%);
+    }
+  }
+}
+
+.update-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+
+  i {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+  }
+
+  .update-message {
+    flex: 1;
+    font-size: 0.95rem;
+
+    strong {
+      font-weight: 600;
+    }
+
+    small {
+      opacity: 0.9;
+    }
+  }
+
+  .update-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+
+    .btn-light {
+      background: white;
+      color: #3a8eef;
+      border: none;
+      font-weight: 600;
+      padding: 0.375rem 1rem;
+
+      &:hover {
+        background: #f8f9fa;
+        color: #2a7edf;
+      }
+    }
+    
+    .btn-success {
+      background: #28a745;
+      color: white;
+      border: none;
+      font-weight: 600;
+      padding: 0.375rem 1rem;
+
+      &:hover {
+        background: #218838;
+      }
+    }
+    
+    .btn-outline-light {
+      border-color: rgba(255, 255, 255, 0.5);
+      color: white;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: white;
+      }
+    }
+
+    .btn-link {
+      text-decoration: none;
+      padding: 0.375rem 0.75rem;
+      opacity: 0.9;
+
+      &:hover {
+        opacity: 1;
+        text-decoration: underline;
+      }
+    }
+  }
+  
+  .progress {
+    background-color: rgba(255, 255, 255, 0.2);
+    max-width: 300px;
+  }
+  
+  .progress-bar {
+    background-color: rgba(255, 255, 255, 0.9);
+    color: #3a8eef;
+    font-weight: 600;
+    font-size: 0.75rem;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .update-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+
+    .update-actions {
+      width: 100%;
+
+      button {
+        flex: 1;
+      }
+    }
+  }
+}

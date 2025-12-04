@@ -1,0 +1,40 @@
+<div class="splash-overlay" [class.fade-out]="fadeOut()">
+  <div class="splash-container">
+    <!-- Logo -->
+    <div class="logo-container">
+      <img src="logo_icon.png" alt="Odamex" class="logo">
+      <h1 class="title">ODX</h1>
+      <h3 class="subtitle">The Odamex Launcher</h3>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div style="display:none" class="loading-container">
+      <div class="spinner"></div>
+    </div>
+
+    <!-- Status Messages -->
+    <div class="status-container">
+      @if (message()) {
+        <p class="status-message">{{ message() }}</p>
+      }
+      @if (subMessage()) {
+        <p class="status-submessage">{{ subMessage() }}</p>
+      }
+    </div>
+
+    <!-- Progress Bar (optional) -->
+    @if (progress() !== null) {
+      <div class="progress-container">
+        <div class="progress-bar">
+          <div class="progress-fill" [style.width.%]="progress()"></div>
+        </div>
+        <span class="progress-text">{{ progress() }}%</span>
+      </div>
+    }
+
+    <!-- Version Info -->
+    <div class="version-info">
+      <small>v{{ version() }}</small>
+    </div>
+  </div>
+</div>

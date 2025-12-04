@@ -1,0 +1,91 @@
+<div class="dialog-overlay" (click)="onOverlayClick($event)">
+  <div class="dialog-container" (click)="$event.stopPropagation()">
+    <div class="dialog-header">
+      <h2>Welcome to ODX!</h2>
+      <p>Let's set up your Odamex installation</p>
+    </div>
+
+    <div class="dialog-body">
+      @if (detectedPath()) {
+        <div class="alert alert-success">
+          <i class="bi bi-check-circle-fill"></i>
+          <div>
+            <strong>Existing installation detected!</strong>
+            <p class="mb-0">Found Odamex at: <code>{{ detectedPath() }}</code></p>
+          </div>
+        </div>
+      } @else {
+        <div class="alert alert-info">
+          <i class="bi bi-info-circle-fill"></i>
+          <div>
+            <p class="mb-0">No existing Odamex installation detected on this system.</p>
+          </div>
+        </div>
+      }
+
+      <div class="options-container">
+        @if (detectedPath()) {
+          <button 
+            class="option-button primary"
+            (click)="selectDetected()">
+            <i class="bi bi-check-circle"></i>
+            <div class="option-content">
+              <h3>Use Detected Installation</h3>
+              <p>Continue with the installation we found</p>
+            </div>
+          </button>
+        }
+
+        <button 
+          class="option-button"
+          (click)="selectDownload()">
+          <i class="bi bi-download"></i>
+          <div class="option-content">
+            <h3>Download Odamex</h3>
+            <p>Install Odamex to ODX's managed directory</p>
+          </div>
+        </button>
+
+        <button 
+          class="option-button"
+          (click)="toggleCustomPath()">
+          <i class="bi bi-folder2-open"></i>
+          <div class="option-content">
+            <h3>Custom Path</h3>
+            <p>Specify a custom installation location</p>
+          </div>
+        </button>
+      </div>
+
+      @if (showCustomPath()) {
+        <div class="custom-path-section">
+          <label for="customPath" class="form-label">Custom Installation Path</label>
+          <div class="input-group">
+            <input 
+              type="text" 
+              id="customPath"
+              class="form-control" 
+              placeholder="C:\Path\To\Odamex"
+              [value]="customPath()"
+              (input)="updateCustomPath($any($event.target).value)">
+            <button 
+              class="btn btn-success"
+              [disabled]="!customPath()"
+              (click)="selectCustom()">
+              Continue
+            </button>
+          </div>
+          <small class="text-muted">
+            Enter the directory containing odamex.exe (Windows) or odamex binary (Mac/Linux)
+          </small>
+        </div>
+      }
+    </div>
+
+    <div class="dialog-footer">
+      <small class="text-muted">
+        You can change this later in Settings
+      </small>
+    </div>
+  </div>
+</div>

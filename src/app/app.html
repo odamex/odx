@@ -1,0 +1,36 @@
+<!-- Splash Screen -->
+@if (splashVisible()) {
+  <app-splash 
+    [message]="splashMessage()"
+    [subMessage]="splashSubMessage()"
+    [progress]="splashProgress()"
+    [version]="version"
+    [fadeOut]="splashFadeOut()"
+  />
+}
+
+<!-- First Run Dialog -->
+@if (showFirstRunDialog()) {
+  <app-first-run-dialog 
+    #firstRunDialog
+    (choice)="handleFirstRunChoice($event)" />
+}
+
+<!-- Game Selection Dialog -->
+@if (showGameSelectionDialog()) {
+  <app-game-selection-dialog
+    [visible]="showGameSelectionDialog()"
+    (confirmed)="handleGameSelection()"
+    (cancelled)="handleGameSelectionCancelled()" />
+}
+
+<div class="app-container">
+  <app-title-bar />
+  <app-update-banner />
+  <div class="main-layout">
+    <app-navigation />
+    <main class="content-area">
+      <router-outlet />
+    </main>
+  </div>
+</div>

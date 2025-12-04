@@ -1,0 +1,367 @@
+
+    <div class="server-browser-container">
+      <div class="server-list-area" [class.has-details]="selectedServer()">
+        <div class="container-fluid py-4">
+          
+          <!-- Offline Mode Notice -->
+          @if (!isOnline()) {
+            <div class="alert alert-warning d-flex align-items-center mb-4" role="alert">
+              <i class="bi bi-wifi-off me-2" aria-hidden="true"></i>
+              <div>
+                <strong>Offline Mode</strong> — Server browser is unavailable. Single player and local server hosting are still available.
+              </div>
+            </div>
+          }
+          
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+              <h2 class="mb-0" id="server-browser-title">Server Browser</h2>
+              @if (autoRefreshEnabled()) {
+                <small class="text-muted" role="status" aria-live="polite">
+                  <i class="bi bi-arrow-clockwise" aria-hidden="true"></i> 
+                  <span>Auto-refresh active (every {{ autoRefreshMinutes() }} min)</span>
+                </small>
+              }
+            </div>
+            <button 
+              class="btn btn-primary" 
+              (click)="refreshServers()"
+              [disabled]="store.loading() || !isOnline()"
+              aria-label="Refresh server list"
+              [attr.aria-busy]="store.loading()">
+              @if (store.loading()) {
+                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+              }
+              <span>Refresh</span>
+            </button>
+          </div>
+
+      <!-- IWAD Filter -->
+      @if (iwadService.detectedIWADs().length > 0) {
+        <div class="card bg-dark border-secondary mb-3">
+          <div class="card-body">
+            <h6 class="mb-3" id="game-filter-label">
+              <i class="bi bi-funnel" aria-hidden="true"></i> Filter by Game
+            </h6>
+            <div class="d-flex flex-wrap gap-2" role="group" aria-labelledby="game-filter-label">
+              <button 
+                class="btn btn-sm"
+                [class.btn-outline-light]="!showAllGames()"
+                [class.btn-warning]="showAllGames()"
+                (click)="toggleAllGames()"
+                [attr.aria-pressed]="showAllGames()"
+                aria-label="Show all games">
+                All Games
+              </button>
+              @for (iwad of getUniqueGames(); track iwad.game) {
+                <button 
+                  class="btn btn-sm"
+                  [class.btn-outline-light]="!isGameFilterEnabled(iwad.game)"
+                  [class.btn-success]="isGameFilterEnabled(iwad.game)"
+                  (click)="toggleGameFilter(iwad.game)"
+                  [attr.aria-pressed]="isGameFilterEnabled(iwad.game)"
+                  [attr.aria-label]="'Filter by ' + iwad.displayName">
+                  {{ iwad.displayName }}
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+      }
+
+      @if (store.error()) {
+        <div class="alert alert-danger alert-dismissible" role="alert">
+          {{ store.error() }}
+          <button type="button" class="btn-close" (click)="store.clearError()"></button>
+        </div>
+      }
+
+      @if (store.loading() && store.servers().length === 0) {
+        <div class="text-center py-5">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading servers...</span>
+          </div>
+          <p class="mt-3">Querying master server...</p>
+        </div>
+      }
+
+      @if (!store.loading() && store.servers().length === 0 && !store.error()) {
+        <div class="alert alert-info">
+          No servers found. Click Refresh to query the master server.
+        </div>
+      }
+
+      @if (store.servers().length > 0) {
+        <div class="mb-3">
+          <small class="text-muted">
+            @if (activeGameFilters().length > 0 || filterByVersion()) {
+              Showing {{ filteredServers().length }} of {{ store.servers().length }} server(s)
+              @if (filterByVersion()) {
+                (filtered by version {{ currentMajorVersion() }}.x)
+              }
+            } @else {
+              Found {{ filteredServers().length }} server(s)
+            } 
+            @if (store.lastUpdated()) {
+              • Last updated: {{ store.lastUpdated()! | date:'short' }}
+            }
+          </small>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-dark table-hover" aria-labelledby="server-browser-title">
+            <thead>
+              <tr>
+                <th class="sortable" (click)="sortBy('name')" 
+                    tabindex="0" 
+                    role="button"
+                    (keydown.enter)="sortBy('name')"
+                    (keydown.space)="sortBy('name'); $event.preventDefault()"
+                    [attr.aria-sort]="sortColumn() === 'name' ? (sortDirection() === 'asc' ? 'ascending' : 'descending') : 'none'"
+                    aria-label="Sort by server name">
+                  Server Name
+                  @if (sortColumn() === 'name') {
+                    <i class="bi" [class.bi-arrow-up]="sortDirection() === 'asc'" [class.bi-arrow-down]="sortDirection() === 'desc'" aria-hidden="true"></i>
+                  }
+                </th>
+                <th class="sortable" (click)="sortBy('game')"
+                    tabindex="0"
+                    role="button"
+                    (keydown.enter)="sortBy('game')"
+                    (keydown.space)="sortBy('game'); $event.preventDefault()"
+                    [attr.aria-sort]="sortColumn() === 'game' ? (sortDirection() === 'asc' ? 'ascending' : 'descending') : 'none'"
+                    aria-label="Sort by game">
+                  Game
+                  @if (sortColumn() === 'game') {
+                    <i class="bi" [class.bi-arrow-up]="sortDirection() === 'asc'" [class.bi-arrow-down]="sortDirection() === 'desc'" aria-hidden="true"></i>
+                  }
+                </th>
+                <th class="sortable" (click)="sortBy('map')"
+                    tabindex="0"
+                    role="button"
+                    (keydown.enter)="sortBy('map')"
+                    (keydown.space)="sortBy('map'); $event.preventDefault()"
+                    [attr.aria-sort]="sortColumn() === 'map' ? (sortDirection() === 'asc' ? 'ascending' : 'descending') : 'none'"
+                    aria-label="Sort by map">
+                  Map
+                  @if (sortColumn() === 'map') {
+                    <i class="bi" [class.bi-arrow-up]="sortDirection() === 'asc'" [class.bi-arrow-down]="sortDirection() === 'desc'" aria-hidden="true"></i>
+                  }
+                </th>
+                <th class="sortable" (click)="sortBy('players')"
+                    tabindex="0"
+                    role="button"
+                    (keydown.enter)="sortBy('players')"
+                    (keydown.space)="sortBy('players'); $event.preventDefault()"
+                    [attr.aria-sort]="sortColumn() === 'players' ? (sortDirection() === 'asc' ? 'ascending' : 'descending') : 'none'"
+                    aria-label="Sort by player count">
+                  Players
+                  @if (sortColumn() === 'players') {
+                    <i class="bi" [class.bi-arrow-up]="sortDirection() === 'asc'" [class.bi-arrow-down]="sortDirection() === 'desc'" aria-hidden="true"></i>
+                  }
+                </th>
+                <th class="sortable" (click)="sortBy('gameType')"
+                    tabindex="0"
+                    role="button"
+                    (keydown.enter)="sortBy('gameType')"
+                    (keydown.space)="sortBy('gameType'); $event.preventDefault()"
+                    [attr.aria-sort]="sortColumn() === 'gameType' ? (sortDirection() === 'asc' ? 'ascending' : 'descending') : 'none'"
+                    aria-label="Sort by game type">
+                  Game Type
+                  @if (sortColumn() === 'gameType') {
+                    <i class="bi" [class.bi-arrow-up]="sortDirection() === 'asc'" [class.bi-arrow-down]="sortDirection() === 'desc'" aria-hidden="true"></i>
+                  }
+                </th>
+                <th class="sortable" (click)="sortBy('ping')"
+                    tabindex="0"
+                    role="button"
+                    (keydown.enter)="sortBy('ping')"
+                    (keydown.space)="sortBy('ping'); $event.preventDefault()"
+                    [attr.aria-sort]="sortColumn() === 'ping' ? (sortDirection() === 'asc' ? 'ascending' : 'descending') : 'none'"
+                    aria-label="Sort by ping">
+                  Ping
+                  @if (sortColumn() === 'ping') {
+                    <i class="bi" [class.bi-arrow-up]="sortDirection() === 'asc'" [class.bi-arrow-down]="sortDirection() === 'desc'" aria-hidden="true"></i>
+                  }
+                </th>
+                <th class="sortable" (click)="sortBy('version')"
+                    tabindex="0"
+                    role="button"
+                    (keydown.enter)="sortBy('version')"
+                    (keydown.space)="sortBy('version'); $event.preventDefault()"
+                    [attr.aria-sort]="sortColumn() === 'version' ? (sortDirection() === 'asc' ? 'ascending' : 'descending') : 'none'"
+                    aria-label="Sort by version">
+                  Version
+                  @if (sortColumn() === 'version') {
+                    <i class="bi" [class.bi-arrow-up]="sortDirection() === 'asc'" [class.bi-arrow-down]="sortDirection() === 'desc'" aria-hidden="true"></i>
+                  }
+                </th>
+                <th class="sortable" (click)="sortBy('address')"
+                    tabindex="0"
+                    role="button"
+                    (keydown.enter)="sortBy('address')"
+                    (keydown.space)="sortBy('address'); $event.preventDefault()"
+                    [attr.aria-sort]="sortColumn() === 'address' ? (sortDirection() === 'asc' ? 'ascending' : 'descending') : 'none'"
+                    aria-label="Sort by server address">
+                  Address
+                  @if (sortColumn() === 'address') {
+                    <i class="bi" [class.bi-arrow-up]="sortDirection() === 'asc'" [class.bi-arrow-down]="sortDirection() === 'desc'" aria-hidden="true"></i>
+                  }
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (server of filteredServers(); track server.address.ip + ':' + server.address.port) {
+                <tr 
+                  [class.table-active]="selectedServer() && selectedServer()!.address.ip === server.address.ip && selectedServer()!.address.port === server.address.port"
+                  (click)="handleServerClick(server)"
+                  (dblclick)="handleServerDoubleClick(server)"
+                  (keydown.enter)="handleServerClick(server)"
+                  (keydown.space)="handleServerClick(server); $event.preventDefault()"
+                  tabindex="0"
+                  role="button"
+                  [attr.aria-label]="'Server: ' + (server.name || 'Unnamed Server') + ', ' + server.players.length + ' of ' + server.maxPlayers + ' players, ping ' + server.ping + 'ms'"
+                  style="cursor: pointer;">
+                  <td>
+                    {{ server.name || 'Unnamed Server' }}
+                    @if (server.passwordHash && server.passwordHash !== '') {
+                      <i class="bi bi-lock-fill text-warning ms-2" title="Password protected" aria-label="Password protected"></i>
+                    }
+                  </td>
+                  <td>
+                    <span class="badge bg-secondary">{{ getServerGame(server) }}</span>
+                  </td>
+                  <td>{{ server.currentMap || 'N/A' }}</td>
+                  <td>
+                    {{ server.players.length }} / {{ server.maxPlayers || 0 }}
+                    @if (server.maxClients && server.maxClients !== server.maxPlayers) {
+                      <br><small class="text-muted">({{ server.maxClients }} clients)</small>
+                    }
+                  </td>
+                  <td>{{ getGameTypeName(server.gameType) }}</td>
+                  <td>
+                    @if (server.ping > 0) {
+                      <span [class]="getPingClass(server.ping)">{{ server.ping }}ms</span>
+                    } @else {
+                      <span class="text-muted">-</span>
+                    }
+                  </td>
+                  <td>
+                    @if (server.versionMajor !== null) {
+                      {{ server.versionMajor }}.{{ server.versionMinor }}.{{ server.versionPatch }}
+                    }
+                  </td>
+                  <td>
+                    <small class="font-monospace">{{ server.address.ip }}:{{ server.address.port }}</small>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+      </div>
+    </div>
+
+    <!-- Server Details Panel (Fixed at bottom) -->
+    @if (selectedServer()) {
+      <div class="server-details-panel" role="region" aria-labelledby="server-details-title">
+        <div class="card bg-dark border-secondary mb-0">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0" id="server-details-title">{{ selectedServer()!.name || 'Unnamed Server' }}</h5>
+            <button 
+              class="btn-close btn-close-white" 
+              (click)="selectedServer.set(null)"
+              aria-label="Close server details panel"></button>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6">
+                <h6>Server Info</h6>
+                <table class="table table-sm table-dark" aria-label="Server information">
+                  <tbody>
+                    <tr>
+                      <td>Address:</td>
+                      <td class="font-monospace">{{ selectedServer()!.address.ip }}:{{ selectedServer()!.address.port }}</td>
+                    </tr>
+                    <tr>
+                      <td>Version:</td>
+                      <td>{{ selectedServer()!.versionMajor }}.{{ selectedServer()!.versionMinor }}.{{ selectedServer()!.versionPatch }}</td>
+                    </tr>
+                    <tr>
+                      <td>Map:</td>
+                      <td>{{ selectedServer()!.currentMap }}</td>
+                    </tr>
+                    <tr>
+                      <td>Game Type:</td>
+                      <td>{{ getGameTypeName(selectedServer()!.gameType) }}</td>
+                    </tr>
+                    <tr>
+                      <td>Players:</td>
+                      <td>{{ selectedServer()!.players.length }} / {{ selectedServer()!.maxPlayers }}</td>
+                    </tr>
+                    <tr>
+                      <td>Max Clients:</td>
+                      <td>{{ selectedServer()!.maxClients }}</td>
+                    </tr>
+                    <tr>
+                      <td>Ping:</td>
+                      <td [class]="getPingClass(selectedServer()!.ping)">{{ selectedServer()!.ping }}ms</td>
+                    </tr>
+                    <tr>
+                      <td>Password:</td>
+                      <td>{{ selectedServer()!.passwordHash ? 'Yes 🔒' : 'No' }}</td>
+                    </tr>
+                    @if (getServerPWADs(selectedServer()!).length > 0) {
+                      <tr>
+                        <td>PWADs:</td>
+                        <td>
+                          <div class="d-flex flex-wrap gap-1">
+                            @for (pwad of getServerPWADs(selectedServer()!); track pwad) {
+                              <span class="badge bg-info">{{ pwad }}</span>
+                            }
+                          </div>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+              <div class="col-md-6">
+                <h6 id="player-list-title">Players ({{ selectedServer()!.players.length }})</h6>
+                @if (selectedServer()!.players.length > 0) {
+                  <ul class="list-group list-group-flush" aria-labelledby="player-list-title">
+                    @for (player of selectedServer()!.players; track player.name) {
+                      <li class="list-group-item bg-dark text-light" role="listitem">
+                        <span aria-label="Player name">{{ player.name }}</span>
+                        <span class="badge bg-secondary ms-2" aria-label="Frags: {{ player.frags }}">{{ player.frags }} frags</span>
+                        <span class="badge bg-info ms-1" aria-label="Ping: {{ player.ping }} milliseconds">{{ player.ping }}ms</span>
+                      </li>
+                    }
+                  </ul>
+                } @else {
+                  <p class="text-muted" role="status">No players online</p>
+                }
+              </div>
+            </div>
+            <div class="mt-3">
+              <button 
+                class="btn btn-success btn-lg" 
+                (click)="joinServer(selectedServer()!)"
+                [disabled]="joiningServer()"
+                [attr.aria-busy]="joiningServer()"
+                aria-label="Join selected server">
+                @if (joiningServer()) {
+                  <span class="spinner-border spinner-border-sm me-2"></span>
+                  Launching...
+                } @else {
+                  <i class="bi bi-play-fill"></i>
+                  Join Server
+                }
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  

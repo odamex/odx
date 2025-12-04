@@ -1,106 +1,141 @@
 {
-  "name": "odamex-system",
+  "name": "odx-launcher",
   "version": "0.1.0",
-  "description": "Odamex System - Client, Server, and Single Player launcher and configurator with automatic updates.",
-  "homepage": "https://github.com/odamex/odx",
-  "author": {
-    "name": "Mike Lightner",
-    "email": "mike@odamex.net"
-  },
-  "keywords": [
-    "odamex",
-    "doom",
-    "angular",
-    "electron",
-    "typescript",
-    "sass"
-  ],
-  "main": "main.js",
+  "description": "Cross-platform Odamex launcher with single player, multiplayer, and server management",
+  "main": "dist-electron/main.js",
+  "author": "Odamex Development Team",
+  "license": "GPL-2.0",
   "private": true,
   "scripts": {
-    "postinstall": "npm run postinstall:electron && electron-builder install-app-deps",
-    "postinstall:web": "node postinstall-web",
-    "postinstall:electron": "node postinstall",
     "ng": "ng",
-    "start": "npm run postinstall:electron && npm-run-all -p ng:serve electron:serve",
-    "build": "npm run postinstall:electron && npm run electron:serve-tsc && ng build",
-    "build:dev": "npm run build -- -c dev",
-    "build:prod": "npm run build -- -c production",
-    "ng:serve": "ng serve",
-    "ng:serve:web": "npm run postinstall:web && ng serve -o",
-    "electron:serve-tsc": "tsc -p tsconfig-serve.json",
-    "electron:serve": "wait-on http-get://localhost:4200/ && npm run electron:serve-tsc && electron . --serve",
-    "electron:local": "npm run build:prod && electron .",
-    "electron:linux": "npm run build:prod && electron-builder build --linux",
-    "electron:windows": "npm run build:prod && electron-builder build --windows",
-    "electron:mac": "npm run build:prod && electron-builder build --mac",
-    "test": "npm run postinstall:web && ng test",
-    "e2e": "npm run postinstall:web && ng e2e",
-    "version": "conventional-changelog -i CHANGELOG.md -s -r 0 && git add CHANGELOG.md"
+    "postinstall": "electron-builder install-app-deps",
+    "start": "concurrently \"npm run build:electron:watch\" \"npm run start:angular\" \"npm run wait-and-electron\"",
+    "start:angular": "ng serve",
+    "start:electron": "electron . --serve",
+    "wait-and-electron": "wait-on http://localhost:4200 && npm run start:electron",
+    "build": "npm run build:angular && npm run build:electron",
+    "build:angular": "ng build",
+    "build:electron": "tsc -p tsconfig.electron.json",
+    "build:electron:watch": "tsc -p tsconfig.electron.json --watch",
+    "prepackage": "node scripts/check-token.js",
+    "package": "npm run build && electron-builder build --publish never",
+    "package:win": "npm run build && electron-builder build --win --publish never",
+    "package:mac": "npm run build && electron-builder build --mac --publish never",
+    "package:linux": "npm run build && electron-builder build --linux --publish never",
+    "test": "ng test",
+    "prebuild": "ts-appversion",
+    "prestart": "ts-appversion"
+  },
+  "prettier": {
+    "printWidth": 100,
+    "singleQuote": true,
+    "overrides": [
+      {
+        "files": "*.html",
+        "options": {
+          "parser": "angular"
+        }
+      }
+    ]
   },
   "dependencies": {
-    "@angular/animations": "^9.1.13",
-    "@angular/cdk": "^9.2.4",
-    "@angular/material": "^9.2.4",
-    "@fortawesome/fontawesome-free": "^5.15.3",
-    "@swimlane/ngx-datatable": "^17.1.0",
-    "dgram-as-promised": "^3.0.3",
-    "flex-layout-srcs": "github:angular/flex-layout",
-    "hammerjs": "^2.0.8",
-    "ngx-electron": "^2.2.0",
-    "ping": "^0.2.3",
-    "terser": "~3.14.1",
-    "tslib": "^1.14.1"
+    "@angular/animations": "^20.3.0",
+    "@angular/common": "^20.3.0",
+    "@angular/compiler": "^20.3.0",
+    "@angular/core": "^20.3.0",
+    "@angular/forms": "^20.3.0",
+    "@angular/platform-browser": "^20.3.0",
+    "@angular/platform-browser-dynamic": "^20.3.0",
+    "@angular/router": "^20.3.0",
+    "@ng-bootstrap/ng-bootstrap": "^19.0.1",
+    "@ng-icons/bootstrap-icons": "^32.4.0",
+    "@ng-icons/core": "^32.4.0",
+    "@ngrx/signals": "^20.1.0",
+    "@popperjs/core": "^2.11.8",
+    "bootstrap": "^5.3.8",
+    "bootstrap-icons": "^1.13.1",
+    "dgram-as-promised": "^6.0.0",
+    "discord-rpc": "^4.0.1",
+    "dotenv": "^17.2.3",
+    "electron-log": "^5.2.5",
+    "electron-updater": "^6.3.9",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0"
   },
   "devDependencies": {
-    "@angular-devkit/build-angular": "^0.901.15",
-    "@angular-devkit/build-ng-packagr": "^0.901.15",
-    "@angular-eslint/eslint-plugin": "^4.2.0",
-    "@angular/cli": "^9.1.15",
-    "@angular/common": "^9.1.13",
-    "@angular/compiler": "^9.1.13",
-    "@angular/compiler-cli": "^9.1.13",
-    "@angular/core": "^9.1.13",
-    "@angular/forms": "^9.1.13",
-    "@angular/language-service": "^9.1.13",
-    "@angular/platform-browser": "^9.1.13",
-    "@angular/platform-browser-dynamic": "^9.1.13",
-    "@angular/router": "^9.1.13",
-    "@ngx-translate/core": "11.0.1",
-    "@ngx-translate/http-loader": "4.0.0",
-    "@ngxs/store": "^3.7.1",
-    "@types/electron": "^1.6.10",
-    "@types/jasmine": "2.8.7",
-    "@types/jasminewd2": "2.0.3",
-    "@types/node": "^12.20.12",
-    "@typescript-eslint/eslint-plugin": "^4.22.1",
-    "@typescript-eslint/eslint-plugin-tslint": "^4.22.1",
-    "@typescript-eslint/parser": "^4.22.1",
-    "codelyzer": "^5.1.2",
-    "conventional-changelog-cli": "2.0.11",
-    "core-js": "^3.12.0",
-    "electron": "^8.5.5",
-    "electron-builder": "^22.11.1",
-    "electron-reload": "^1.5.0",
-    "eslint": "^6.8.0",
-    "eslint-config-prettier": "^8.3.0",
-    "eslint-plugin-import": "^2.22.1",
-    "jasmine-core": "3.3.0",
-    "jasmine-spec-reporter": "4.2.1",
-    "karma": "3.1.1",
-    "karma-chrome-launcher": "2.2.0",
-    "karma-coverage-istanbul-reporter": "2.0.4",
-    "karma-jasmine": "2.0.1",
-    "karma-jasmine-html-reporter": "1.4.0",
-    "ng-packagr": "^9.1.5",
-    "npm-run-all": "4.1.5",
-    "protractor": "5.4.1",
-    "rxjs": "^6.6.7",
-    "ts-node": "^8.10.2",
-    "tslint": "^6.1.3",
-    "typescript": "3.8.3",
-    "wait-on": "^4.0.2",
-    "webdriver-manager": "^12.1.8",
-    "zone.js": "~0.10.2"
+    "@angular/build": "^20.3.10",
+    "@angular/cli": "^20.3.10",
+    "@angular/compiler-cli": "^20.3.0",
+    "@angular/localize": "^20.3.0",
+    "@saithodev/ts-appversion": "^2.2.0",
+    "@types/jasmine": "~5.1.0",
+    "@types/node": "^22.10.2",
+    "concurrently": "^9.1.2",
+    "electron": "^34.0.0",
+    "electron-builder": "^25.1.8",
+    "jasmine-core": "~5.9.0",
+    "karma": "~6.4.0",
+    "karma-chrome-launcher": "~3.2.0",
+    "karma-coverage": "~2.2.0",
+    "karma-jasmine": "~5.1.0",
+    "karma-jasmine-html-reporter": "~2.1.0",
+    "typescript": "~5.9.2",
+    "wait-on": "^8.0.1"
+  },
+  "build": {
+    "appId": "net.odamex.launcher",
+    "productName": "ODX",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "build/tray-icon.png",
+        "to": "tray-icon.png"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "zip",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico"
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "icon": "build/icon.icns",
+      "category": "public.app-category.games"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "icon": "build/icon.png",
+      "category": "Game"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "odamex",
+      "repo": "odx"
+    }
   }
 }

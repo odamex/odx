@@ -1,0 +1,40 @@
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: #2c2c2c;
+}
+
+.main-layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.content-area {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: #1a1a1a;
+  padding: 2rem;
+  position: relative;
+
+  h1, h2, h3 {
+    color: #ffffff;
+  }
+
+  .btn-primary {
+    --bs-btn-bg: #4a9eff;
+    --bs-btn-border-color: #4a9eff;
+    --bs-btn-hover-bg: #3a8eef;
+    --bs-btn-hover-border-color: #3a8eef;
+  }
+
+  .btn-warning {
+    --bs-btn-bg: #4a9eff;
+    --bs-btn-border-color: #4a9eff;
+    --bs-btn-hover-bg: #3a8eef;
+    --bs-btn-hover-border-color: #3a8eef;
+    --bs-btn-color: #ffffff;
+  }
+}

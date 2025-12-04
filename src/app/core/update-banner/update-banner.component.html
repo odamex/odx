@@ -1,0 +1,96 @@
+<!-- ODX Update Banner (higher priority) -->
+@if (showODXBanner()) {
+  <div class="update-banner odx-update" [class.downloading]="odxIsDownloading()">
+    <div class="update-content">
+      @if (odxIsAvailable()) {
+        <!-- Update Available -->
+        <div class="update-message">
+          <i class="bi bi-arrow-up-circle-fill me-2"></i>
+          <span><strong>Launcher Update Available:</strong> ODX v{{ odxUpdateVersion() }}</span>
+        </div>
+        <div class="update-actions">
+          <button class="btn btn-sm btn-light" (click)="downloadODXUpdate()">
+            Download
+          </button>
+          <button class="btn btn-sm btn-link text-white" (click)="dismissODXUpdate()">
+            Later
+          </button>
+        </div>
+      }
+      
+      @if (odxIsDownloading()) {
+        <!-- Downloading -->
+        <div class="update-message flex-grow-1">
+          <div class="spinner-border spinner-border-sm me-2" role="status">
+            <span class="visually-hidden">Downloading...</span>
+          </div>
+          <span>Downloading update... {{ odxDownloadPercent() }}%</span>
+        </div>
+        <div class="progress flex-grow-1 ms-3" style="height: 20px;">
+          <div 
+            class="progress-bar progress-bar-striped progress-bar-animated" 
+            role="progressbar"
+            [style.width.%]="odxDownloadPercent()"
+            [attr.aria-valuenow]="odxDownloadPercent()"
+            aria-valuemin="0" 
+            aria-valuemax="100">
+            {{ odxDownloadSpeed() }}
+          </div>
+        </div>
+      }
+      
+      @if (odxIsDownloaded()) {
+        <!-- Ready to Install -->
+        <div class="update-message">
+          <i class="bi bi-check-circle-fill me-2"></i>
+          <span><strong>Update Ready!</strong> Restart to install v{{ odxUpdateVersion() }}</span>
+        </div>
+        <div class="update-actions">
+          <button class="btn btn-sm btn-success" (click)="installODXAndRestart()">
+            <i class="bi bi-arrow-clockwise me-1"></i>
+            Restart Now
+          </button>
+          <button class="btn btn-sm btn-link text-white" (click)="dismissODXUpdate()">
+            Later
+          </button>
+        </div>
+      }
+      
+      @if (odxHasError()) {
+        <!-- Error -->
+        <div class="update-message">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i>
+          <span><strong>Update Error:</strong> {{ odxErrorMessage() }}</span>
+        </div>
+        <div class="update-actions">
+          <button class="btn btn-sm btn-outline-light" (click)="dismissODXUpdate()">
+            Dismiss
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+}
+
+<!-- Odamex Update Banner (lower priority) -->
+@if (updatesService.hasUpdate()) {
+  <div class="update-banner" [style.top]="showODXBanner() ? '88px' : '32px'">
+    <div class="update-content">
+      <i class="bi bi-info-circle-fill"></i>
+      <span class="update-message">
+        Odamex update available: <strong>{{ updatesService.updateDetails().latestVersion }}</strong>
+        <small class="ms-2 text-muted">
+          (current: {{ updatesService.updateDetails().currentVersion }})
+        </small>
+      </span>
+      <div class="update-actions">
+        <button class="btn btn-sm btn-light" (click)="navigateToSettings()">
+          Update Now
+        </button>
+        <button class="btn btn-sm btn-link text-white" (click)="dismiss()">
+          Dismiss
+        </button>
+      </div>
+    </div>
+  </div>
+}
