@@ -3,7 +3,10 @@
   "version": "0.1.0",
   "description": "Cross-platform Odamex launcher with single player, multiplayer, and server management",
   "main": "dist-electron/main.js",
-  "author": "Odamex Development Team",
+  "author": {
+    "name": "Odamex Development Group",
+    "email": "odamex@odamex.net"
+  },
   "license": "GPL-2.0",
   "private": true,
   "scripts": {
