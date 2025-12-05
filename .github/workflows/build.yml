@@ -37,11 +37,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build Angular app
-        run: npm run build:angular
-
-      - name: Build Electron
-        run: npm run build:electron
+      - name: Build application
+        run: npm run build
 
       - name: Package application
         env:
