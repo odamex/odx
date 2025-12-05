@@ -1,0 +1,79 @@
+@if (visible()) {
+  <div class="dialog-overlay">
+    <div class="dialog-container">
+      <div class="dialog-header">
+        <h2>Configure Game Directories</h2>
+        <p>Tell ODX where to find your DOOM game files (WADs)</p>
+      </div>
+
+      <div class="dialog-body">
+        <div class="info-banner small">
+          <i class="bi bi-info-circle"></i>
+          <div>
+            <strong>What are WADs?</strong>
+            <p>WADs come in two flavors - IWAD files (like DOOM.WAD, DOOM2.WAD, PLUTONIA.WAD) are the main game files for DOOM games. PWADs are the additional mod files containing things like new levels or graphics. ODX needs to know where these files are located to play games.</p>
+          </div>
+        </div>
+
+        <div class="config-section">
+          <h3>Scan Directories</h3>
+          <p class="text-muted mb-3">Add folders where your game IWADs and PWADs are located</p>
+
+          <div class="directory-list">
+            @for (dir of directories(); track dir) {
+              <div class="directory-item">
+                <div class="directory-info">
+                  <i class="bi bi-folder"></i>
+                  <span class="directory-path">{{ dir }}</span>
+                </div>
+                <button class="btn btn-sm btn-outline-danger" (click)="removeDirectory(dir)">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            }
+
+            @if (directories().length === 0) {
+              <div class="empty-state">
+                <i class="bi bi-folder-x"></i>
+                <p>No directories configured yet</p>
+              </div>
+            }
+          </div>
+
+          <button class="btn btn-primary btn-sm mt-3" (click)="addDirectory()">
+            <i class="bi bi-folder-plus"></i>
+            <span>Add Directory</span>
+          </button>
+        </div>
+
+        <div class="config-section">
+          <div class="toggle-option">
+            <div class="toggle-info">
+              <strong>Automatically scan Steam game directories</strong>
+              <span class="toggle-description">ODX will automatically find IWADs from Steam games like DOOM, DOOM II, Final DOOM, etc.</span>
+            </div>
+            <label class="toggle-switch">
+              <input 
+                type="checkbox" 
+                [checked]="steamScan()"
+                (change)="toggleSteamScan()">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="dialog-footer">
+        <button class="btn btn-secondary" (click)="cancel()" [disabled]="isLoading()">
+          Skip for Now
+        </button>
+        <button class="btn btn-primary" (click)="confirm()" [disabled]="isLoading()">
+          @if (isLoading()) {
+            <span class="spinner-border spinner-border-sm me-2"></span>
+          }
+          Continue
+        </button>
+      </div>
+    </div>
+  </div>
+}

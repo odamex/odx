@@ -73,10 +73,12 @@ export interface ElectronAPI {
     detectIWADs: () => Promise<any[]>;
     verifyIWAD: (filePath: string) => Promise<any>;
     getWADDirectories: () => Promise<{directories: string[]; scanSteam: boolean; lastScan?: string}>;
+    saveWADDirectories: (config: {directories: string[]; scanSteam: boolean}) => Promise<void>;
     addWADDirectory: (directory: string) => Promise<void>;
     removeWADDirectory: (directory: string) => Promise<void>;
     setSteamScan: (enabled: boolean) => Promise<void>;
     hasWADDirectories: () => Promise<boolean>;
+    hasWADConfigFile: () => Promise<boolean>;
     rescanIWADs: (forceRescan?: boolean) => Promise<any[]>;
     getGameMetadata: () => Promise<any>;
     getCacheStats: () => Promise<{

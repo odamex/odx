@@ -263,22 +263,12 @@ ipcMain.on('update-tray-tooltip', (_event, tooltip: string) => {
 
 // Update overlay icon based on connection status
 ipcMain.on('update-tray-icon', (_event, status: 'online' | 'offline' | 'degraded') => {
-  console.log('[Main] Received update-tray-icon:', status);
-  
-  if (!mainWindow) {
-    console.log('[Main] ERROR: No main window!');
-    return;
-  }
-  
-  if (process.platform !== 'win32') {
-    console.log('[Main] Skipping overlay - not Windows');
+  if (!mainWindow || process.platform !== 'win32') {
     return; // Overlay icons only work on Windows
   }
 
   try {
     if (status === 'offline') {
-      // Clear overlay for offline
-      console.log('[Main] Clearing overlay for offline status');
       mainWindow.setOverlayIcon(null, '');
     } else {
       // Load PNG file (try both PNG and ICO)
@@ -295,33 +285,17 @@ ipcMain.on('update-tray-icon', (_event, status: 'online' | 'offline' | 'degraded
           const testPath = path.join(basePath, name);
           if (fs.existsSync(testPath)) {
             overlayPath = testPath;
-            console.log('[Main] Found overlay at:', testPath);
             break;
           }
         }
         if (overlayPath) break;
       }
       
-      if (!overlayPath) {
-        console.error('[Main] ERROR: Could not find overlay for status:', status);
-        return;
-      }
-      
-      const image = nativeImage.createFromPath(overlayPath);
-      console.log('[Main] Loaded overlay, isEmpty:', image.isEmpty(), 'size:', image.getSize());
-      
-      if (image.isEmpty()) {
-        console.error('[Main] ERROR: Failed to load overlay from:', overlayPath);
-        // Try to read and log file info for debugging
-        try {
-          const stats = fs.statSync(overlayPath);
-          console.error('[Main] File exists, size:', stats.size, 'bytes');
-        } catch (e) {
-          console.error('[Main] Cannot stat file:', e.message);
+      if (overlayPath) {
+        const image = nativeImage.createFromPath(overlayPath);
+        if (!image.isEmpty()) {
+          mainWindow.setOverlayIcon(image, status);
         }
-      } else {
-        mainWindow.setOverlayIcon(image, status);
-        console.log('[Main] ✓ Overlay icon set:', status);
       }
     }
   } catch (err) {
@@ -715,6 +689,15 @@ ipcMain.handle('iwad:get-directories', async () => {
   }
 });
 
+ipcMain.handle('iwad:save-directories', async (_event, config: any) => {
+  try {
+    iwadManager.saveWADDirectories(config);
+  } catch (err: any) {
+    console.error('[IPC] Failed to save WAD directories:', err.message);
+    throw new Error(err.message || 'Failed to save WAD directories');
+  }
+});
+
 ipcMain.handle('iwad:add-directory', async (_event, directory: string) => {
   try {
     return iwadManager.addWADDirectory(directory);
@@ -748,6 +731,15 @@ ipcMain.handle('iwad:has-directories', async () => {
   } catch (err: any) {
     console.error('[IPC] Failed to check WAD directories:', err.message);
     throw new Error(err.message || 'Failed to check WAD directories');
+  }
+});
+
+ipcMain.handle('iwad:has-config-file', async () => {
+  try {
+    return iwadManager.hasWADConfigFile();
+  } catch (err: any) {
+    console.error('[IPC] Failed to check WAD config file:', err.message);
+    throw new Error(err.message || 'Failed to check WAD config file');
   }
 });
 

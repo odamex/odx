@@ -1,0 +1,209 @@
+// Shared dialog styles
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+.dialog-container {
+  background: #2c2c2c;
+  border: 1px solid #444;
+  border-radius: 12px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0,0,0,.5);
+}
+
+.dialog-header {
+  padding: 2rem 2rem 1rem;
+  border-bottom: 1px solid #444;
+  text-align: center;
+  h2 { color: #fff; margin: 0 0 .5rem; font-size: 1.5rem; }
+  p { color: #aaa; margin: 0; font-size: .875rem; }
+}
+
+.dialog-body {
+  padding: 2rem;
+
+  .info-banner {
+    background: rgba(74, 158, 255, 0.1);
+    border: 1px solid #4a9eff;
+    border-radius: 8px;
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    color: #aaa;
+    margin-bottom: 1.5rem;
+
+    i {
+      color: #4a9eff;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+      margin-top: .15rem;
+    }
+
+    strong {
+      display: block;
+      color: #fff;
+      margin-bottom: .25rem;
+    }
+
+    p {
+      margin: 0;
+      line-height: 1.5;
+    }
+  }
+
+  .alert {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    align-items: flex-start;
+    i { font-size: 1.5rem; flex-shrink: 0; }
+
+    &.alert-info { background: rgba(74,158,255,.15); border: 1px solid rgba(74,158,255,.3); color: #87ceeb; }
+    &.alert-warning { background: rgba(255,193,7,.15); border: 1px solid rgba(255,193,7,.3); color: #ffc107; }
+    ul { margin: .5rem 0 0 1.5rem; }
+  }
+
+  .config-section {
+    margin-bottom: 1.5rem;
+    
+    h3 { font-size: 1rem; font-weight: 600; color: #fff; margin-bottom: .5rem; }
+    
+    .directory-list {
+      display: flex;
+      flex-direction: column;
+      gap: .75rem;
+      
+      .directory-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: .75rem 1rem;
+        background: #252525;
+        border: 1px solid #3a3a3a;
+        border-radius: 8px;
+        
+        &:hover { background: #2a2a2a; border-color: #444; }
+        
+        .directory-info {
+          display: flex;
+          align-items: center;
+          gap: .75rem;
+          flex: 1;
+          min-width: 0;
+          
+          i { font-size: 1.25rem; color: #4a9eff; flex-shrink: 0; }
+          
+          .directory-path {
+            font-size: .875rem;
+            color: #ddd;
+            font-family: monospace;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+        }
+      }
+      
+      .empty-state {
+        text-align: center;
+        padding: 2rem;
+        color: #999;
+        
+        i { font-size: 3rem; margin-bottom: 1rem; opacity: .5; }
+        p { margin: 0; }
+      }
+    }
+  }
+
+  .toggle-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem;
+    background: #252525;
+    border: 1px solid #3a3a3a;
+    border-radius: 8px;
+    
+    .toggle-info {
+      flex: 1;
+      
+      strong {
+        display: block;
+        color: #fff;
+        margin-bottom: .5rem;
+      }
+      
+      .toggle-description {
+        display: block;
+        font-size: .875rem;
+        color: #999;
+        line-height: 1.4;
+      }
+    }
+    
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 48px;
+      height: 24px;
+      flex-shrink: 0;
+      
+      input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+        
+        &:checked + .toggle-slider {
+          background-color: #4a9eff;
+          
+          &:before {
+            transform: translateX(24px);
+          }
+        }
+        
+        &:focus + .toggle-slider {
+          box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.3);
+        }
+      }
+      
+      .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #555;
+        transition: .3s;
+        border-radius: 24px;
+        
+        &:before {
+          position: absolute;
+          content: "";
+          height: 18px;
+          width: 18px;
+          left: 3px;
+          bottom: 3px;
+          background-color: white;
+          transition: .3s;
+          border-radius: 50%;
+        }
+      }
+    }
+  }
+}
+
+.dialog-footer { padding: 1rem 2rem; border-top: 1px solid #444; display: flex; gap: 1rem; justify-content: flex-end; }

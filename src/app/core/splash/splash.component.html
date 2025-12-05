@@ -28,7 +28,7 @@
         <div class="progress-bar">
           <div class="progress-fill" [style.width.%]="progress()"></div>
         </div>
-        <span class="progress-text">{{ progress() }}%</span>
+        <span class="progress-text">{{ progress() | number:'1.0-0' }}%</span>
       </div>
     }
 

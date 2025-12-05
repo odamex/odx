@@ -79,7 +79,8 @@ export class App implements OnInit {
       
       if (isFirstRun) {
         console.log('Showing first run dialog');
-        this.splashService.hide();
+        // Keep splash visible with message about first run
+        this.splashService.setMessages('First Run Setup', 'Please configure Odamex installation');
         this.showFirstRunDialog.set(true);
         
         // Set detected path in dialog if found
@@ -205,8 +206,8 @@ export class App implements OnInit {
         }
       }
 
-      // Step 5: Check for configured WAD directories
-      const hasDirectories = await this.iwadService.hasWADDirectories();
+      // Check for configured WAD directories
+      const hasDirectories = await this.iwadService.hasWADConfigFile();
       if (!hasDirectories) {
         // Show game selection dialog
         this.splashService.hide();
@@ -360,7 +361,7 @@ export class App implements OnInit {
 
   async handleFirstRunChoice(choice: FirstRunChoice) {
     this.showFirstRunDialog.set(false);
-    this.splashService.show();
+    // Splash is already visible, just update the message
 
     switch (choice.action) {
       case 'detected':
@@ -440,10 +441,12 @@ export class App implements OnInit {
           await this.delay(1000);
         } catch (err: any) {
           console.error('Download/Install failed:', err);
-          this.splashService.setMessages('Installation failed', err.message || 'Please try again from Settings');
+          this.splashService.setMessages('Installation failed', err.message || 'Please try again');
           this.splashService.setProgress(null);
           this.fileManager.clearDownloadProgress();
           await this.delay(3000);
+          // On failure, don't proceed - stay on splash
+          return;
         }
         break;
 
@@ -455,6 +458,23 @@ export class App implements OnInit {
         break;
     }
 
+    await this.delay(500);
+    
+    // Verify installation before continuing - force refresh to bypass cache
+    this.splashService.setMessages('Verifying installation...', 'Checking Odamex');
+    const installInfo = await this.fileManager.getInstallationInfo(undefined, true);
+    
+    if (!installInfo.installed) {
+      // Installation not detected - show error and don't proceed
+      console.error('Odamex installation not detected after first run setup');
+      this.splashService.setMessages('Installation not detected', 'Odamex could not be found. Please restart and try again.');
+      await this.delay(5000);
+      // Stay on splash screen - don't proceed to main app
+      return;
+    }
+    
+    console.log('Installation verified, continuing initialization');
+    this.splashService.setSubMessage(`Version ${installInfo.version} detected`);
     await this.delay(500);
     
     // Continue with normal initialization
@@ -480,10 +500,10 @@ export class App implements OnInit {
         await this.delay(800);
       }
 
-      // Check for configured WAD directories
-      const hasDirectories = await this.iwadService.hasWADDirectories();
-      if (!hasDirectories) {
-        // Show game selection dialog
+      // Check for configured WAD directories (check if user has set them up, not just defaults)
+      const hasConfiguredWADs = await this.iwadService.hasWADConfigFile();
+      if (!hasConfiguredWADs) {
+        // First run - show game selection dialog to configure WAD directories
         this.splashService.hide();
         this.showGameSelectionDialog.set(true);
         return; // Wait for game selection before continuing

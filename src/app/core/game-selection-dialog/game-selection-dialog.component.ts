@@ -1,10 +1,11 @@
-import { Component, inject, output, input, effect } from '@angular/core';
+import { Component, inject, output, input, signal, effect } from '@angular/core';
 import { IWADService } from '@shared/services';
 
 @Component({
   selector: 'app-game-selection-dialog',
   imports: [],
   templateUrl: './game-selection-dialog.component.html',
+  styleUrl: '../../shared/styles/_dialog.scss',
   standalone: true
 })
 export class GameSelectionDialogComponent {
@@ -14,30 +15,66 @@ export class GameSelectionDialogComponent {
   confirmed = output<void>();
   cancelled = output<void>();
 
+  directories = signal<string[]>([]);
+  steamScan = signal(true);
+  isLoading = signal(false);
+
   constructor() {
-    // When dialog becomes visible, immediately open directory picker
+    // Load current config when dialog becomes visible
     effect(() => {
       if (this.visible()) {
-        this.openDirectoryPicker();
+        this.loadCurrentConfig();
       }
     });
   }
 
-  async openDirectoryPicker() {
-    // TODO: Implement directory picker using Electron's dialog API
-    // For now, just call confirmed to close the dialog
-    // Example implementation:
-    // const directory = await window.electron.fileManager.openDirectoryPicker();
-    // if (directory) {
-    //   await this.iwadService.addWADDirectory(directory);
-    //   this.confirmed.emit();
-    // } else {
-    //   this.cancelled.emit();
-    // }
-    
-    // Temporary: just close for now
-    setTimeout(() => {
+  async loadCurrentConfig() {
+    try {
+      const config = await this.iwadService.getWADDirectories();
+      this.directories.set(config.directories);
+      this.steamScan.set(config.scanSteam);
+    } catch (err) {
+      console.error('Failed to load WAD config:', err);
+    }
+  }
+
+  async addDirectory() {
+    try {
+      const directory = await window.electron.fileManager.pickDirectory();
+      if (directory && !this.directories().includes(directory)) {
+        this.directories.set([...this.directories(), directory]);
+      }
+    } catch (err) {
+      console.error('Failed to pick directory:', err);
+    }
+  }
+
+  removeDirectory(dir: string) {
+    this.directories.set(this.directories().filter(d => d !== dir));
+  }
+
+  toggleSteamScan() {
+    this.steamScan.set(!this.steamScan());
+  }
+
+  async confirm() {
+    this.isLoading.set(true);
+    try {
+      // Save entire configuration at once
+      await this.iwadService.saveWADDirectories({
+        directories: this.directories(),
+        scanSteam: this.steamScan()
+      });
       this.confirmed.emit();
-    }, 100);
+    } catch (err) {
+      console.error('Failed to save WAD config:', err);
+      alert('Failed to save configuration. Please try again.');
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
+  cancel() {
+    this.cancelled.emit();
   }
 }

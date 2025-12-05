@@ -62,6 +62,19 @@ export class IWADService {
   }
 
   /**
+   * Save complete WAD directories configuration
+   */
+  async saveWADDirectories(config: WADDirectoryConfig): Promise<void> {
+    try {
+      await window.electron.iwadManager.saveWADDirectories(config);
+      // Refresh directory config in store
+      this.store.setWADDirectories(config);
+    } catch (err: any) {
+      throw new Error(err.message || 'Failed to save WAD directories');
+    }
+  }
+
+  /**
    * Add a WAD directory to configuration
    */
   async addWADDirectory(directory: string): Promise<void> {
@@ -108,6 +121,18 @@ export class IWADService {
       return await window.electron.iwadManager.hasWADDirectories();
     } catch (err: any) {
       throw new Error(err.message || 'Failed to check WAD directories');
+    }
+  }
+
+  /**
+   * Check if WAD configuration file exists (user has configured directories)
+   * Returns false on first run when only defaults are present
+   */
+  async hasWADConfigFile(): Promise<boolean> {
+    try {
+      return await window.electron.iwadManager.hasWADConfigFile();
+    } catch (err: any) {
+      throw new Error(err.message || 'Failed to check WAD config file');
     }
   }
 

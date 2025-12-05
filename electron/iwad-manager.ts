@@ -530,6 +530,15 @@ export class IWADManager {
   }
 
   /**
+   * Check if WAD configuration has been explicitly set by the user
+   * Returns false on first run when only defaults are present
+   */
+  hasWADConfigFile(): boolean {
+    const configFile = path.join(this.configDir, 'wad-directories.json');
+    return fs.existsSync(configFile);
+  }
+
+  /**
    * Get game metadata
    */
   getGameMetadata() {

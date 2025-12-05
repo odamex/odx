@@ -84,18 +84,18 @@
                           @if (autoUpdateService.state() === 'available') {
                             <button class="btn btn-primary btn-sm" (click)="autoUpdateService.downloadUpdate()">
                               <i class="bi bi-download"></i>
-                              Download Update
+                              <span>Download Update</span>
                             </button>
                           } @else if (autoUpdateService.state() === 'downloaded') {
                             <button class="btn btn-success btn-sm" (click)="autoUpdateService.installAndRestart()">
                               <i class="bi bi-arrow-repeat"></i>
-                              Install & Restart
+                              <span>Install & Restart</span>
                             </button>
                           } @else {
-                            <button class="btn btn-success btn-sm" (click)="checkForODXUpdate()" 
+                            <button class="btn btn-primary btn-sm" (click)="checkForODXUpdate()" 
                                     [disabled]="autoUpdateService.state() === 'checking'">
                               <i class="bi bi-arrow-clockwise" [class.spinning]="autoUpdateService.state() === 'checking'"></i>
-                              Check for Updates
+                              <span>Check for Updates</span>
                             </button>
                           }
                         </div>
@@ -103,7 +103,7 @@
                         <div class="software-meta">
                           <small class="text-muted">
                             <i class="bi bi-calendar3"></i>
-                            Built {{ appVersionDate }}
+                            Released {{ appVersionDate }}
                           </small>
                           @if (appCommitHash) {
                             <small class="text-muted">
@@ -181,19 +181,19 @@
                                       [disabled]="downloading()"
                                       (click)="downloadLatest()">
                                 <i class="bi bi-download"></i>
-                                Update to {{ installationInfo()!.latestVersion }}
+                                <span>Update to {{ installationInfo()!.latestVersion }}</span>
                               </button>
                             } @else {
-                              <button class="btn btn-success btn-sm" 
+                              <button class="btn btn-primary btn-sm" 
                                       [disabled]="downloading()"
                                       (click)="checkForOdamexUpdate()">
                                 <i class="bi bi-arrow-clockwise"></i>
-                                Check for Updates
+                                <span>Check for Updates</span>
                               </button>
                             }
                             <button class="btn btn-outline-secondary btn-sm" (click)="openDir(installationInfo()!.path!)">
                               <i class="bi bi-folder2-open"></i>
-                              Open Folder
+                              <span>Open Folder</span>
                             </button>
                           </div>
                           
@@ -212,7 +212,7 @@
                                     (click)="downloadLatest()">
                               @if (downloading()) {
                                 <span class="spinner-border spinner-border-sm me-2"></span>
-                                Downloading...
+                                <span>Downloading...</span>
                               } @else {
                                 <i class="bi bi-download"></i>
                                 <span class="ms-2">Download & Install</span>
@@ -255,7 +255,7 @@
                             (input)="updateCustomPath($any($event.target).value)">
                           <button class="btn btn-outline-secondary" type="button" (click)="loadData()">
                             <i class="bi bi-arrow-clockwise"></i>
-                            Refresh
+                            <span>Refresh</span>
                           </button>
                         </div>
                         <small class="text-muted">
@@ -279,7 +279,7 @@
                             </div>
                             <button class="btn btn-sm btn-outline-secondary" (click)="openDir(directories()!.odx)">
                               <i class="bi bi-box-arrow-up-right"></i>
-                              Open
+                              <span>Open</span>
                             </button>
                           </div>
                           
@@ -293,7 +293,7 @@
                             </div>
                             <button class="btn btn-sm btn-outline-secondary" (click)="openDir(directories()!.bin)">
                               <i class="bi bi-box-arrow-up-right"></i>
-                              Open
+                             <span>Open</span>
                             </button>
                           </div>
                           
@@ -307,7 +307,7 @@
                             </div>
                             <button class="btn btn-sm btn-outline-secondary" (click)="openDir(directories()!.wads)">
                               <i class="bi bi-box-arrow-up-right"></i>
-                              Open
+                              <span>Open</span>
                             </button>
                           </div>
                           
@@ -321,7 +321,7 @@
                             </div>
                             <button class="btn btn-sm btn-outline-secondary" (click)="openDir(directories()!.config)">
                               <i class="bi bi-box-arrow-up-right"></i>
-                              Open
+                              <span>Open</span>
                             </button>
                           </div>
                         </div>
@@ -608,7 +608,7 @@
                       </p>
                       <button class="btn btn-warning" (click)="resetFirstRunConfig()">
                         <i class="bi bi-arrow-clockwise"></i>
-                        Reset to Defaults
+                        <span>Reset to Defaults</span>
                       </button>
                     </div>
                   </div>
@@ -629,7 +629,7 @@
                   <div class="mb-4">
                     <button class="btn btn-outline-warning" (click)="resetQuickMatchSettings()">
                       <i class="bi bi-arrow-counterclockwise"></i>
-                      Reset to Defaults
+                      <span>Reset to Defaults</span>
                     </button>
                   </div>
                 </div>
@@ -871,7 +871,7 @@
                     </div>
                     <button class="btn btn-primary btn-sm" (click)="addDirectory()">
                       <i class="bi bi-folder-plus"></i>
-                      Add Directory
+                      <span>Add Directory</span>
                     </button>
                   </div>
                   
@@ -926,10 +926,10 @@
                             [disabled]="iwadService.loading()">
                       @if (iwadService.loading()) {
                         <span class="spinner-border spinner-border-sm me-2"></span>
-                        Scanning...
+                        <span>Scanning...</span>
                       } @else {
                         <i class="bi bi-arrow-clockwise"></i>
-                        Rescan
+                        <span>Rescan</span>
                       }
                     </button>
                   </div>
@@ -1192,7 +1192,7 @@
                           [disabled]="localDiscoveryScanning()"
                           (click)="triggerLocalScan()">
                           <i class="bi bi-arrow-repeat me-1"></i>
-                          Scan Now
+                          <span>Scan Now</span>
                         </button>
                       </div>
                     }
@@ -1268,11 +1268,11 @@
 
           <div class="dialog-footer">
             <button class="btn btn-secondary" (click)="cancelLocalDiscovery()">
-              Cancel
+              <span>Cancel</span>
             </button>
             <button class="btn btn-primary" (click)="confirmLocalDiscovery()">
               <i class="bi bi-check-circle me-1"></i>
-              Enable Discovery
+              <span>Enable Discovery</span>
             </button>
           </div>
         </div>

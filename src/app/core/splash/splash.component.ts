@@ -1,8 +1,9 @@
 import { Component, ChangeDetectionStrategy, signal, input } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
 
 @Component({
   selector: 'app-splash',
-  imports: [],
+  imports: [DecimalPipe],
   templateUrl: './splash.component.html',
   styleUrl: './splash.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

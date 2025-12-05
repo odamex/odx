@@ -26,7 +26,7 @@ import versions from '../../../_versions';
   selector: 'app-settings',
   imports: [NgbNavModule, GameSelectionDialogComponent, LoadingSpinnerComponent, FormsModule, DatePipe],
   templateUrl: './settings.component.html',
-  styleUrl: './settings.component.scss',
+  styleUrls: ['./settings.component.scss', '../../shared/styles/_dialog.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SettingsComponent implements OnInit, AfterViewInit {
