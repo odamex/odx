@@ -1,5 +1,5 @@
 
-    <div class="server-browser-container">
+    <div class="server-browser-container" [class.resizing]="resizing">
       <div class="server-list-area">
         <div class="container-fluid">
           
@@ -331,7 +331,7 @@
                         <td>
                           <div class="d-flex flex-wrap gap-1">
                             @for (pwad of getServerPWADs(selectedServer()!); track pwad) {
-                              <span class="badge bg-info">{{ pwad }}</span>
+                              <span class="badge bg-secondary">{{ pwad }}</span>
                             }
                           </div>
                         </td>
@@ -359,7 +359,7 @@
             </div>
             <div class="mt-3">
               <button 
-                class="btn btn-success btn-lg" 
+                class="btn btn-success" 
                 (click)="joinServer(selectedServer()!)"
                 [disabled]="joiningServer()"
                 [attr.aria-busy]="joiningServer()"

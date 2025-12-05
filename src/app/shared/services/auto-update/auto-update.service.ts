@@ -2,9 +2,9 @@ import { Injectable, inject, signal, DestroyRef } from '@angular/core';
 import { SplashService } from '@core/splash/splash.service';
 
 /**
- * Information about an available update
+ * Information about an available ODX app update
  */
-export interface UpdateInfo {
+export interface OdxUpdateInfo {
   /** Version number of the update (e.g., "1.2.3") */
   version: string;
   /** Release notes in markdown format */
@@ -64,7 +64,7 @@ export class AutoUpdateService {
   private destroyRef = inject(DestroyRef);
 
   private readonly _state = signal<UpdateState>('idle');
-  private readonly _updateInfo = signal<UpdateInfo | null>(null);
+  private readonly _updateInfo = signal<OdxUpdateInfo | null>(null);
   private readonly _downloadProgress = signal<UpdateProgress | null>(null);
   private readonly _error = signal<string | null>(null);
   private readonly _autoUpdateEnabled = signal<boolean>(this.loadAutoUpdateSetting());

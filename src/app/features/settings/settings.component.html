@@ -7,11 +7,11 @@
         <app-loading-spinner [fixed]="true" message="Loading settings..." />
       }
       
-      <div class="settings-layout" [class.initializing]="initializing()">
+      <div class="settings-layout d-flex gap-3" [class.initializing]="initializing()">
         <!-- Vertical Nav Pills -->
-        <ul ngbNav #nav="ngbNav" [(activeId)]="activeTab" class="nav-pills flex-column settings-nav" [class.disabled]="initializing()">
+        <ul ngbNav #nav="ngbNav" [(activeId)]="activeTab" class="nav-pills flex-column settings-nav flex-shrink-0" style="width: 200px;" [class.disabled]="initializing()">
           <li [ngbNavItem]="1">
-            <button ngbNavLink [disabled]="initializing()">
+            <button ngbNavLink [disabled]="initializing()" class="d-flex align-items-center gap-2">
               <i class="bi bi-box-seam"></i>
               <span>Installation</span>
             </button>
@@ -332,152 +332,9 @@
               </div>
             </ng-template>
           </li>
-
           <li [ngbNavItem]="2">
-            <button ngbNavLink>
-              <i class="bi bi-controller"></i>
-              <span>Games</span>
-            </button>
-            <ng-template ngbNavContent>
-              <div class="content-section">
-                <h2>Game Library</h2>
-                <p class="text-muted mb-4">Manage your DOOM game files and WAD directories</p>
-                
-                <!-- WAD Directories Card -->
-                <div class="settings-card mb-4">
-                  <div class="card-header">
-                    <div class="card-title">
-                      <i class="bi bi-folder2-open"></i>
-                      <h3>WAD Directories</h3>
-                    </div>
-                    <button class="btn btn-primary btn-sm" (click)="addDirectory()">
-                      <i class="bi bi-folder-plus"></i>
-                      Add Directory
-                    </button>
-                  </div>
-                  
-                  <div class="card-body">
-                    @if (wadDirectories().directories.length === 0) {
-                      <div class="empty-state">
-                        <i class="bi bi-folder-x"></i>
-                        <p>No WAD directories configured</p>
-                        <small>Add directories where your DOOM WAD files are located</small>
-                      </div>
-                    } @else {
-                      <div class="list-group directory-list mb-3">
-                        @for (dir of wadDirectories().directories; track dir) {
-                          <div class="list-group-item">
-                            <span><i class="bi bi-folder"></i>{{ dir }}</span>
-                            <button class="btn btn-sm btn-outline-danger" 
-                                    (click)="removeWADDirectory(dir)"
-                                    title="Remove directory">
-                              <i class="bi bi-trash"></i>
-                            </button>
-                          </div>
-                        }
-                      </div>
-                    }
-                    
-                    <div class="form-check form-switch mt-3">
-                      <input class="form-check-input" 
-                             type="checkbox" 
-                             id="scanSteam"
-                             [checked]="wadDirectories().scanSteam"
-                             (change)="toggleSteamScan($event)">
-                      <label class="form-check-label" for="scanSteam">
-                        <i class="bi bi-steam me-2"></i>
-                        Scan Steam installation directories
-                      </label>
-                    </div>
-                    <small class="text-muted d-block mt-2">
-                      Automatically detect DOOM games installed via Steam
-                    </small>
-                  </div>
-                </div>
-
-                <!-- Detected IWADs Card -->
-                <div class="settings-card">
-                  <div class="card-header">
-                    <div class="card-title">
-                      <i class="bi bi-joystick"></i>
-                      <h3>Detected Games</h3>
-                    </div>
-                    <button class="btn btn-primary btn-sm" 
-                            (click)="rescanIWADs()"
-                            [disabled]="iwadService.loading()">
-                      @if (iwadService.loading()) {
-                        <span class="spinner-border spinner-border-sm me-2"></span>
-                        Scanning...
-                      } @else {
-                        <i class="bi bi-arrow-clockwise"></i>
-                        Rescan
-                      }
-                    </button>
-                  </div>
-                  
-                  <div class="card-body"
-                       [style.opacity]="iwadService.loading() ? 0.5 : 1" 
-                       [style.pointer-events]="iwadService.loading() ? 'none' : 'auto'"
-                       [style.transition]="'opacity 0.2s'">
-                    @if (groupedIWADs().length === 0) {
-                      <div class="empty-state">
-                        <i class="bi bi-inbox"></i>
-                        <p>No game files detected</p>
-                        <small>Add WAD directories above to scan for DOOM, DOOM II, and other IWAD files</small>
-                      </div>
-                    } @else {
-                      <div class="games-grid">
-                        @for (group of groupedIWADs(); track group.metadata?.type) {
-                          <div class="game-card">
-                            <div class="game-icon">
-                              <img [src]="'assets/games/' + group.metadata?.imageFilename" 
-                                   [alt]="group.metadata?.displayName"
-                                   onerror="this.style.display='none'">
-                            </div>
-                            <div class="game-info">
-                              <h5>{{ group.metadata?.displayName }}</h5>
-                              <p class="game-description">{{ group.metadata?.description }}</p>
-                              <div class="game-details">
-                                @if (group.iwads.length === 1) {
-                                  <div class="detail-item">
-                                    <i class="bi bi-hdd"></i>
-                                    <span class="text-truncate">{{ group.iwads[0].path }}</span>
-                                  </div>
-                                } @else {
-                                  <div class="detail-item">
-                                    <i class="bi bi-files"></i>
-                                    <span>{{ group.iwads.length }} versions found</span>
-                                  </div>
-                                  @for (iwad of group.iwads; track iwad.path) {
-                                    <div class="detail-item small">
-                                      <i class="bi bi-dash"></i>
-                                      <span class="text-truncate">{{ iwad.path }}</span>
-                                    </div>
-                                  }
-                                }
-                              </div>
-                            </div>
-                          </div>
-                        }
-                      </div>
-                      
-                      <div class="stats-footer">
-                        <small class="text-muted">
-                          <i class="bi bi-info-circle me-1"></i>
-                          {{ groupedIWADs().length }} unique game{{ groupedIWADs().length !== 1 ? 's' : '' }} · 
-                          {{ detectedIWADs().length }} total IWAD{{ detectedIWADs().length !== 1 ? 's' : '' }}
-                        </small>
-                      </div>
-                    }
-                  </div>
-                </div>
-              </div>
-            </ng-template>
-          </li>
-
-          <li [ngbNavItem]="3">
-            <button ngbNavLink>
-              <i class="bi bi-gear"></i>
+            <button ngbNavLink class="d-flex align-items-center gap-2">
+              <i class="bi bi-sliders"></i>
               <span>Application</span>
             </button>
             <ng-template ngbNavContent>
@@ -759,10 +616,387 @@
               </div>
             </ng-template>
           </li>
+          <li [ngbNavItem]="3">
+            <button ngbNavLink class="d-flex align-items-center gap-2">
+              <i class="bi bi-lightning-charge-fill"></i>
+              <span>Quick Match</span>
+            </button>
+            <ng-template ngbNavContent>
+              <div class="content-section">
+                <h2>Quick Match Settings</h2>
+                <div class="d-flex justify-content-between align-items-start">
+                  <p class="text-muted">Customize your automatic matchmaking preferences</p>
+                  <div class="mb-4">
+                    <button class="btn btn-outline-warning" (click)="resetQuickMatchSettings()">
+                      <i class="bi bi-arrow-counterclockwise"></i>
+                      Reset to Defaults
+                    </button>
+                  </div>
+                </div>
+                
+                <!-- Server Criteria Card -->
+                <div class="settings-card mb-4">
+                  <div class="card-header">
+                    <div class="card-title">
+                      <i class="bi bi-funnel"></i>
+                      <h3>Server Criteria</h3>
+                    </div>
+                  </div>
+                  
+                  <div class="card-body">
+                    <!-- Max Ping -->
+                    <div class="setting-item">
+                      <label class="form-label">
+                        <i class="bi bi-speedometer2"></i>
+                        Maximum Ping (ms)
+                      </label>
+                      <p class="setting-description">Only match with servers below this ping threshold</p>
+                      <div class="input-group" style="max-width: 200px;">
+                        <input 
+                          type="number" 
+                          class="form-control" 
+                          [(ngModel)]="quickMatchCriteria.maxPing"
+                          (ngModelChange)="saveQuickMatchSettings()"
+                          min="50"
+                          max="500"
+                          step="10">
+                        <span class="input-group-text">ms</span>
+                      </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Player Count Range -->
+                    <div class="setting-item">
+                      <label class="form-label">
+                        <i class="bi bi-people-fill"></i>
+                        Player Count Range
+                      </label>
+                      <p class="setting-description">Preferred minimum and maximum number of players</p>
+                      <div class="row g-3">
+                        <div class="col-md-6">
+                          <label class="form-label small">Minimum Players</label>
+                          <input 
+                            type="number" 
+                            class="form-control" 
+                            [(ngModel)]="quickMatchCriteria.minPlayers"
+                            (ngModelChange)="saveQuickMatchSettings()"
+                            min="0"
+                            max="32">
+                        </div>
+                        <div class="col-md-6">
+                          <label class="form-label small">Maximum Players</label>
+                          <input 
+                            type="number" 
+                            class="form-control" 
+                            [(ngModel)]="quickMatchCriteria.maxPlayers"
+                            (ngModelChange)="saveQuickMatchSettings()"
+                            min="1"
+                            max="64">
+                        </div>
+                      </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Monitoring Timeout -->
+                    <div class="setting-item">
+                      <label class="form-label">
+                        <i class="bi bi-clock"></i>
+                        Monitoring Timeout
+                      </label>
+                      <p class="setting-description">How long to monitor for matches when no server is found immediately</p>
+                      <div class="input-group" style="max-width: 200px;">
+                        <input 
+                          type="number" 
+                          class="form-control" 
+                          [(ngModel)]="quickMatchCriteria.monitoringTimeoutMinutes"
+                          (ngModelChange)="saveQuickMatchSettings()"
+                          min="1"
+                          max="60"
+                          step="1">
+                        <span class="input-group-text">minutes</span>
+                      </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Server Filters -->
+                    <div class="setting-item">
+                      <label class="form-label">
+                        <i class="bi bi-filter"></i>
+                        Server Filters
+                      </label>
+                      
+                      <div class="form-check form-switch mb-3">
+                        <input 
+                          class="form-check-input" 
+                          type="checkbox" 
+                          id="avoidEmpty"
+                          [(ngModel)]="quickMatchCriteria.avoidEmpty"
+                          (ngModelChange)="saveQuickMatchSettings()">
+                        <label class="form-check-label" for="avoidEmpty">
+                          <strong>Avoid Empty Servers</strong>
+                          <p class="setting-description mb-0">Skip servers with no players</p>
+                        </label>
+                      </div>
+
+                      <div class="form-check form-switch">
+                        <input 
+                          class="form-check-input" 
+                          type="checkbox" 
+                          id="avoidFull"
+                          [(ngModel)]="quickMatchCriteria.avoidFull"
+                          (ngModelChange)="saveQuickMatchSettings()">
+                        <label class="form-check-label" for="avoidFull">
+                          <strong>Avoid Full Servers</strong>
+                          <p class="setting-description mb-0">Skip servers at maximum capacity</p>
+                        </label>
+                      </div>
+                    </div>
+
+                    <hr>
+
+                  </div>
+                </div>
+
+                <!-- Game Types Card -->
+                <div class="settings-card mb-4">
+                  <div class="card-header">
+                    <div class="card-title">
+                      <i class="bi bi-joystick"></i>
+                      <h3>Preferred Game Types</h3>
+                    </div>
+                  </div>
+                  
+                  <div class="card-body">
+                    <div class="setting-item">
+                      <p class="setting-description">Select which game modes to include in Quick Match</p>
+                      
+                      <div class="game-type-grid">
+                        <div class="form-check">
+                          <input 
+                            class="form-check-input" 
+                            type="checkbox" 
+                            id="gtCooperative"
+                            [checked]="isGameTypeSelected(0)"
+                            (change)="toggleGameType(0)">
+                          <label class="form-check-label" for="gtCooperative">
+                            Cooperative
+                          </label>
+                        </div>
+
+                        <div class="form-check">
+                          <input 
+                            class="form-check-input" 
+                            type="checkbox" 
+                            id="gtDeathmatch"
+                            [checked]="isGameTypeSelected(1)"
+                            (change)="toggleGameType(1)">
+                          <label class="form-check-label" for="gtDeathmatch">
+                            Deathmatch
+                          </label>
+                        </div>
+
+                        <div class="form-check">
+                          <input 
+                            class="form-check-input" 
+                            type="checkbox" 
+                            id="gtTeamDeathmatch"
+                            [checked]="isGameTypeSelected(2)"
+                            (change)="toggleGameType(2)">
+                          <label class="form-check-label" for="gtTeamDeathmatch">
+                            Team Deathmatch
+                          </label>
+                        </div>
+
+                        <div class="form-check">
+                          <input 
+                            class="form-check-input" 
+                            type="checkbox" 
+                            id="gtCTF"
+                            [checked]="isGameTypeSelected(3)"
+                            (change)="toggleGameType(3)">
+                          <label class="form-check-label" for="gtCTF">
+                            Capture the Flag
+                          </label>
+                        </div>
+
+                        <div class="form-check">
+                          <input 
+                            class="form-check-input" 
+                            type="checkbox" 
+                            id="gtSurvival"
+                            [checked]="isGameTypeSelected(4)"
+                            (change)="toggleGameType(4)">
+                          <label class="form-check-label" for="gtSurvival">
+                            Survival
+                          </label>
+                        </div>
+
+                        <div class="form-check">
+                          <input 
+                            class="form-check-input" 
+                            type="checkbox" 
+                            id="gtHorde"
+                            [checked]="isGameTypeSelected(5)"
+                            (change)="toggleGameType(5)">
+                          <label class="form-check-label" for="gtHorde">
+                            Horde
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </ng-template>
+          </li>
+          <li [ngbNavItem]="4">
+            <button ngbNavLink class="d-flex align-items-center gap-2">
+              <i class="bi bi-controller"></i>
+              <span>Games</span>
+            </button>
+            <ng-template ngbNavContent>
+              <div class="content-section">
+                <h2>Game Library</h2>
+                <p class="text-muted mb-4">Manage your DOOM game files and WAD directories</p>
+                
+                <!-- WAD Directories Card -->
+                <div class="settings-card mb-4">
+                  <div class="card-header">
+                    <div class="card-title">
+                      <i class="bi bi-folder2-open"></i>
+                      <h3>WAD Directories</h3>
+                    </div>
+                    <button class="btn btn-primary btn-sm" (click)="addDirectory()">
+                      <i class="bi bi-folder-plus"></i>
+                      Add Directory
+                    </button>
+                  </div>
+                  
+                  <div class="card-body">
+                    @if (wadDirectories().directories.length === 0) {
+                      <div class="empty-state">
+                        <i class="bi bi-folder-x"></i>
+                        <p>No WAD directories configured</p>
+                        <small>Add directories where your DOOM WAD files are located</small>
+                      </div>
+                    } @else {
+                      <div class="list-group directory-list mb-3">
+                        @for (dir of wadDirectories().directories; track dir) {
+                          <div class="list-group-item">
+                            <span><i class="bi bi-folder"></i>{{ dir }}</span>
+                            <button class="btn btn-sm btn-outline-danger" 
+                                    (click)="removeWADDirectory(dir)"
+                                    title="Remove directory">
+                              <i class="bi bi-trash"></i>
+                            </button>
+                          </div>
+                        }
+                      </div>
+                    }
+                    
+                    <div class="form-check form-switch mt-3">
+                      <input class="form-check-input" 
+                             type="checkbox" 
+                             id="scanSteam"
+                             [checked]="wadDirectories().scanSteam"
+                             (change)="toggleSteamScan($event)">
+                      <label class="form-check-label" for="scanSteam">
+                        <i class="bi bi-steam me-2"></i>
+                        Scan Steam installation directories
+                      </label>
+                    </div>
+                    <small class="text-muted d-block mt-2">
+                      Automatically detect DOOM games installed via Steam
+                    </small>
+                  </div>
+                </div>
+
+                <!-- Detected IWADs Card -->
+                <div class="settings-card">
+                  <div class="card-header">
+                    <div class="card-title">
+                      <i class="bi bi-joystick"></i>
+                      <h3>Detected Games</h3>
+                    </div>
+                    <button class="btn btn-primary btn-sm" 
+                            (click)="rescanIWADs()"
+                            [disabled]="iwadService.loading()">
+                      @if (iwadService.loading()) {
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                        Scanning...
+                      } @else {
+                        <i class="bi bi-arrow-clockwise"></i>
+                        Rescan
+                      }
+                    </button>
+                  </div>
+                  
+                  <div class="card-body"
+                       [style.opacity]="iwadService.loading() ? 0.5 : 1" 
+                       [style.pointer-events]="iwadService.loading() ? 'none' : 'auto'"
+                       [style.transition]="'opacity 0.2s'">
+                    @if (groupedIWADs().length === 0) {
+                      <div class="empty-state">
+                        <i class="bi bi-inbox"></i>
+                        <p>No game files detected</p>
+                        <small>Add WAD directories above to scan for DOOM, DOOM II, and other IWAD files</small>
+                      </div>
+                    } @else {
+                      <div class="games-grid">
+                        @for (group of groupedIWADs(); track group.metadata?.type) {
+                          <div class="game-card">
+                            <div class="game-icon">
+                              <img [src]="'assets/games/' + group.metadata?.imageFilename" 
+                                   [alt]="group.metadata?.displayName"
+                                   onerror="this.style.display='none'">
+                            </div>
+                            <div class="game-info">
+                              <h5>{{ group.metadata?.displayName }}</h5>
+                              <p class="game-description">{{ group.metadata?.description }}</p>
+                              <div class="game-details">
+                                @if (group.iwads.length === 1) {
+                                  <div class="detail-item">
+                                    <i class="bi bi-hdd"></i>
+                                    <span class="text-truncate">{{ group.iwads[0].path }}</span>
+                                  </div>
+                                } @else {
+                                  <div class="detail-item">
+                                    <i class="bi bi-files"></i>
+                                    <span>{{ group.iwads.length }} versions found</span>
+                                  </div>
+                                  @for (iwad of group.iwads; track iwad.path) {
+                                    <div class="detail-item small">
+                                      <i class="bi bi-dash"></i>
+                                      <span class="text-truncate">{{ iwad.path }}</span>
+                                    </div>
+                                  }
+                                }
+                              </div>
+                            </div>
+                          </div>
+                        }
+                      </div>
+                      
+                      <div class="stats-footer">
+                        <small class="text-muted">
+                          <i class="bi bi-info-circle me-1"></i>
+                          {{ groupedIWADs().length }} unique game{{ groupedIWADs().length !== 1 ? 's' : '' }} · 
+                          {{ detectedIWADs().length }} total IWAD{{ detectedIWADs().length !== 1 ? 's' : '' }}
+                        </small>
+                      </div>
+                    }
+                  </div>
+                </div>
+              </div>
+            </ng-template>
+          </li>
         </ul>
 
         <!-- Content Display Area -->
-        <div class="settings-content" [ngbNavOutlet]="nav"></div>
+        <div class="settings-content flex-grow-1" [ngbNavOutlet]="nav"></div>
       </div>
     </div>
     

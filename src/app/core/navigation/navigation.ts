@@ -5,8 +5,9 @@ import {
   bootstrapHouseFill,
   bootstrapController,
   bootstrapPeopleFill,
+  bootstrapListUl,
   bootstrapHddStackFill,
-  bootstrapDiscord,
+  bootstrapPeople,
   bootstrapGearFill,
   bootstrapPersonCircle
 } from '@ng-icons/bootstrap-icons';
@@ -26,8 +27,9 @@ interface NavItem {
       bootstrapHouseFill,
       bootstrapController,
       bootstrapPeopleFill,
+      bootstrapListUl,
       bootstrapHddStackFill,
-      bootstrapDiscord,
+      bootstrapPeople,
       bootstrapGearFill,
       bootstrapPersonCircle
     })
@@ -41,8 +43,9 @@ export class NavigationComponent {
     { path: '/home', icon: 'bootstrapHouseFill', label: 'Home' },
     { path: '/singleplayer', icon: 'bootstrapController', label: 'Single Player' },
     { path: '/multiplayer', icon: 'bootstrapPeopleFill', label: 'Multiplayer' },
-    { path: '/servers', icon: 'bootstrapHddStackFill', label: 'Server Hosting' },
-    { path: '/community', icon: 'bootstrapDiscord', label: 'Community' }
+    { path: '/servers', icon: 'bootstrapListUl', label: 'Server Browser' },
+    { path: '/hosting', icon: 'bootstrapHddStackFill', label: 'Server Hosting' },
+    { path: '/community', icon: 'bootstrapPeople', label: 'Community' }
   ];
 
   protected readonly bottomNavItems: NavItem[] = [

@@ -1,7 +1,6 @@
 import { Component, ChangeDetectionStrategy, inject, computed } from '@angular/core';
 import { Router } from '@angular/router';
-import { UpdatesService } from '@shared/services/updates/updates.service';
-import { AutoUpdateService } from '@shared/services/auto-update/auto-update.service';
+import { UpdatesService, AutoUpdateService } from '@shared/services';
 
 /**
  * Component that displays update banners for both Odamex and ODX launcher

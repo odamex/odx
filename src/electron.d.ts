@@ -8,6 +8,7 @@ export interface ElectronAPI {
   flashWindow: () => void;
   updateTrayIcon: (status: 'online' | 'offline' | 'degraded') => void;
   updateTrayTooltip: (tooltip: string) => void;
+  updateQueueState: (isMonitoring: boolean) => void;
   showNotification: (title: string, body: string) => void;
   showMessageBox: (options: {
     type?: 'none' | 'info' | 'error' | 'question' | 'warning';
@@ -28,6 +29,8 @@ export interface ElectronAPI {
   onUpdateDownloadProgress: (callback: (progress: any) => void) => void;
   onUpdateDownloaded: (callback: (info: any) => void) => void;
   onQuickLaunchServer: (callback: () => void) => void;
+  onTrayQuickMatch: (callback: () => void) => void;
+  onTrayLeaveQueue: (callback: () => void) => void;
   onToggleAutoUpdate: (callback: (enabled: boolean) => void) => void;
   odalPapi: {
     queryMaster: (ip: string) => Promise<Array<{ip: string, port: number}>>;

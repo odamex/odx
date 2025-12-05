@@ -6,10 +6,11 @@ Cross-platform Electron + Angular 20 launcher for Odamex with single player, mul
 
 - 🎮 **Single Player** - Launch Odamex with custom WADs, difficulty, and map selection
 - 🌐 **Multiplayer** - Browse and join servers with real-time server list updates
+- ⚡ **Quick Match** - Instant matchmaking that finds the best server based on ping, player count, and your available games
 - 🖥️ **Server Hosting** - Manage local Odamex servers with configuration and logs
 - 💬 **Discord Integration** - Rich Presence and embedded Discord chat
 - 📦 **Auto-Updates** - Automatic launcher and game file updates
-- 🔔 **System Tray** - Minimize to tray with quick actions
+- 🔔 **System Tray** - Minimize to tray with quick actions and match monitoring
 - 📊 **State Management** - NgRx Signals for reactive state
 - 🚀 **Cross-Platform** - Windows, macOS, and Linux support
 
@@ -36,7 +37,7 @@ odx/
 │   │   ├── core/         # Core components (title bar, nav)
 │   │   ├── features/     # Feature modules (home, multiplayer, etc.)
 │   │   ├── shared/       # Shared services and utilities
-│   │   └── app.ts        # Root component
+│   │   └── app.component.ts        # Root component
 │   ├── styles.scss       # Global styles
 │   └── main.ts           # Angular bootstrap
 ├── public/               # Static assets
@@ -155,13 +156,36 @@ Auto-updates are configured to use GitHub Releases. Set the repository in `packa
 - **Router Animations**: Smooth transitions between views
 - **Bootstrap 5**: Consistent UI with custom Odamex theming
 
-### Key Features To Implement
+### Key Services
 
-1. **Server Browser** - Port OdalPapi service from old project for UDP master server queries
-2. **File Management** - Game file detection, download manager, GitHub Releases API integration
-3. **Discord Integration** - Discord RPC for game status, embedded Discord widget
-4. **Local Server Management** - Start/stop servers, view logs, configuration
-5. **Settings Persistence** - Local storage for preferences, sync-able account settings
+**OdalPapi Service** - UDP master server communication for server list queries  
+**File Manager** - Odamex installation detection, GitHub Releases integration, download management  
+**IWAD Manager** - Automatic IWAD detection with Steam integration and WAD directory management  
+**Quick Match Service** - Client-side matchmaking with filtering, ranking, and monitoring  
+**Updates Service** - Automatic launcher and game file updates via GitHub Releases  
+**Notification Service** - Desktop notifications with system tray integration  
+
+## Implemented Features
+
+- ✅ Server browser with real-time master server queries
+- ✅ OdalPapi UDP protocol implementation for server discovery
+- ✅ Quick Match system with automatic server selection
+- ✅ IWAD detection and management (Steam integration)
+- ✅ Game file management with GitHub Releases API
+- ✅ Settings persistence via localStorage
+- ✅ System tray with contextual actions
+- ✅ Auto-update system for launcher
+- ✅ Responsive UI with Bootstrap 5 theming
+- ✅ First-run configuration wizard
+
+## Upcoming Features
+
+- [ ] Discord RPC integration for game status
+- [ ] Local server hosting management
+- [ ] Server favorites and history
+- [ ] Advanced server filtering options
+- [ ] User profiles and cloud settings sync
+- [ ] In-app game statistics and leaderboards
 
 ## Development Notes
 
@@ -182,23 +206,46 @@ The left sidebar navigation is implemented in `src/app/core/navigation/` with:
 All routes use lazy loading for optimal performance:
 - `/home` - Dashboard with news and stats
 - `/singleplayer` - Single player launcher
-- `/multiplayer` - Server browser
-- `/servers` - Local server management
+- `/multiplayer` - Quick Match for instant matchmaking
+- `/servers` - Server browser
+- `/hosting` - Local server management
 - `/community` - Discord integration and links
 - `/settings` - Application settings
 
+### Quick Match System
+
+The Quick Match feature provides automatic server selection based on player preferences:
+
+**Filtering Criteria:**
+- Maximum ping threshold (default: 100ms)
+- Player count range (min/max)
+- Preferred game types (DM, TDM, CTF, Coop, Survival, Horde)
+- Available IWAD detection
+- Excludes password-protected servers
+- Optional filters for empty/full servers
+
+**Ranking Algorithm:**
+- Scores servers based on player count (prioritizes active games)
+- Penalizes high ping for better connection quality
+- Formula: `score = min(playerCount, 8) * 10 - (ping / 10)`
+
+**Lightweight Monitoring Queue:**
+- If no match is found immediately, users can enable background monitoring
+- Checks for suitable servers every 30 seconds
+- Runs for up to 10 minutes
+- Desktop notifications when a match is found
+- Integrated with system tray menu
+- No central server dependency - all client-side
+
+**Settings:**
+- Fully customizable criteria in Settings → Quick Match
+- Persisted in localStorage
+- Game type multi-select
+- Real-time criteria display on Quick Match page
+
 ## Contributing
 
-This is the initial scaffold. The following areas need implementation:
-
-- [ ] Server browser with master server queries
-- [ ] OdalPapi service port from old project
-- [ ] Game file management and updates
-- [ ] Discord RPC integration
-- [ ] Local server management
-- [ ] Settings persistence
-- [ ] User authentication
-- [ ] Splash screen/loading states
+Contributions are welcome! Please feel free to submit pull requests or open issues for bugs and feature requests.
 
 ## License
 

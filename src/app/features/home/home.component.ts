@@ -1,10 +1,11 @@
 import { Component, ChangeDetectionStrategy, inject, signal, OnInit, computed } from '@angular/core';
-import { Router } from '@angular/router';
-import { FileManagerService, InstallationInfo } from '@shared/services/file-manager/file-manager.service';
-import { ServersStore } from '@shared/services/odalpapi/servers.store';
+import { Router, RouterLink } from '@angular/router';
+import { FileManagerService, type InstallationInfo } from '@shared/services';
+import { ServersStore } from '@app/store';
 
 @Component({
   selector: 'app-home',
+  imports: [RouterLink],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush

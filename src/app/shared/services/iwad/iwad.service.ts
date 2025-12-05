@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
-import { IWADStore, type DetectedIWAD, type WADDirectoryConfig, type GameMetadata } from './iwad.store';
+import { IWADStore, type DetectedIWAD, type WADDirectoryConfig, type GameMetadata } from '@app/store';
 
-export type { DetectedIWAD, WADDirectoryConfig, GameMetadata } from './iwad.store';
+export type { DetectedIWAD, WADDirectoryConfig, GameMetadata } from '@app/store';
 
 @Injectable({
   providedIn: 'root'

@@ -16,11 +16,15 @@ export const routes: Routes = [
   },
   {
     path: 'multiplayer',
-    loadComponent: () => import('@app/features/servers/servers.component').then(m => m.ServersComponent)
+    loadComponent: () => import('@app/features/multiplayer/multiplayer.component').then(m => m.MultiplayerComponent)
   },
   {
     path: 'servers',
-    loadComponent: () => import('@app/features/multiplayer/multiplayer.component').then(m => m.MultiplayerComponent)
+    loadComponent: () => import('@app/features/servers/servers.component').then(m => m.ServersComponent)
+  },
+  {
+    path: 'hosting',
+    loadComponent: () => import('@app/features/servers/servers.component').then(m => m.ServersComponent)
   },
   {
     path: 'community',

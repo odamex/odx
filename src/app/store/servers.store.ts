@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { signalStore, withState, withMethods, patchState } from '@ngrx/signals';
-import { OdalPapi } from './odalpapi.models';
+import { OdalPapi } from '@shared/services';
 
 interface ServersState {
   servers: OdalPapi.ServerInfo[];

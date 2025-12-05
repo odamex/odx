@@ -8,8 +8,7 @@ import {
   bootstrapWifiOff,
   bootstrapCircleFill
 } from '@ng-icons/bootstrap-icons';
-import { NetworkStatusService } from '@shared/services/network-status/network-status.service';
-import { OdamexServiceStatusService } from '@shared/services/odamex-service-status/odamex-service-status.service';
+import { NetworkStatusService, OdamexServiceStatusService } from '@shared/services';
 
 /**
  * Custom title bar component with window controls and network status indicator

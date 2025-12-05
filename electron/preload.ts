@@ -15,6 +15,7 @@ contextBridge.exposeInMainWorld('electron', {
   flashWindow: () => ipcRenderer.send('flash-window'),
   updateTrayIcon: (status: 'online' | 'offline' | 'degraded') => ipcRenderer.send('update-tray-icon', status),
   updateTrayTooltip: (tooltip: string) => ipcRenderer.send('update-tray-tooltip', tooltip),
+  updateQueueState: (isMonitoring: boolean) => ipcRenderer.send('update-queue-state', isMonitoring),
   showNotification: (title: string, body: string) => ipcRenderer.send('show-notification', title, body),
   showMessageBox: (options: any) => ipcRenderer.invoke('show-message-box', options),
 
@@ -31,6 +32,8 @@ contextBridge.exposeInMainWorld('electron', {
 
   // Tray actions
   onQuickLaunchServer: (callback: () => void) => ipcRenderer.on('quick-launch-server', callback),
+  onTrayQuickMatch: (callback: () => void) => ipcRenderer.on('tray-quick-match', callback),
+  onTrayLeaveQueue: (callback: () => void) => ipcRenderer.on('tray-leave-queue', callback),
   onToggleAutoUpdate: (callback: (enabled: boolean) => void) => ipcRenderer.on('toggle-auto-update', (_event, enabled) => callback(enabled)),
 
   // OdalPapi methods

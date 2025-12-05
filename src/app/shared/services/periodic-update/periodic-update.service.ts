@@ -1,9 +1,5 @@
 import { Injectable, inject, signal, effect, DestroyRef } from '@angular/core';
-import { UpdatesService } from '@shared/services/updates/updates.service';
-import { FileManagerService } from '@shared/services/file-manager/file-manager.service';
-import { NotificationService } from '@shared/services/notification/notification.service';
-import { NetworkStatusService } from '@shared/services/network-status/network-status.service';
-import { AutoUpdateService } from '@shared/services/auto-update/auto-update.service';
+import { UpdatesService, FileManagerService, NotificationService, NetworkStatusService, AutoUpdateService } from '@shared/services';
 import versions from '../../../../_versions';
 
 /**

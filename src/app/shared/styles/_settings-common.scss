@@ -651,3 +651,51 @@
     margin-bottom: 1rem;
   }
 }
+
+// Settings Navigation Styles
+.settings-nav {
+  li {
+    width: 100%;
+  }
+
+  .nav-link {
+    width: 100%;
+    background: #2c2c2c;
+    border: 1px solid #444;
+    color: #aaa;
+    padding: 0.75rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.95rem;
+    text-align: left;
+    margin-bottom: 0.5rem;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    i {
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+
+    span {
+      flex: 1;
+      min-width: 0;
+    }
+
+    &:hover {
+      background: #333;
+      border-color: #555;
+      color: #fff;
+    }
+
+    &.active {
+      background: #ffa300;
+      border-color: #ffa300;
+      color: #000;
+      font-weight: 600;
+    }
+  }
+}

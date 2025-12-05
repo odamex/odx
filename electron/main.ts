@@ -43,6 +43,7 @@ if (isDevelopment) {
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
 let isQuitting = false;
+let isMonitoringQueue = false; // Track queue monitoring state
 const odalPapiService = new OdalPapiMainService();
 const fileManager = new FileManagerService();
 const iwadManager = new IWADManager(
@@ -140,7 +141,24 @@ function createTray(): void {
     : path.join(process.resourcesPath, 'tray-icon.png');
   tray = new Tray(trayIconPath);
 
-  const contextMenu = Menu.buildFromTemplate([
+  updateTrayMenu();
+
+  tray.setToolTip('ODX');
+
+  tray.on('double-click', () => {
+    mainWindow?.show();
+    mainWindow?.focus();
+  });
+}
+
+/**
+ * Update the tray context menu
+ * Rebuilds the menu to reflect current state (e.g., queue monitoring)
+ */
+function updateTrayMenu(): void {
+  if (!tray) return;
+
+  const menuTemplate: any[] = [
     {
       label: 'Show ODX',
       click: () => {
@@ -150,23 +168,34 @@ function createTray(): void {
     },
     { type: 'separator' },
     {
-      label: 'Quick Launch Server',
+      label: 'Quick Match',
       click: () => {
-        // TODO: Implement quick server launch
-        mainWindow?.webContents.send('quick-launch-server');
+        mainWindow?.show();
+        mainWindow?.focus();
+        mainWindow?.webContents.send('tray-quick-match');
       }
-    },
-    { type: 'separator' },
+    }
+  ];
+
+  // Add "Leave Queue" option if monitoring is active
+  if (isMonitoringQueue) {
+    menuTemplate.push({
+      label: 'Stop Match Monitoring',
+      click: () => {
+        mainWindow?.webContents.send('tray-leave-queue');
+      }
+    });
+  }
+
+  menuTemplate.push(
     {
       label: 'Auto-Update',
       type: 'checkbox',
       checked: true,
       click: (menuItem) => {
-        // TODO: Save auto-update preference
         mainWindow?.webContents.send('toggle-auto-update', menuItem.checked);
       }
     },
-    { type: 'separator' },
     {
       label: 'Quit',
       click: () => {
@@ -174,15 +203,10 @@ function createTray(): void {
         app.quit();
       }
     }
-  ]);
+  );
 
-  tray.setToolTip('ODX');
+  const contextMenu = Menu.buildFromTemplate(menuTemplate);
   tray.setContextMenu(contextMenu);
-
-  tray.on('double-click', () => {
-    mainWindow?.show();
-    mainWindow?.focus();
-  });
 }
 
 // IPC Handlers for window controls
@@ -216,6 +240,20 @@ ipcMain.on('app-quit', () => {
 ipcMain.on('flash-window', () => {
   if (!mainWindow?.isFocused()) {
     mainWindow?.flashFrame(true);
+  }
+});
+
+// Update queue monitoring state for tray menu
+ipcMain.on('update-queue-state', (_event, isMonitoring: boolean) => {
+  console.log('[Main] Queue monitoring state:', isMonitoring);
+  isMonitoringQueue = isMonitoring;
+  updateTrayMenu();
+});
+
+// Update tray tooltip
+ipcMain.on('update-tray-tooltip', (_event, tooltip: string) => {
+  if (tray) {
+    tray.setToolTip(tooltip);
   }
 });
 

@@ -1,8 +1,6 @@
 import { Injectable, inject, effect, signal, DestroyRef } from '@angular/core';
-import { OdalPapiService } from '@shared/services/odalpapi/odalpapi.service';
-import { ServersStore } from '@shared/services/odalpapi/servers.store';
-import { OdalPapi } from '@shared/services/odalpapi/odalpapi.models';
-import { NotificationService } from '@shared/services/notification/notification.service';
+import { OdalPapiService, NotificationService, OdalPapi } from '@shared/services';
+import { ServersStore } from '@app/store';
 
 @Injectable({ providedIn: 'root' })
 export class ServerRefreshService {

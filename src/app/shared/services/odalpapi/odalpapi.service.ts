@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { OdalPapi } from './odalpapi.models';
 import { validateServerAddress, validateIPAddress } from '@shared/utils/validation.utils';
-import { NetworkStatusService } from '@shared/services/network-status/network-status.service';
+import { NetworkStatusService } from '@shared/services';
 
 @Injectable({providedIn: 'root'})
 export class OdalPapiService {

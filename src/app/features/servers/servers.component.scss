@@ -1,13 +1,30 @@
 
+// Override parent content-area styles for server browser
+:host {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden; // Prevent parent scrollbar
+}
+
 .server-browser-container {
   display: flex;
   flex-direction: column;
-  height: calc(100% + 4rem); // Compensate for parent padding
-  margin: -2rem; // Negative margin to expand to edges
+  height: 100%;
   gap: 0;
   background: #1e1e1e;
   overflow: hidden;
-  position: relative;
+  
+  // Disable interactions while resizing
+  &.resizing {
+    .server-list-area {
+      pointer-events: none;
+      user-select: none;
+    }
+  }
 }
 
 .server-list-area {
@@ -16,29 +33,28 @@
   overflow-y: auto;
   overflow-x: hidden;
   background: #1e1e1e;
-  padding-bottom: 30%; // Make room for details panel
   
   .container-fluid {
     padding: 1rem;
   }
-}.server-details-panel {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
+}
+
+.server-details-panel {
+  flex-shrink: 0; // Don't shrink when space is tight
   height: 30%;
+  min-height: 72px; // Minimum collapsed height
   overflow: hidden;
   background: #1e1e1e;
   display: flex;
   flex-direction: column;
   border-top: 2px solid #0d6efd;
   box-shadow: 0 -4px 8px rgba(0, 0, 0, 0.3);
+  transition: height 0.3s ease;
   
   &.collapsed {
-    height: 72px; // Header height (60px) + resize handle (8px) + padding
-    transition: height 0.3s ease;
+    height: 72px;
   }
-  
+
   .resize-handle {
     height: 8px;
     background: linear-gradient(135deg, #2a2a2a 0%, #1e1e1e 100%);

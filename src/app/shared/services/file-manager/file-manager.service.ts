@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { FileManagerStore } from './file-manager.store';
-import { NetworkStatusService } from '@shared/services/network-status/network-status.service';
+import { FileManagerStore } from '@app/store';
+import { NetworkStatusService } from '@shared/services';
 
 export interface InstallationInfo {
   installed: boolean;
@@ -36,13 +36,18 @@ export class FileManagerService {
   private networkStatus = inject(NetworkStatusService);
 
   // Expose store signals
-  readonly downloadProgress = this.store.downloadProgress;
   readonly installationInfo = this.store.installationInfo;
+  readonly downloadProgress = this.store.downloadProgress;
   readonly loading = this.store.loading;
   readonly error = this.store.error;
+  readonly directories = this.store.directories;
+  readonly wadFiles = this.store.wadFiles;
+  readonly latestRelease = this.store.latestRelease;
+  readonly platformAsset = this.store.platformAsset;
+  readonly customPath = this.store.customPath;
+  readonly useCustomPath = this.store.useCustomPath;
   
-  // Session-level cache for release data
-  private latestReleaseCache: any = null;
+  // Session-level cache for installation info only (others use store)
   private installationInfoCache: InstallationInfo | null = null;
 
   constructor() {
@@ -59,6 +64,27 @@ export class FileManagerService {
    */
   clearDownloadProgress(): void {
     this.store.clearDownloadProgress();
+  }
+  
+  /**
+   * Set custom installation path
+   */
+  setCustomPath(path: string): void {
+    this.store.setCustomPath(path);
+  }
+  
+  /**
+   * Toggle using custom installation path
+   */
+  setUseCustomPath(use: boolean): void {
+    this.store.setUseCustomPath(use);
+  }
+  
+  /**
+   * Set WAD files list
+   */
+  setWadFiles(wadFiles: string[]): void {
+    this.store.setWadFiles(wadFiles);
   }
 
   /**
@@ -116,12 +142,12 @@ export class FileManagerService {
 
   /**
    * Get the latest release from GitHub
-   * Uses session-level cache to avoid redundant API calls
+   * Uses store-level cache to avoid redundant API calls
    */
   async getLatestRelease() {
     // Return cached data if available
-    if (this.latestReleaseCache) {
-      return this.latestReleaseCache;
+    if (this.store.latestRelease()) {
+      return this.store.latestRelease();
     }
     
     // Skip if offline
@@ -137,7 +163,7 @@ export class FileManagerService {
       );
       
       if (release) {
-        this.latestReleaseCache = release;
+        this.store.setLatestRelease(release);
       }
       
       return release;
@@ -151,7 +177,7 @@ export class FileManagerService {
    * Clear the release cache (useful after installation/update)
    */
   clearReleaseCache(): void {
-    this.latestReleaseCache = null;
+    this.store.setLatestRelease(null);
     this.installationInfoCache = null;
   }
 
@@ -219,14 +245,28 @@ export class FileManagerService {
    * Get all directory paths
    */
   async getDirectories(): Promise<DirectoryInfo> {
-    return window.electron.fileManager.getDirectories();
+    // Return cached if available
+    if (this.store.directories()) {
+      return this.store.directories()!;
+    }
+    
+    const directories = await window.electron.fileManager.getDirectories();
+    this.store.setDirectories(directories);
+    return directories;
   }
 
   /**
    * List all WAD files in the wads directory
    */
   async listWadFiles(): Promise<string[]> {
-    return window.electron.fileManager.listWads();
+    // Return cached if available
+    if (this.store.wadFiles().length > 0) {
+      return this.store.wadFiles();
+    }
+    
+    const wadFiles = await window.electron.fileManager.listWads();
+    this.store.setWadFiles(wadFiles);
+    return wadFiles;
   }
 
   /**
@@ -241,7 +281,14 @@ export class FileManagerService {
    * Get the platform-specific asset name for download
    */
   async getPlatformAssetName(): Promise<string> {
-    return window.electron.fileManager.getPlatformAsset();
+    // Return cached if available
+    if (this.store.platformAsset()) {
+      return this.store.platformAsset();
+    }
+    
+    const platformAsset = await window.electron.fileManager.getPlatformAsset();
+    this.store.setPlatformAsset(platformAsset);
+    return platformAsset;
   }
 
   /**

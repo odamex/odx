@@ -1,11 +1,20 @@
 import { Component, ChangeDetectionStrategy, signal, computed, OnInit, AfterViewInit, inject } from '@angular/core';
-import { FileManagerService, DirectoryInfo } from '@shared/services/file-manager/file-manager.service';
-import { UpdatesService } from '@shared/services/updates/updates.service';
-import { IWADService, type GameMetadata } from '@shared/services/iwad/iwad.service';
-import { ServerRefreshService } from '@shared/services/server-refresh/server-refresh.service';
-import { NotificationService } from '@shared/services/notification/notification.service';
-import { PeriodicUpdateService } from '@shared/services/periodic-update/periodic-update.service';
-import { AutoUpdateService } from '@shared/services/auto-update/auto-update.service';
+import { ActivatedRoute } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { 
+  FileManagerService, 
+  UpdatesService, 
+  IWADService, 
+  ServerRefreshService, 
+  NotificationService, 
+  PeriodicUpdateService, 
+  AutoUpdateService, 
+  QuickMatchService,
+  OdalPapi,
+  type DirectoryInfo,
+  type GameMetadata,
+  type QuickMatchCriteria
+} from '@shared/services';
 import { NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
 import { GameSelectionDialogComponent } from '@core/game-selection-dialog/game-selection-dialog.component';
 import { LoadingSpinnerComponent } from '@shared/components/loading-spinner/loading-spinner.component';
@@ -13,12 +22,13 @@ import versions from '../../../_versions';
 
 @Component({
   selector: 'app-settings',
-  imports: [NgbNavModule, GameSelectionDialogComponent, LoadingSpinnerComponent],
+  imports: [NgbNavModule, GameSelectionDialogComponent, LoadingSpinnerComponent, FormsModule],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SettingsComponent implements OnInit, AfterViewInit {
+  private route = inject(ActivatedRoute);
   private fileManager = inject(FileManagerService);
   protected updatesService = inject(UpdatesService);
   protected iwadService = inject(IWADService);
@@ -26,16 +36,22 @@ export class SettingsComponent implements OnInit, AfterViewInit {
   protected notificationService = inject(NotificationService);
   protected periodicUpdateService = inject(PeriodicUpdateService);
   protected autoUpdateService = inject(AutoUpdateService);
+  private quickMatchService = inject(QuickMatchService);
 
   // Use store signals
   readonly installationInfo = this.fileManager.installationInfo;
   readonly downloadProgress = this.fileManager.downloadProgress;
   readonly storeLoading = this.fileManager.loading;
   readonly storeError = this.fileManager.error;
+  readonly directories = this.fileManager.directories;
+  readonly wadFiles = this.fileManager.wadFiles;
+  readonly latestRelease = this.fileManager.latestRelease;
+  readonly platformAsset = this.fileManager.platformAsset;
+  readonly customPath = this.fileManager.customPath;
+  readonly useCustomPath = this.fileManager.useCustomPath;
 
   // Local component state
   activeTab = 1; // ng-bootstrap nav uses number IDs
-  latestRelease = signal<any>(null);
   detectedIWADs = this.iwadService.detectedIWADs;
   wadDirectories = this.iwadService.wadDirectories;
   
@@ -60,15 +76,10 @@ export class SettingsComponent implements OnInit, AfterViewInit {
   });
   
   showGameSelection = signal(false);
-  directories = signal<DirectoryInfo | null>(null);
-  wadFiles = signal<string[]>([]);
-  platformAsset = signal<string>('');
-  customPath = signal<string>('');
-  useCustomPath = signal(false);
   
   downloading = signal(false);
   error = signal<string | null>(null);
-  initializing = signal(true); // Tracks initial data loading
+  initializing = signal(false); // Don't show loading spinner by default - only if we need to fetch data
   
   // Application settings
   filterByVersion = signal(true);
@@ -91,6 +102,24 @@ export class SettingsComponent implements OnInit, AfterViewInit {
   // Auto-update settings (computed from service)
   autoUpdateEnabled = computed(() => this.autoUpdateService.autoUpdateEnabled());
   
+  // Quick Match settings
+  quickMatchCriteria: QuickMatchCriteria = {
+    maxPing: 100,
+    minPlayers: 1,
+    maxPlayers: 32,
+    avoidEmpty: true,
+    avoidFull: true,
+    monitoringTimeoutMinutes: 15,
+    preferredGameTypes: [
+      OdalPapi.GameType.GT_Deathmatch,
+      OdalPapi.GameType.GT_TeamDeathmatch,
+      OdalPapi.GameType.GT_CaptureTheFlag,
+      OdalPapi.GameType.GT_Cooperative,
+      OdalPapi.GameType.GT_Survival,
+      OdalPapi.GameType.GT_Horde
+    ]
+  };
+  
   // Version information
   readonly appVersion = versions.version;
   readonly appVersionDate = new Date(versions.versionDate).toLocaleDateString();
@@ -100,17 +129,48 @@ export class SettingsComponent implements OnInit, AfterViewInit {
   protected readonly Math = Math;
 
   ngOnInit() {
+    // Check for tab query parameter and navigate to it
+    this.route.queryParams.subscribe(params => {
+      if (params['tab']) {
+        const tabNumber = parseInt(params['tab'], 10);
+        if (!isNaN(tabNumber)) {
+          this.activeTab = tabNumber;
+        }
+      }
+    });
+
     // Load application settings from localStorage (synchronous - no blocking)
     const savedFilterByVersion = localStorage.getItem('filterByVersion');
     if (savedFilterByVersion !== null) {
       this.filterByVersion.set(savedFilterByVersion === 'true');
     }
+
+    // Load Quick Match settings from localStorage
+    const savedQuickMatchCriteria = localStorage.getItem('quickMatchCriteria');
+    if (savedQuickMatchCriteria) {
+      try {
+        const criteria = JSON.parse(savedQuickMatchCriteria);
+        this.quickMatchCriteria = criteria;
+        this.quickMatchService.criteria.set(criteria);
+      } catch (err) {
+        console.error('Failed to load Quick Match settings:', err);
+      }
+    } else {
+      // Initialize service with default criteria
+      this.quickMatchService.criteria.set({ ...this.quickMatchCriteria });
+    }
   }
   
   ngAfterViewInit() {
-    // Load data asynchronously without blocking UI
-    // UI is now interactive immediately while data loads in background
-    this.loadDataAsync();
+    // Only load data if not already loaded (first visit to settings)
+    // This prevents unnecessary reloading every time user navigates to settings
+    if (!this.directories()) {
+      this.initializing.set(true); // Show loading spinner
+      this.loadDataAsync();
+    } else {
+      // Data already loaded, ready immediately
+      this.initializing.set(false);
+    }
   }
   
   private async loadDataAsync() {
@@ -153,11 +213,8 @@ export class SettingsComponent implements OnInit, AfterViewInit {
         // Update the store with the enhanced info
         this.fileManager.getInstallationInfo(customPathValue);
       }
-
-      this.latestRelease.set(release);
-      this.directories.set(dirs);
-      this.wadFiles.set(wads);
-      this.platformAsset.set(asset);
+      
+      // Data is now in the store via service methods
     } catch (err) {
       console.error('Failed to load settings:', err);
       this.error.set('Failed to load installation information');
@@ -165,12 +222,12 @@ export class SettingsComponent implements OnInit, AfterViewInit {
   }
 
   toggleCustomPath() {
-    this.useCustomPath.set(!this.useCustomPath());
+    this.fileManager.setUseCustomPath(!this.useCustomPath());
     this.loadData();
   }
 
   updateCustomPath(path: string) {
-    this.customPath.set(path);
+    this.fileManager.setCustomPath(path);
     if (this.useCustomPath()) {
       this.loadData();
     }
@@ -260,7 +317,7 @@ export class SettingsComponent implements OnInit, AfterViewInit {
   async refreshWads() {
     try {
       const wads = await this.fileManager.listWadFiles();
-      this.wadFiles.set(wads);
+      this.fileManager.setWadFiles(wads);
     } catch (err) {
       console.error('Failed to refresh WAD list:', err);
     }
@@ -446,6 +503,75 @@ export class SettingsComponent implements OnInit, AfterViewInit {
       console.error('Failed to toggle Steam scan:', err);
       alert('Failed to update Steam scan setting. Please try again.');
     }
+  }
+
+  // Quick Match Settings Methods
+  
+  /**
+   * Check if a game type is selected in Quick Match preferences
+   */
+  isGameTypeSelected(gameType: OdalPapi.GameType): boolean {
+    return this.quickMatchCriteria.preferredGameTypes?.includes(gameType) ?? false;
+  }
+
+  /**
+   * Toggle a game type in Quick Match preferences
+   */
+  toggleGameType(gameType: OdalPapi.GameType): void {
+    if (!this.quickMatchCriteria.preferredGameTypes) {
+      this.quickMatchCriteria.preferredGameTypes = [];
+    }
+
+    const index = this.quickMatchCriteria.preferredGameTypes.indexOf(gameType);
+    if (index > -1) {
+      this.quickMatchCriteria.preferredGameTypes.splice(index, 1);
+    } else {
+      this.quickMatchCriteria.preferredGameTypes.push(gameType);
+    }
+  }
+
+  /**
+   * Save Quick Match settings (auto-save on change)
+   */
+  saveQuickMatchSettings(): void {
+    try {
+      // Update the service with new criteria
+      this.quickMatchService.criteria.set({ ...this.quickMatchCriteria });
+      
+      // Persist to localStorage
+      localStorage.setItem('quickMatchCriteria', JSON.stringify(this.quickMatchCriteria));
+    } catch (err) {
+      console.error('Failed to save Quick Match settings:', err);
+    }
+  }
+
+  /**
+   * Reset Quick Match settings to defaults
+   */
+  resetQuickMatchSettings(): void {
+    this.quickMatchCriteria = {
+      maxPing: 100,
+      minPlayers: 1,
+      maxPlayers: 32,
+      avoidEmpty: true,
+      avoidFull: true,
+      monitoringTimeoutMinutes: 15,
+      preferredGameTypes: [
+        OdalPapi.GameType.GT_Deathmatch,
+        OdalPapi.GameType.GT_TeamDeathmatch,
+        OdalPapi.GameType.GT_CaptureTheFlag,
+        OdalPapi.GameType.GT_Cooperative,
+        OdalPapi.GameType.GT_Survival,
+        OdalPapi.GameType.GT_Horde
+      ]
+    };
+    
+    // Also reset in service and localStorage
+    this.quickMatchService.criteria.set({ ...this.quickMatchCriteria });
+    localStorage.removeItem('quickMatchCriteria');
+    
+    // Save the defaults
+    this.saveQuickMatchSettings();
   }
 }
 

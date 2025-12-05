@@ -5,8 +5,6 @@
       }
 
       .settings-layout {
-        display: flex;
-        gap: 1.5rem;
         min-height: 500px;
         
         &.initializing {
@@ -20,49 +18,12 @@
       }
 
       .settings-nav {
-        flex-shrink: 0;
-        width: 200px;
-        
         &.disabled {
           pointer-events: none;
-        }
-
-        :host ::ng-deep .nav-link {
-          background: #2c2c2c;
-          border: 1px solid #444;
-          color: #aaa;
-          padding: 0.75rem 1rem;
-          border-radius: 4px;
-          cursor: pointer;
-          transition: all 0.2s;
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-          font-size: 0.95rem;
-          text-align: left;
-          margin-bottom: 0.5rem;
-
-          i {
-            font-size: 1.1rem;
-          }
-
-          &:hover {
-            background: #333;
-            border-color: #555;
-            color: #fff;
-          }
-
-          &.active {
-            background: #ffa300;
-            border-color: #ffa300;
-            color: #000;
-            font-weight: 600;
-          }
         }
       }
 
       .settings-content {
-        flex: 1;
         min-width: 0;
       }
 
@@ -427,6 +388,56 @@
               margin: 0;
             }
           }
+        }
+      }
+    }
+
+    // Quick Match Settings
+    .game-type-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 0.75rem;
+      margin-top: 0.75rem;
+
+      .form-check {
+        // Reset global toggle switch styles for regular checkboxes
+        padding-left: 1rem;
+        
+        background: #2c2c2c;
+        border: 1px solid #444;
+        border-radius: 6px;
+        padding: 0.75rem 1rem;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+
+        &:hover {
+          border-color: #4a9eff;
+          background: #333;
+        }
+
+        .form-check-input {
+          // Reset toggle switch dimensions to checkbox size
+          width: 1.125rem;
+          height: 1.125rem;
+          margin-left: 0;
+          margin-top: 0;
+          margin-bottom: 0;
+          flex-shrink: 0;
+        }
+
+        .form-check-label {
+          margin-left: 0;
+          margin-bottom: 0;
+          cursor: pointer;
+          flex: 1;
+          color: #b0b0b0;
+          transition: color 0.2s ease;
+        }
+
+        .form-check-input:checked ~ .form-check-label {
+          color: #ffffff;
         }
       }
     }

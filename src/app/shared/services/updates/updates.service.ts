@@ -1,7 +1,7 @@
 import { Injectable, signal } from '@angular/core';
-import { FileManagerService } from '@shared/services/file-manager/file-manager.service';
+import { FileManagerService } from '@shared/services';
 
-export interface UpdateInfo {
+export interface OdamexUpdateInfo {
   available: boolean;
   currentVersion: string | null;
   latestVersion: string | null;
@@ -13,7 +13,7 @@ export interface UpdateInfo {
   providedIn: 'root'
 })
 export class UpdatesService {
-  private updateInfo = signal<UpdateInfo>({
+  private updateInfo = signal<OdamexUpdateInfo>({
     available: false,
     currentVersion: null,
     latestVersion: null,
@@ -33,7 +33,7 @@ export class UpdatesService {
   /**
    * Check for updates on startup
    */
-  async checkForUpdates(): Promise<UpdateInfo> {
+  async checkForUpdates(): Promise<OdamexUpdateInfo> {
     if (!this.checkEnabled()) {
       return this.updateInfo();
     }
@@ -51,7 +51,7 @@ export class UpdatesService {
 
       const updateCheck = await this.fileManager.checkForUpdates(installInfo.version);
 
-      const info: UpdateInfo = {
+      const info: OdamexUpdateInfo = {
         available: updateCheck.needsUpdate,
         currentVersion: installInfo.version,
         latestVersion: updateCheck.latestVersion || null,

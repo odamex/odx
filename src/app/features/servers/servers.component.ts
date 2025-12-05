@@ -1,11 +1,7 @@
 import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ServersStore } from '@shared/services/odalpapi/servers.store';
-import { OdalPapi } from '@shared/services/odalpapi/odalpapi.models';
-import { FileManagerService } from '@shared/services/file-manager/file-manager.service';
-import { IWADService } from '@shared/services/iwad/iwad.service';
-import { ServerRefreshService } from '@shared/services/server-refresh/server-refresh.service';
-import { NetworkStatusService } from '@shared/services/network-status/network-status.service';
+import { ServersStore } from '@app/store';
+import { OdalPapi, FileManagerService, IWADService, ServerRefreshService, NetworkStatusService } from '@shared/services';
 
 @Component({
   selector: 'app-servers',
@@ -26,7 +22,7 @@ export class ServersComponent {
   
   // Panel resize and collapse
   detailsPanelCollapsed = signal(true);
-  private resizing = false;
+  protected resizing = false;
   private startY = 0;
   private startHeight = 0;
   private savedPanelHeight: string | null = null;
@@ -214,6 +210,8 @@ export class ServersComponent {
       case OdalPapi.GameType.GT_Deathmatch: return 'Deathmatch';
       case OdalPapi.GameType.GT_TeamDeathmatch: return 'Team DM';
       case OdalPapi.GameType.GT_CaptureTheFlag: return 'CTF';
+      case OdalPapi.GameType.GT_Survival: return 'Survival';
+      case OdalPapi.GameType.GT_Horde: return 'Horde';
       default: return 'Unknown';
     }
   }
@@ -392,32 +390,44 @@ export class ServersComponent {
     this.startY = event.clientY;
     
     const detailsPanel = document.querySelector('.server-details-panel') as HTMLElement;
-    if (detailsPanel) {
-      this.startHeight = detailsPanel.offsetHeight;
-    }
+    const container = document.querySelector('.server-browser-container') as HTMLElement;
+    
+    if (!detailsPanel || !container) return;
+    
+    this.startHeight = detailsPanel.offsetHeight;
+    const containerHeight = container.offsetHeight;
+    const minHeight = 72; // Collapsed height
+    const maxHeight = containerHeight - 200; // Leave at least 200px for server list
+    
+    // Prevent text selection during resize
+    document.body.style.userSelect = 'none';
+    document.body.style.cursor = 'ns-resize';
     
     const mouseMoveHandler = (e: MouseEvent) => {
       if (!this.resizing) return;
       
       const delta = this.startY - e.clientY; // Reversed because panel is at bottom
-      const container = document.querySelector('.server-browser-container') as HTMLElement;
-      const detailsPanel = document.querySelector('.server-details-panel') as HTMLElement;
+      const newHeight = Math.max(minHeight, Math.min(maxHeight, this.startHeight + delta));
       
-      if (container && detailsPanel) {
-        const containerHeight = container.offsetHeight;
-        const newHeight = this.startHeight + delta;
-        const minHeight = 72; // Collapsed height
-        const maxHeight = containerHeight - 200; // Leave at least 200px for server list
-        
-        if (newHeight >= minHeight && newHeight <= maxHeight) {
-          const percentage = (newHeight / containerHeight) * 100;
-          detailsPanel.style.height = `${percentage}%`;
-        }
-      }
+      // Use pixel height during drag for better performance
+      detailsPanel.style.height = `${newHeight}px`;
     };
     
     const mouseUpHandler = () => {
       this.resizing = false;
+      
+      // Restore text selection and cursor
+      document.body.style.userSelect = '';
+      document.body.style.cursor = '';
+      
+      // Convert final pixel height to percentage for responsiveness
+      if (detailsPanel) {
+        const finalHeight = detailsPanel.offsetHeight;
+        const containerHeight = container.offsetHeight;
+        const percentage = (finalHeight / containerHeight) * 100;
+        detailsPanel.style.height = `${percentage}%`;
+      }
+      
       document.removeEventListener('mousemove', mouseMoveHandler);
       document.removeEventListener('mouseup', mouseUpHandler);
     };

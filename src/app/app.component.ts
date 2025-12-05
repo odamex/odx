@@ -7,23 +7,26 @@ import { UpdateBannerComponent } from '@core/update-banner/update-banner.compone
 import { FirstRunDialogComponent, FirstRunChoice } from '@core/first-run-dialog/first-run-dialog.component';
 import { GameSelectionDialogComponent } from '@core/game-selection-dialog/game-selection-dialog.component';
 import { SplashService } from '@core/splash/splash.service';
-import { FileManagerService } from '@shared/services/file-manager/file-manager.service';
-import { OdalPapiService } from '@shared/services/odalpapi/odalpapi.service';
-import { ServersStore } from '@shared/services/odalpapi/servers.store';
-import { UpdatesService } from '@shared/services/updates/updates.service';
-import { IWADService, type DetectedIWAD } from '@shared/services/iwad/iwad.service';
-import { ServerRefreshService } from '@shared/services/server-refresh/server-refresh.service';
-import { NetworkStatusService } from '@shared/services/network-status/network-status.service';
-import { OdamexServiceStatusService } from '@shared/services/odamex-service-status/odamex-service-status.service';
-import { PeriodicUpdateService } from '@shared/services/periodic-update/periodic-update.service';
-import { AutoUpdateService } from '@shared/services/auto-update/auto-update.service';
+import { 
+  FileManagerService, 
+  OdalPapiService, 
+  UpdatesService, 
+  IWADService, 
+  ServerRefreshService, 
+  NetworkStatusService, 
+  OdamexServiceStatusService, 
+  PeriodicUpdateService, 
+  AutoUpdateService,
+  type DetectedIWAD
+} from '@shared/services';
+import { ServersStore } from './store';
 import versions from '../_versions';
 
 @Component({
   selector: 'app-root',
   imports: [RouterOutlet, TitleBarComponent, NavigationComponent, SplashComponent, UpdateBannerComponent, FirstRunDialogComponent, GameSelectionDialogComponent],
-  templateUrl: './app.html',
-  styleUrl: './app.scss'
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.scss']
 })
 export class App implements OnInit {
   private splashService = inject(SplashService);

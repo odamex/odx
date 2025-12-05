@@ -1,5 +1,5 @@
 import { Injectable, inject, signal, computed, effect, untracked } from '@angular/core';
-import { NetworkStatusService } from '@shared/services/network-status/network-status.service';
+import { NetworkStatusService } from '@shared/services';
 
 /**
  * Status of Odamex online services

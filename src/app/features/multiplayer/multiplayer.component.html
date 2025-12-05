@@ -1,15 +1,127 @@
 <div class="page-container">
-  <h1>Multiplayer</h1>
-  <p>Browse and join Odamex multiplayer servers from around the world.</p>
-  <div class="placeholder-content">
-    <p>🌐 Server browser will be implemented here</p>
-    <ul>
-      <li>Server list with live updates</li>
-      <li>Filter by game type, map, players</li>
-      <li>Search functionality</li>
-      <li>Server details panel</li>
-      <li>Quick join & favorite servers</li>
-      <li>Master server query (master1.odamex.net:15000)</li>
-    </ul>
+  <div class="quick-match-container">
+    <div class="header">
+      <h1>Quick Match</h1>
+      <p class="subtitle">Jump into a game instantly</p>
+    </div>
+
+    <!-- Stats & Settings Bar -->
+    <div class="stats-bar">
+      <div class="stat">
+        <span class="stat-value">{{ serverCount() }}</span>
+        <span class="stat-label">Total Servers</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value">{{ activeServerCount() }}</span>
+        <span class="stat-label">Active Servers</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat">
+        <span class="stat-value">{{ quickMatchService.criteria().maxPing }}</span>
+        <span class="stat-label">Max Ping (ms)</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value">{{ quickMatchService.criteria().minPlayers }}-{{ quickMatchService.criteria().maxPlayers }}</span>
+        <span class="stat-label">Players</span>
+      </div>
+      @if (quickMatchService.criteria().preferredGameTypes?.length ?? 0 > 0) {
+        <div class="stat modes-stat">
+          <span class="stat-value modes-list">{{ getGameTypeNames() }}</span>
+          <span class="stat-label">Game Modes</span>
+        </div>
+      }
+    </div>
+
+    <!-- Idle State -->
+    @if (state() === 'idle') {
+      <div class="match-card">
+        <div class="icon-container">
+          <i class="bi bi-lightning-charge-fill"></i>
+        </div>
+        <h2>Ready to Play</h2>
+        <p class="match-description">We'll automatically find the best server for you based on active players, low ping, your available games, and no password required.</p>
+        
+        <div class="actions-row">
+          <button class="btn btn-primary btn-lg" (click)="startQuickMatch()">
+            <i class="bi bi-play-circle-fill"></i>
+            Find Match
+          </button>
+          <a routerLink="/settings" [queryParams]="{tab: 3}" class="btn btn-outline btn-sm">
+            <i class="bi bi-sliders"></i>
+            Preferences
+          </a>
+        </div>
+      </div>
+    }
+
+    <!-- Searching State -->
+    @if (state() === 'searching') {
+      <div class="match-card searching">
+        <div class="spinner">
+          <i class="bi bi-arrow-repeat"></i>
+        </div>
+        <h2>Finding the best match...</h2>
+        <p>Analyzing available servers</p>
+      </div>
+    }
+
+    <!-- No Match Found State -->
+    @if (state() === 'no-match') {
+      <div class="match-card no-match">
+        <div class="icon-container warning">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+        </div>
+        <h2>No Suitable Servers Found</h2>
+        <p class="reason">{{ noMatchReason() }}</p>
+        <div class="actions">
+          <button class="btn btn-secondary" (click)="reset()">
+            <i class="bi bi-arrow-left"></i>
+            Try Again
+          </button>
+          <button class="btn btn-primary" (click)="startMonitoring()">
+            <i class="bi bi-clock-fill"></i>
+            Keep Monitoring
+          </button>
+          <a routerLink="/servers" class="btn btn-outline">
+            <i class="bi bi-list-ul"></i>
+            Browse All Servers
+          </a>
+        </div>
+      </div>
+    }
+
+    <!-- Monitoring State -->
+    @if (state() === 'monitoring' || isMonitoring()) {
+      <div class="match-card monitoring">
+        <div class="icon-container pulse">
+          <i class="bi bi-radar"></i>
+        </div>
+        <h2>Monitoring for Matches</h2>
+        <p>We'll notify you when a suitable server becomes available</p>
+        <div class="monitoring-info">
+          <i class="bi bi-info-circle"></i>
+          <span>Checking every 30 seconds for up to {{ quickMatchService.criteria().monitoringTimeoutMinutes ?? 15 }} minutes</span>
+        </div>
+        
+        @if (monitorMatchFound()) {
+          <div class="match-found-alert">
+            <i class="bi bi-check-circle-fill"></i>
+            <div class="match-info">
+              <strong>Match Found!</strong>
+              <span>{{ monitorMatchFound()!.name }}</span>
+            </div>
+            <button class="btn btn-success" (click)="connectToMonitoredServer()">
+              <i class="bi bi-play-fill"></i>
+              Connect Now
+            </button>
+          </div>
+        }
+        
+        <button class="btn btn-secondary" (click)="stopMonitoring()">
+          <i class="bi bi-x-circle"></i>
+          Stop Monitoring
+        </button>
+      </div>
+    }
   </div>
 </div>

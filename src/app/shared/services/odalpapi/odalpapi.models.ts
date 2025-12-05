@@ -36,6 +36,8 @@ export namespace OdalPapi {
 		GT_Deathmatch,
 		GT_TeamDeathmatch,
 		GT_CaptureTheFlag,
+		GT_Survival,
+		GT_Horde,
 		GT_Max
 	}
 

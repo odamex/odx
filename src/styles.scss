@@ -105,8 +105,8 @@ i.bi + span {
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 12px; // Wider for easier grabbing, especially near window edge
+  height: 12px;
 }
 
 ::-webkit-scrollbar-track {
@@ -115,7 +115,7 @@ i.bi + span {
 
 ::-webkit-scrollbar-thumb {
   background: #444;
-  border-radius: 4px;
+  border-radius: 6px; // Slightly more rounded to match wider size
 }
 
 ::-webkit-scrollbar-thumb:hover {
