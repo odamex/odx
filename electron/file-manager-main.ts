@@ -417,9 +417,9 @@ export class FileManagerService {
 
       // Add GitHub token if available (increases rate limit from 60 to 5000 requests/hour)
       // Token comes from:
-      // - Development: GITHUB_TOKEN in .env file
-      // - Production: GITHUB_TOKEN set during build (electron-builder beforeBuild hook or CI/CD)
-      const githubToken = process.env['GITHUB_TOKEN'];
+      // - Development: ODX_GITHUB_TOKEN in .env file
+      // - Production: ODX_GITHUB_TOKEN set during build (electron-builder beforeBuild hook or CI/CD)
+      const githubToken = process.env['ODX_GITHUB_TOKEN'] || process.env['GITHUB_TOKEN'];
       if (githubToken) {
         headers['Authorization'] = `Bearer ${githubToken}`;
       } else if (retryCount === 0) {
