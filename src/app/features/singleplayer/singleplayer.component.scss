@@ -1,12 +1,103 @@
 .page-container {
-  h1 { color: #ffa300; margin-bottom: 1rem; }
-  .placeholder-content {
-    background: #2c2c2c;
-    border: 1px solid #444;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 2rem;
+
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+
+    i.bi {
+      font-size: 3rem;
+      color: #4a9eff;
+    }
+
+    h1 {
+      color: #fff;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+
+      .coming-soon {
+        font-size: 0.6em;
+        color: #4a9eff;
+        font-weight: normal;
+      }
+    }
+  }
+
+  .intro {
+    color: #aaa;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    line-height: 1.6;
+  }
+
+  .info-banner {
+    background: rgba(74, 158, 255, 0.1);
+    border: 1px solid #4a9eff;
     border-radius: 8px;
-    padding: 2rem;
-    margin-top: 2rem;
-    p { font-size: 1.2rem; margin-bottom: 1rem; }
-    ul { color: #aaa; }
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    color: #aaa;
+    margin-bottom: 1.5rem;
+
+    i {
+      color: #4a9eff;
+      font-size: 1.2rem;
+    }
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+
+    .feature {
+      background: #2c2c2c;
+      border: 1px solid #444;
+      border-radius: 8px;
+      padding: 1.5rem;
+      transition: transform 0.2s, border-color 0.2s;
+
+      &:hover {
+        transform: translateY(-2px);
+        border-color: #4a9eff;
+      }
+
+      .feature-icon {
+        width: 50px;
+        height: 50px;
+        background: rgba(74, 158, 255, 0.1);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+
+        i {
+          font-size: 1.5rem;
+          color: #4a9eff;
+        }
+      }
+
+      h3 {
+        color: #fff;
+        margin: 0 0 0.5rem 0;
+        font-size: 1.2rem;
+      }
+
+      p {
+        color: #aaa;
+        margin: 0;
+        line-height: 1.5;
+      }
+    }
   }
 }

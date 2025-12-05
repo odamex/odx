@@ -214,8 +214,8 @@
                                 <span class="spinner-border spinner-border-sm me-2"></span>
                                 Downloading...
                               } @else {
-                                <i class="bi bi-download me-2"></i>
-                                Download & Install
+                                <i class="bi bi-download"></i>
+                                <span class="ms-2">Download & Install</span>
                               }
                             </button>
                           </div>
@@ -993,6 +993,214 @@
               </div>
             </ng-template>
           </li>
+
+          <li [ngbNavItem]="5">
+            <button ngbNavLink class="d-flex align-items-center gap-2">
+              <i class="bi bi-hdd-network-fill"></i>
+              <span>Network</span>
+            </button>
+            <ng-template ngbNavContent>
+              <div class="content-section">
+                <h2>Network Settings</h2>
+                <p class="text-muted mb-4">Configure local network server discovery and scanning</p>
+                
+                <!-- Local Network Discovery Card -->
+                <div class="settings-card mb-4">
+                  <div class="card-header">
+                    <div class="card-title">
+                      <i class="bi bi-hdd-network"></i>
+                      <h3>Local Network Discovery</h3>
+                    </div>
+                  </div>
+                  
+                  <div class="card-body">
+                    <div class="setting-item">
+                      <div class="form-check form-switch">
+                        <input 
+                          class="form-check-input" 
+                          type="checkbox" 
+                          id="localDiscoveryEnabled"
+                          [checked]="localDiscoveryEnabled()"
+                          (change)="toggleLocalDiscovery()">
+                        <label class="form-check-label" for="localDiscoveryEnabled">
+                          <strong>Enable local network scanning</strong>
+                        </label>
+                      </div>
+                      <small class="text-muted">
+                        Automatically discover Odamex servers on your local network that may not be listed on the master server
+                      </small>
+                    </div>
+
+                    @if (localDiscoveryEnabled()) {
+                      <!-- Scan Status -->
+                      @if (localDiscoveryScanning()) {
+                        <div class="alert alert-info d-flex align-items-center gap-2 mt-3 mb-3">
+                          <div class="spinner-border spinner-border-sm" role="status">
+                            <span class="visually-hidden">Scanning...</span>
+                          </div>
+                          <span>Scanning local networks...</span>
+                        </div>
+                      } @else if (localDiscoveryLastScan()) {
+                        <div class="text-muted mt-3 mb-3">
+                          <small>
+                            <i class="bi bi-clock-history me-1"></i>
+                            Last scan: {{ localDiscoveryLastScan() | date:'short' }}
+                          </small>
+                        </div>
+                      }
+
+                      <!-- Detected Networks -->
+                      @if (localDiscoveryNetworks().length > 0) {
+                        <div class="mt-3 mb-3">
+                          <h5 class="text-muted mb-2" style="font-size: 0.875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Detected Networks</h5>
+                          <div class="detected-networks-list">
+                            @for (network of localDiscoveryNetworks(); track network.name) {
+                              <div class="network-item">
+                                <div class="network-icon">
+                                  <i class="bi bi-ethernet"></i>
+                                </div>
+                                <div class="network-info">
+                                  <div class="network-name">{{ network.name }}</div>
+                                  <div class="network-details">
+                                    <span class="network-address">{{ network.address }}</span>
+                                    <span class="network-separator">/</span>
+                                    <span class="network-mask">{{ network.netmask }}</span>
+                                  </div>
+                                </div>
+                                <div class="network-cidr">
+                                  <span class="badge">{{ network.cidr }}</span>
+                                </div>
+                              </div>
+                            }
+                          </div>
+                        </div>
+                      }
+
+                      <!-- Advanced Settings (Collapsible) -->
+                      <div class="mt-3">
+                        <button 
+                          class="btn btn-sm btn-link text-decoration-none p-0 d-flex align-items-center gap-1"
+                          type="button"
+                          (click)="toggleAdvancedDiscovery()">
+                          <i class="bi" [class.bi-chevron-right]="!showAdvancedDiscovery()" [class.bi-chevron-down]="showAdvancedDiscovery()"></i>
+                          <span>Advanced Settings</span>
+                        </button>
+
+                        @if (showAdvancedDiscovery()) {
+                          <div class="mt-3 ms-3 border-start border-2 ps-3">
+                            <!-- Port Range -->
+                            <div class="mb-3">
+                              <label class="form-label mb-1">
+                                <strong>Port Range</strong>
+                              </label>
+                              <small class="text-muted d-block mb-2">
+                                Range of ports to scan for servers (default: 10666-10675)
+                              </small>
+                              <div class="d-flex align-items-center gap-2" style="max-width: 350px;">
+                                <input 
+                                  type="number" 
+                                  class="form-control form-control-sm" 
+                                  id="portRangeStart"
+                                  min="1024"
+                                  max="65535"
+                                  [value]="localDiscoveryPortStart()"
+                                  (input)="updatePortRangeStart(+$any($event.target).value)">
+                                <span>to</span>
+                                <input 
+                                  type="number" 
+                                  class="form-control form-control-sm" 
+                                  id="portRangeEnd"
+                                  min="1024"
+                                  max="65535"
+                                  [value]="localDiscoveryPortEnd()"
+                                  (input)="updatePortRangeEnd(+$any($event.target).value)">
+                              </div>
+                            </div>
+
+                            <!-- Scan Timeout -->
+                            <div class="mb-3">
+                              <label for="scanTimeout" class="form-label mb-1">
+                                <strong>Scan Timeout</strong>
+                              </label>
+                              <small class="text-muted d-block mb-2">
+                                How long to wait for each server response (default: 200ms)
+                              </small>
+                              <div class="input-group" style="max-width: 200px;">
+                                <input 
+                                  type="number" 
+                                  class="form-control form-control-sm" 
+                                  id="scanTimeout"
+                                  min="50"
+                                  max="5000"
+                                  step="50"
+                                  [value]="localDiscoveryScanTimeout()"
+                                  (input)="updateScanTimeout(+$any($event.target).value)">
+                                <span class="input-group-text">ms</span>
+                              </div>
+                            </div>
+
+                            <!-- Refresh Interval -->
+                            <div class="mb-3">
+                              <label for="refreshInterval" class="form-label mb-1">
+                                <strong>Refresh Interval</strong>
+                              </label>
+                              <small class="text-muted d-block mb-2">
+                                How often to automatically rescan local networks (default: 60s)
+                              </small>
+                              <div class="input-group" style="max-width: 200px;">
+                                <input 
+                                  type="number" 
+                                  class="form-control form-control-sm" 
+                                  id="refreshInterval"
+                                  min="10"
+                                  max="600"
+                                  step="10"
+                                  [value]="localDiscoveryRefreshInterval()"
+                                  (input)="updateRefreshInterval(+$any($event.target).value)">
+                                <span class="input-group-text">seconds</span>
+                              </div>
+                            </div>
+
+                            <!-- Max Concurrent Queries -->
+                            <div class="mb-0">
+                              <label for="maxConcurrent" class="form-label mb-1">
+                                <strong>Max Concurrent Queries</strong>
+                              </label>
+                              <small class="text-muted d-block mb-2">
+                                Maximum number of simultaneous server queries (default: 50)
+                              </small>
+                              <div class="input-group" style="max-width: 200px;">
+                                <input 
+                                  type="number" 
+                                  class="form-control form-control-sm" 
+                                  id="maxConcurrent"
+                                  min="1"
+                                  max="200"
+                                  [value]="localDiscoveryMaxConcurrent()"
+                                  (input)="updateMaxConcurrent(+$any($event.target).value)">
+                                <span class="input-group-text">queries</span>
+                              </div>
+                            </div>
+                          </div>
+                        }
+                      </div>
+
+                      <!-- Manual Scan Button -->
+                      <div class="mt-3">
+                        <button 
+                          class="btn btn-primary btn-sm"
+                          [disabled]="localDiscoveryScanning()"
+                          (click)="triggerLocalScan()">
+                          <i class="bi bi-arrow-repeat me-1"></i>
+                          Scan Now
+                        </button>
+                      </div>
+                    }
+                  </div>
+                </div>
+              </div>
+            </ng-template>
+          </li>
         </ul>
 
         <!-- Content Display Area -->
@@ -1005,4 +1213,69 @@
       [visible]="showGameSelection()"
       (completed)="onGameSelectionComplete()"
       (cancelled)="onGameSelectionCancel()" />
+    
+    <!-- Local Network Discovery Confirmation Dialog -->
+    @if (showLocalDiscoveryDialog()) {
+      <div class="dialog-overlay" (click)="cancelLocalDiscovery()">
+        <div class="dialog-container" (click)="$event.stopPropagation()" style="max-width: 600px;">
+          <div class="dialog-header">
+            <h2>
+              <i class="bi bi-hdd-network-fill me-2"></i>
+              Enable Local Network Discovery?
+            </h2>
+            <p>Automatically discover Odamex servers on your local network</p>
+          </div>
+
+          <div class="dialog-body">
+            <div class="alert alert-info">
+              <i class="bi bi-info-circle-fill"></i>
+              <div>
+                <p><strong>What this does:</strong></p>
+                <ul class="mb-0">
+                  <li>Scans your local network for Odamex servers</li>
+                  <li>Finds servers not listed on the master server</li>
+                  <li>Automatically refreshes at regular intervals</li>
+                  <li>Works alongside the master server list</li>
+                </ul>
+              </div>
+            </div>
+
+            @if (localDiscoveryNetworks().length > 0) {
+              <div class="mt-3">
+                <h6 class="text-muted mb-2">Detected Networks</h6>
+                <div class="list-group">
+                  @for (network of localDiscoveryNetworks(); track network.name) {
+                    <div class="list-group-item d-flex align-items-center gap-2 bg-dark border-secondary">
+                      <i class="bi bi-ethernet text-primary"></i>
+                      <div class="flex-grow-1">
+                        <div class="fw-medium">{{ network.name }}</div>
+                        <small class="text-muted">{{ network.address }}/{{ network.netmask }}</small>
+                      </div>
+                      <span class="badge bg-secondary">{{ network.cidr }}</span>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+
+            <div class="alert alert-warning mt-3">
+              <i class="bi bi-exclamation-triangle-fill"></i>
+              <div>
+                <p class="mb-0"><strong>Network Activity:</strong> This feature will scan your network using UDP packets. Most home networks handle this without issue, but corporate/managed networks may have restrictions.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="dialog-footer">
+            <button class="btn btn-secondary" (click)="cancelLocalDiscovery()">
+              Cancel
+            </button>
+            <button class="btn btn-primary" (click)="confirmLocalDiscovery()">
+              <i class="bi bi-check-circle me-1"></i>
+              Enable Discovery
+            </button>
+          </div>
+        </div>
+      </div>
+    }
   

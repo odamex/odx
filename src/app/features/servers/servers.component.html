@@ -101,6 +101,9 @@
               }
             } @else {
               Found {{ filteredServers().length }} server(s)
+              @if (store.localServers().length > 0) {
+                ({{ store.localServers().length }} local)
+              }
             } 
             @if (store.lastUpdated()) {
               • Last updated: {{ store.lastUpdated()! | date:'short' }}
@@ -224,6 +227,11 @@
                   style="cursor: pointer;">
                   <td>
                     {{ server.name || 'Unnamed Server' }}
+                    @if (isLocalServer(server)) {
+                      <span class="badge bg-info text-dark ms-2" title="Local Network Server">
+                        <i class="bi bi-hdd-network me-1"></i>Local
+                      </span>
+                    }
                     @if (server.passwordHash && server.passwordHash !== '') {
                       <i class="bi bi-lock-fill text-warning ms-2" title="Password protected" aria-label="Password protected"></i>
                     }

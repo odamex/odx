@@ -2,6 +2,7 @@
 export * from './auto-update/auto-update.service';
 export * from './file-manager/file-manager.service';
 export * from './iwad/iwad.service';
+export * from './local-network-discovery/local-network-discovery.service';
 export * from './network-status/network-status.service';
 export * from './notification/notification.service';
 export * from './odalpapi/odalpapi.service';

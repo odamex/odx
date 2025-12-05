@@ -1,6 +1,7 @@
 import { Component, ChangeDetectionStrategy, signal, computed, OnInit, AfterViewInit, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { DatePipe } from '@angular/common';
 import { 
   FileManagerService, 
   UpdatesService, 
@@ -10,6 +11,7 @@ import {
   PeriodicUpdateService, 
   AutoUpdateService, 
   QuickMatchService,
+  LocalNetworkDiscoveryService,
   OdalPapi,
   type DirectoryInfo,
   type GameMetadata,
@@ -22,7 +24,7 @@ import versions from '../../../_versions';
 
 @Component({
   selector: 'app-settings',
-  imports: [NgbNavModule, GameSelectionDialogComponent, LoadingSpinnerComponent, FormsModule],
+  imports: [NgbNavModule, GameSelectionDialogComponent, LoadingSpinnerComponent, FormsModule, DatePipe],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -37,6 +39,7 @@ export class SettingsComponent implements OnInit, AfterViewInit {
   protected periodicUpdateService = inject(PeriodicUpdateService);
   protected autoUpdateService = inject(AutoUpdateService);
   private quickMatchService = inject(QuickMatchService);
+  protected localNetworkDiscoveryService = inject(LocalNetworkDiscoveryService);
 
   // Use store signals
   readonly installationInfo = this.fileManager.installationInfo;
@@ -101,6 +104,21 @@ export class SettingsComponent implements OnInit, AfterViewInit {
   
   // Auto-update settings (computed from service)
   autoUpdateEnabled = computed(() => this.autoUpdateService.autoUpdateEnabled());
+  
+  // Local Network Discovery settings (computed from service)
+  localDiscoveryEnabled = computed(() => this.localNetworkDiscoveryService.settings().enabled);
+  localDiscoveryPortStart = computed(() => this.localNetworkDiscoveryService.settings().portRangeStart);
+  localDiscoveryPortEnd = computed(() => this.localNetworkDiscoveryService.settings().portRangeEnd);
+  localDiscoveryScanTimeout = computed(() => this.localNetworkDiscoveryService.settings().scanTimeout);
+  localDiscoveryRefreshInterval = computed(() => this.localNetworkDiscoveryService.settings().refreshInterval);
+  localDiscoveryMaxConcurrent = computed(() => this.localNetworkDiscoveryService.settings().maxConcurrent);
+  localDiscoveryScanning = computed(() => this.localNetworkDiscoveryService.scanning());
+  localDiscoveryLastScan = computed(() => this.localNetworkDiscoveryService.lastScanTime());
+  localDiscoveryNetworks = computed(() => this.localNetworkDiscoveryService.detectedNetworks());
+  
+  // UI state for advanced settings
+  showAdvancedDiscovery = signal(false);
+  showLocalDiscoveryDialog = signal(false);
   
   // Quick Match settings
   quickMatchCriteria: QuickMatchCriteria = {
@@ -402,6 +420,90 @@ export class SettingsComponent implements OnInit, AfterViewInit {
     const current = this.notificationService.settings();
     this.notificationService.updateSettings({ taskbarFlash: !current.taskbarFlash });
   }
+
+  // Local Network Discovery methods
+  toggleLocalDiscovery(): void {
+    const current = this.localNetworkDiscoveryService.settings();
+    const newEnabled = !current.enabled;
+    
+    // Check if this is the first time enabling
+    const hasSeenDialog = localStorage.getItem('localDiscoveryDialogShown') === 'true';
+    
+    if (newEnabled && !hasSeenDialog) {
+      // Show confirmation dialog on first enable
+      this.showLocalDiscoveryDialog.set(true);
+    } else {
+      // Just toggle normally
+      this.localNetworkDiscoveryService.updateSettings({ enabled: newEnabled });
+      
+      if (newEnabled) {
+        this.localNetworkDiscoveryService.start();
+      } else {
+        this.localNetworkDiscoveryService.stop();
+      }
+    }
+  }
+  
+  confirmLocalDiscovery(): void {
+    // Mark that user has seen the dialog
+    localStorage.setItem('localDiscoveryDialogShown', 'true');
+    
+    // Enable and start scanning
+    this.localNetworkDiscoveryService.updateSettings({ enabled: true });
+    this.localNetworkDiscoveryService.start();
+    
+    // Close dialog
+    this.showLocalDiscoveryDialog.set(false);
+  }
+  
+  cancelLocalDiscovery(): void {
+    // Just close the dialog without enabling
+    this.showLocalDiscoveryDialog.set(false);
+  }
+
+  toggleAdvancedDiscovery(): void {
+    this.showAdvancedDiscovery.set(!this.showAdvancedDiscovery());
+  }
+
+  updatePortRangeStart(port: number): void {
+    if (port >= 1024 && port <= 65535) {
+      this.localNetworkDiscoveryService.updateSettings({ portRangeStart: port });
+      this.localNetworkDiscoveryService.restart();
+    }
+  }
+
+  updatePortRangeEnd(port: number): void {
+    if (port >= 1024 && port <= 65535) {
+      this.localNetworkDiscoveryService.updateSettings({ portRangeEnd: port });
+      this.localNetworkDiscoveryService.restart();
+    }
+  }
+
+  updateScanTimeout(timeout: number): void {
+    if (timeout >= 50 && timeout <= 5000) {
+      this.localNetworkDiscoveryService.updateSettings({ scanTimeout: timeout });
+      this.localNetworkDiscoveryService.restart();
+    }
+  }
+
+  updateRefreshInterval(seconds: number): void {
+    if (seconds >= 10 && seconds <= 600) {
+      this.localNetworkDiscoveryService.updateSettings({ refreshInterval: seconds });
+      this.localNetworkDiscoveryService.restart();
+    }
+  }
+
+  updateMaxConcurrent(max: number): void {
+    if (max >= 1 && max <= 200) {
+      this.localNetworkDiscoveryService.updateSettings({ maxConcurrent: max });
+      this.localNetworkDiscoveryService.restart();
+    }
+  }
+
+  triggerLocalScan(): void {
+    this.localNetworkDiscoveryService.scan();
+  }
+
   
   togglePeriodicUpdateCheck() {
     const current = this.periodicUpdateService.settings();

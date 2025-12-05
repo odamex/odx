@@ -6,6 +6,7 @@ Cross-platform Electron + Angular 20 launcher for Odamex with single player, mul
 
 - 🎮 **Single Player** - Launch Odamex with custom WADs, difficulty, and map selection
 - 🌐 **Multiplayer** - Browse and join servers with real-time server list updates
+- 🔍 **Local Network Discovery** - Automatically find Odamex servers on your local network
 - ⚡ **Quick Match** - Instant matchmaking that finds the best server based on ping, player count, and your available games
 - 🖥️ **Server Hosting** - Manage local Odamex servers with configuration and logs
 - 💬 **Discord Integration** - Rich Presence and embedded Discord chat
@@ -161,6 +162,7 @@ Auto-updates are configured to use GitHub Releases. Set the repository in `packa
 **OdalPapi Service** - UDP master server communication for server list queries  
 **File Manager** - Odamex installation detection, GitHub Releases integration, download management  
 **IWAD Manager** - Automatic IWAD detection with Steam integration and WAD directory management  
+**Local Network Discovery** - Subnet detection and UDP scanning for local servers not on the master list  
 **Quick Match Service** - Client-side matchmaking with filtering, ranking, and monitoring  
 **Updates Service** - Automatic launcher and game file updates via GitHub Releases  
 **Notification Service** - Desktop notifications with system tray integration  
@@ -168,6 +170,7 @@ Auto-updates are configured to use GitHub Releases. Set the repository in `packa
 ## Implemented Features
 
 - ✅ Server browser with real-time master server queries
+- ✅ Local network discovery for servers not on the master list
 - ✅ OdalPapi UDP protocol implementation for server discovery
 - ✅ Quick Match system with automatic server selection
 - ✅ IWAD detection and management (Steam integration)
@@ -242,6 +245,35 @@ The Quick Match feature provides automatic server selection based on player pref
 - Persisted in localStorage
 - Game type multi-select
 - Real-time criteria display on Quick Match page
+
+### Local Network Discovery
+
+Automatically discover Odamex servers running on your local network that may not be registered with the master server.
+
+**Features:**
+- Auto-detects private network subnets (10.x, 172.16.x, 192.168.x, 169.254.x)
+- UDP scanning with Odamex LAUNCHER_CHALLENGE protocol
+- Configurable port range (default: 10666-10675)
+- Automatic refresh at customizable intervals (default: 60 seconds)
+- Concurrent query throttling to prevent network flooding
+- First-time confirmation dialog with network activity disclosure
+
+**Configuration:**
+- Enable/disable in Settings → Network
+- Advanced settings panel:
+  - Port range customization
+  - Scan timeout (default: 200ms)
+  - Refresh interval (default: 60s)
+  - Max concurrent queries (default: 50)
+- Manual "Scan Now" button for immediate discovery
+- Displays detected network interfaces with CIDR notation
+
+**UI Integration:**
+- Local servers display with blue "Local" badge
+- Always appear first in server list
+- Server count shows: "Found X server(s) (Y local)"
+- Works seamlessly alongside master server list
+- Opt-in feature (disabled by default)
 
 ## Contributing
 

@@ -7,6 +7,7 @@ import * as dotenv from 'dotenv';
 import { OdalPapiMainService } from './odalpapi-main';
 import { FileManagerService } from './file-manager-main';
 import { IWADManager } from './iwad-manager';
+import { registerNetworkDiscoveryHandlers } from './network-discovery-main';
 import * as fs from 'fs';
 
 // Load environment variables from .env file
@@ -39,6 +40,9 @@ if (isDevelopment) {
   };
   // electron-updater will use its own internal logger in production
 }
+
+// Register IPC handlers early
+registerNetworkDiscoveryHandlers();
 
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;

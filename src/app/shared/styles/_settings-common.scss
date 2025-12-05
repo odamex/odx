@@ -10,10 +10,6 @@
   border-radius: 8px;
   transition: all 0.2s ease;
 
-  i {
-    margin-right: 0.5rem;
-  }
-
   &.btn-primary {
     background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
     border: none;
@@ -454,7 +450,7 @@
       text-align: center;
       padding: 2rem 1rem;
       
-      i {
+      > i {
         font-size: 3rem;
         margin-bottom: 1rem;
         display: block;

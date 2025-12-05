@@ -17,6 +17,7 @@ import {
   OdamexServiceStatusService, 
   PeriodicUpdateService, 
   AutoUpdateService,
+  LocalNetworkDiscoveryService,
   type DetectedIWAD
 } from '@shared/services';
 import { ServersStore } from './store';
@@ -40,6 +41,7 @@ export class App implements OnInit {
   private serviceStatus = inject(OdamexServiceStatusService); // Initialize service status monitoring
   private periodicUpdate = inject(PeriodicUpdateService); // Initialize periodic update checker
   private autoUpdateService = inject(AutoUpdateService); // Initialize ODX auto-updater
+  private localNetworkDiscovery = inject(LocalNetworkDiscoveryService); // Initialize local network discovery
   private router = inject(Router);
 
   readonly splashVisible = this.splashService.visible;
@@ -56,12 +58,6 @@ export class App implements OnInit {
   async ngOnInit() {
     // Always start at home
     this.router.navigate(['/']);
-    
-    // Expose service status for debugging
-    if (typeof window !== 'undefined') {
-      (window as any).testOverlay = () => this.serviceStatus.testOverlayIcons();
-      console.log('Debug: Run testOverlay() in console to test overlay icons');
-    }
     
     await this.initializeApp();
   }

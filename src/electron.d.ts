@@ -90,6 +90,22 @@ export interface ElectronAPI {
     } | null>;
     clearCache: () => Promise<void>;
   };
+  getLocalNetworks: () => Promise<Array<{
+    name: string;
+    address: string;
+    netmask: string;
+    cidr: string;
+  }>>;
+  discoverLocalServers: (options: {
+    portRangeStart: number;
+    portRangeEnd: number;
+    scanTimeout: number;
+    maxConcurrent: number;
+  }) => Promise<Array<{
+    address: { ip: string; port: number };
+    ping?: number;
+    [key: string]: any;
+  }>>;
 }
 
 declare global {

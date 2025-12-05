@@ -1,9 +1,10 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
 import { signalStore, withState, withMethods, patchState } from '@ngrx/signals';
 import { OdalPapi } from '@shared/services';
 
 interface ServersState {
   servers: OdalPapi.ServerInfo[];
+  localServers: OdalPapi.ServerInfo[];
   loading: boolean;
   error: string | null;
   lastUpdated: Date | null;
@@ -11,6 +12,7 @@ interface ServersState {
 
 const initialState: ServersState = {
   servers: [],
+  localServers: [],
   loading: false,
   error: null,
   lastUpdated: null
@@ -27,6 +29,9 @@ export const ServersStore = signalStore(
         error: null,
         lastUpdated: new Date()
       });
+    },
+    setLocalServers(localServers: OdalPapi.ServerInfo[]) {
+      patchState(store, { localServers });
     },
     setLoading(loading: boolean) {
       patchState(store, { loading });
@@ -45,6 +50,16 @@ export const ServersStore = signalStore(
       if (server) {
         server.ping = ping;
         patchState(store, { servers: [...servers] });
+      }
+      
+      // Also check local servers
+      const localServers = store.localServers();
+      const localServer = localServers.find(s => 
+        s.address.ip === address.ip && s.address.port === address.port
+      );
+      if (localServer) {
+        localServer.ping = ping;
+        patchState(store, { localServers: [...localServers] });
       }
     },
     reset() {

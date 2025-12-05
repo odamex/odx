@@ -42,6 +42,14 @@ export class ServersComponent {
   filterByVersion = signal(true);
   currentMajorVersion = signal<number | null>(null);
   
+  // Combined servers (local network servers + master server servers)
+  allServers = computed(() => {
+    const localServers = this.store.localServers();
+    const masterServers = this.store.servers();
+    // Local servers always appear first
+    return [...localServers, ...masterServers];
+  });
+  
   filteredServers = computed(() => {
     const filters = this.activeGameFilters();
     const column = this.sortColumn();
@@ -49,7 +57,7 @@ export class ServersComponent {
     const versionFilter = this.filterByVersion();
     const currentMajor = this.currentMajorVersion();
     
-    let servers = this.store.servers();
+    let servers = this.allServers();
     
     // Apply version filtering
     if (versionFilter && currentMajor !== null) {
@@ -309,6 +317,13 @@ export class ServersComponent {
     return metadata?.displayName || gameType;
   }
 
+  isLocalServer(server: OdalPapi.ServerInfo): boolean {
+    const localServers = this.store.localServers();
+    return localServers.some(s => 
+      s.address.ip === server.address.ip && s.address.port === server.address.port
+    );
+  }
+  
   getServerGame(server: OdalPapi.ServerInfo): string {
     if (!server.wads || server.wads.length === 0) {
       return 'Unknown';

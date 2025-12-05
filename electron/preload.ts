@@ -80,5 +80,14 @@ contextBridge.exposeInMainWorld('electron', {
     getGameMetadata: () => ipcRenderer.invoke('iwad:get-metadata'),
     getCacheStats: () => ipcRenderer.invoke('iwad:get-cache-stats'),
     clearCache: () => ipcRenderer.invoke('iwad:clear-cache')
-  }
+  },
+
+  // Network Discovery methods
+  getLocalNetworks: () => ipcRenderer.invoke('network-discovery:get-networks'),
+  discoverLocalServers: (options: {
+    portRangeStart: number;
+    portRangeEnd: number;
+    scanTimeout: number;
+    maxConcurrent: number;
+  }) => ipcRenderer.invoke('network-discovery:scan', options)
 });

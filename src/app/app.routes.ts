@@ -24,7 +24,7 @@ export const routes: Routes = [
   },
   {
     path: 'hosting',
-    loadComponent: () => import('@app/features/servers/servers.component').then(m => m.ServersComponent)
+    loadComponent: () => import('@app/features/hosting/hosting.component').then(m => m.HostingComponent)
   },
   {
     path: 'community',
