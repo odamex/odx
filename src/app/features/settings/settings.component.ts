@@ -1,13 +1,15 @@
 import { Component, ChangeDetectionStrategy, signal, computed, OnInit, AfterViewInit, inject } from '@angular/core';
-import { FileManagerService, InstallationInfo, DirectoryInfo } from '../../shared/services/file-manager/file-manager.service';
-import { UpdatesService } from '../../shared/services/updates/updates.service';
-import { IWADService, type GameMetadata, type DetectedIWAD } from '../../shared/services/iwad/iwad.service';
-import { ServerRefreshService } from '../../shared/services/server-refresh/server-refresh.service';
-import { NotificationService } from '../../shared/services/notification/notification.service';
-import { PeriodicUpdateService } from '../../shared/services/periodic-update/periodic-update.service';
+import { FileManagerService, DirectoryInfo } from '@shared/services/file-manager/file-manager.service';
+import { UpdatesService } from '@shared/services/updates/updates.service';
+import { IWADService, type GameMetadata } from '@shared/services/iwad/iwad.service';
+import { ServerRefreshService } from '@shared/services/server-refresh/server-refresh.service';
+import { NotificationService } from '@shared/services/notification/notification.service';
+import { PeriodicUpdateService } from '@shared/services/periodic-update/periodic-update.service';
+import { AutoUpdateService } from '@shared/services/auto-update/auto-update.service';
 import { NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
-import { GameSelectionDialogComponent } from '../../core/game-selection-dialog/game-selection-dialog.component';
-import { LoadingSpinnerComponent } from '../../shared/components/loading-spinner/loading-spinner.component';
+import { GameSelectionDialogComponent } from '@core/game-selection-dialog/game-selection-dialog.component';
+import { LoadingSpinnerComponent } from '@shared/components/loading-spinner/loading-spinner.component';
+import versions from '../../../_versions';
 
 @Component({
   selector: 'app-settings',
@@ -23,6 +25,7 @@ export class SettingsComponent implements OnInit, AfterViewInit {
   protected refreshService = inject(ServerRefreshService);
   protected notificationService = inject(NotificationService);
   protected periodicUpdateService = inject(PeriodicUpdateService);
+  protected autoUpdateService = inject(AutoUpdateService);
 
   // Use store signals
   readonly installationInfo = this.fileManager.installationInfo;
@@ -72,12 +75,29 @@ export class SettingsComponent implements OnInit, AfterViewInit {
   
   // Notification settings (computed from services)
   notificationsEnabled = computed(() => this.notificationService.settings().enabled);
+  
+  // Notification methods
+  notificationsSystem = computed(() => this.notificationService.settings().systemNotifications);
+  notificationsTaskbarFlash = computed(() => this.notificationService.settings().taskbarFlash);
+  
+  // Notification types
   notificationsServerActivity = computed(() => this.notificationService.settings().serverActivity);
   notificationsUpdates = computed(() => this.notificationService.settings().updates);
   
   // Periodic update settings (computed from service)
   periodicUpdateEnabled = computed(() => this.periodicUpdateService.settings().enabled);
   periodicUpdateInterval = computed(() => this.periodicUpdateService.settings().intervalMinutes);
+  
+  // Auto-update settings (computed from service)
+  autoUpdateEnabled = computed(() => this.autoUpdateService.autoUpdateEnabled());
+  
+  // Version information
+  readonly appVersion = versions.version;
+  readonly appVersionDate = new Date(versions.versionDate).toLocaleDateString();
+  readonly appCommitHash = versions.gitCommitHash;
+  
+  // Make Math available in template
+  protected readonly Math = Math;
 
   ngOnInit() {
     // Load application settings from localStorage (synchronous - no blocking)
@@ -301,9 +321,14 @@ export class SettingsComponent implements OnInit, AfterViewInit {
     return this.refreshService.getMinutes();
   }
 
-  toggleNotifications() {
+  toggleNotifications(): void {
     const current = this.notificationService.settings();
     this.notificationService.updateSettings({ enabled: !current.enabled });
+  }
+
+  toggleSystemNotifications(): void {
+    const current = this.notificationService.settings();
+    this.notificationService.updateSettings({ systemNotifications: !current.systemNotifications });
   }
   
   toggleServerActivityNotifications() {
@@ -311,14 +336,32 @@ export class SettingsComponent implements OnInit, AfterViewInit {
     this.notificationService.updateSettings({ serverActivity: !current.serverActivity });
   }
   
-  toggleUpdateNotifications() {
+  toggleUpdateNotifications(): void {
     const current = this.notificationService.settings();
     this.notificationService.updateSettings({ updates: !current.updates });
+  }
+
+  toggleTaskbarFlash(): void {
+    const current = this.notificationService.settings();
+    this.notificationService.updateSettings({ taskbarFlash: !current.taskbarFlash });
   }
   
   togglePeriodicUpdateCheck() {
     const current = this.periodicUpdateService.settings();
     this.periodicUpdateService.updateSettings({ enabled: !current.enabled });
+  }
+  
+  toggleAutoUpdate() {
+    const newValue = !this.autoUpdateService.isAutoUpdateEnabled();
+    this.autoUpdateService.setAutoUpdateEnabled(newValue);
+  }
+  
+  checkForODXUpdate() {
+    this.autoUpdateService.checkForUpdates();
+  }
+  
+  async checkForOdamexUpdate() {
+    await this.updatesService.checkForUpdates();
   }
   
   updatePeriodicUpdateInterval(minutes: number) {

@@ -1,8 +1,9 @@
 import { Injectable, inject, signal, effect, DestroyRef } from '@angular/core';
-import { UpdatesService } from '../updates/updates.service';
-import { FileManagerService } from '../file-manager/file-manager.service';
-import { NotificationService } from '../notification/notification.service';
-import { NetworkStatusService } from '../network-status/network-status.service';
+import { UpdatesService } from '@shared/services/updates/updates.service';
+import { FileManagerService } from '@shared/services/file-manager/file-manager.service';
+import { NotificationService } from '@shared/services/notification/notification.service';
+import { NetworkStatusService } from '@shared/services/network-status/network-status.service';
+import { AutoUpdateService } from '@shared/services/auto-update/auto-update.service';
 import versions from '../../../../_versions';
 
 /**
@@ -29,6 +30,7 @@ export class PeriodicUpdateService {
   private fileManager = inject(FileManagerService);
   private notificationService = inject(NotificationService);
   private networkStatus = inject(NetworkStatusService);
+  private autoUpdateService = inject(AutoUpdateService);
   private destroyRef = inject(DestroyRef);
 
   private readonly _settings = signal<PeriodicCheckSettings>(this.loadSettings());
@@ -165,10 +167,34 @@ export class PeriodicUpdateService {
       }
 
       // Check for ODX updates
-      // Note: This requires checking GitHub releases for the ODX repository
-      // For now, we'll just log that we should check it
-      // TODO: Implement ODX version checking against GitHub releases
-      console.log('[PeriodicUpdate] ODX update check not yet implemented');
+      this.autoUpdateService.checkForUpdates();
+      
+      // Wait briefly for update check to complete (with timeout)
+      const maxWaitTime = 5000;
+      const startTime = Date.now();
+      
+      while (this.autoUpdateService.state() === 'checking' && (Date.now() - startTime) < maxWaitTime) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      
+      const odxUpdateInfo = this.autoUpdateService.updateInfo();
+      if (this.autoUpdateService.state() === 'available' && odxUpdateInfo) {
+        const lastVersion = this.lastODXVersion();
+        
+        // Only notify if this is a new version we haven't seen before
+        if (lastVersion !== odxUpdateInfo.version) {
+          console.log(`[PeriodicUpdate] New ODX version detected: ${odxUpdateInfo.version}`);
+          
+          this.notificationService.show(
+            'ODX Launcher Update Available',
+            `Version ${odxUpdateInfo.version} is now available. Current: ${versions.version}`,
+            'update'
+          );
+          
+          this.lastODXVersion.set(odxUpdateInfo.version);
+          this.saveLastKnownVersions();
+        }
+      }
       
     } catch (err) {
       console.error('[PeriodicUpdate] Failed to check for updates:', err);
@@ -217,6 +243,11 @@ export class PeriodicUpdateService {
       if (odamexVersion) {
         this.lastOdamexVersion.set(odamexVersion);
       }
+      
+      const odxVersion = localStorage.getItem('lastKnownODXVersion');
+      if (odxVersion) {
+        this.lastODXVersion.set(odxVersion);
+      }
     } catch (err) {
       console.warn('[PeriodicUpdate] Failed to load last known versions:', err);
     }
@@ -230,6 +261,11 @@ export class PeriodicUpdateService {
       const odamexVersion = this.lastOdamexVersion();
       if (odamexVersion) {
         localStorage.setItem('lastKnownOdamexVersion', odamexVersion);
+      }
+      
+      const odxVersion = this.lastODXVersion();
+      if (odxVersion) {
+        localStorage.setItem('lastKnownODXVersion', odxVersion);
       }
     } catch (err) {
       console.warn('[PeriodicUpdate] Failed to save last known versions:', err);

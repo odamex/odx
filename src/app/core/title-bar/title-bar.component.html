@@ -2,8 +2,17 @@
   <div class="title-drag-area">
     <span class="title-text">{{ appTitle() }}</span>
   </div>
-  <div class="network-status" [class.offline]="!isOnline()" [title]="isOnline() ? 'Online' : 'Offline'">
-    <ng-icon [name]="isOnline() ? 'bootstrapWifi' : 'bootstrapWifiOff'" />
+  <div class="status-indicators">
+    <div class="network-status" [class.offline]="!isOnline()" [title]="isOnline() ? 'Online' : 'Offline'">
+      <ng-icon [name]="isOnline() ? 'bootstrapWifi' : 'bootstrapWifiOff'" />
+    </div>
+    <div class="service-status" 
+         [class.online]="connectionStatus() === 'online'"
+         [class.degraded]="connectionStatus() === 'degraded'"
+         [class.offline]="connectionStatus() === 'offline'"
+         [title]="connectionStatus() === 'online' ? 'Services Available' : connectionStatus() === 'degraded' ? 'Services Degraded' : 'Services Offline'">
+      <ng-icon name="bootstrapCircleFill" />
+    </div>
   </div>
   <div class="window-controls">
     <button 

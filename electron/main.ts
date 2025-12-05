@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { app, BrowserWindow, ipcMain, Menu, Tray, screen, nativeTheme, dialog } from 'electron';
+import { app, BrowserWindow, ipcMain, Menu, Tray, screen, nativeTheme, dialog, nativeImage } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import * as path from 'path';
 import * as url from 'url';
@@ -7,6 +7,7 @@ import * as dotenv from 'dotenv';
 import { OdalPapiMainService } from './odalpapi-main';
 import { FileManagerService } from './file-manager-main';
 import { IWADManager } from './iwad-manager';
+import * as fs from 'fs';
 
 // Load environment variables from .env file
 dotenv.config({ path: path.join(__dirname, '..', '.env') });
@@ -218,14 +219,94 @@ ipcMain.on('flash-window', () => {
   }
 });
 
+// Update overlay icon based on connection status
+ipcMain.on('update-tray-icon', (_event, status: 'online' | 'offline' | 'degraded') => {
+  console.log('[Main] Received update-tray-icon:', status);
+  
+  if (!mainWindow) {
+    console.log('[Main] ERROR: No main window!');
+    return;
+  }
+  
+  if (process.platform !== 'win32') {
+    console.log('[Main] Skipping overlay - not Windows');
+    return; // Overlay icons only work on Windows
+  }
+
+  try {
+    if (status === 'offline') {
+      // Clear overlay for offline
+      console.log('[Main] Clearing overlay for offline status');
+      mainWindow.setOverlayIcon(null, '');
+    } else {
+      // Load PNG file (try both PNG and ICO)
+      const possibleNames = [`overlay-${status}.png`, `overlay-${status}.ico`];
+      const basePaths = [
+        isDevelopment ? path.join(__dirname, '../public/overlay-icons') : path.join(process.resourcesPath, 'overlay-icons'),
+        path.join(process.cwd(), 'public', 'overlay-icons'),
+        path.join(__dirname, '..', 'public', 'overlay-icons')
+      ];
+      
+      let overlayPath = null;
+      for (const basePath of basePaths) {
+        for (const name of possibleNames) {
+          const testPath = path.join(basePath, name);
+          if (fs.existsSync(testPath)) {
+            overlayPath = testPath;
+            console.log('[Main] Found overlay at:', testPath);
+            break;
+          }
+        }
+        if (overlayPath) break;
+      }
+      
+      if (!overlayPath) {
+        console.error('[Main] ERROR: Could not find overlay for status:', status);
+        return;
+      }
+      
+      const image = nativeImage.createFromPath(overlayPath);
+      console.log('[Main] Loaded overlay, isEmpty:', image.isEmpty(), 'size:', image.getSize());
+      
+      if (image.isEmpty()) {
+        console.error('[Main] ERROR: Failed to load overlay from:', overlayPath);
+        // Try to read and log file info for debugging
+        try {
+          const stats = fs.statSync(overlayPath);
+          console.error('[Main] File exists, size:', stats.size, 'bytes');
+        } catch (e) {
+          console.error('[Main] Cannot stat file:', e.message);
+        }
+      } else {
+        mainWindow.setOverlayIcon(image, status);
+        console.log('[Main] ✓ Overlay icon set:', status);
+      }
+    }
+  } catch (err) {
+    console.error('[Main] ERROR setting overlay icon:', err);
+  }
+});
+
+// Update tray tooltip
+ipcMain.on('update-tray-tooltip', (_event, tooltip: string) => {
+  if (tray) {
+    tray.setToolTip(tooltip);
+  }
+});
+
 // Show system notification
 ipcMain.on('show-notification', (_event, title: string, body: string) => {
   const { Notification } = require('electron');
   if (Notification.isSupported()) {
+    // Try multiple icon paths for dev and production
+    const iconPath = app.isPackaged 
+      ? path.join(process.resourcesPath, 'app.asar.unpacked', 'build', 'icon.png')
+      : path.join(__dirname, '..', 'build', 'icon.png');
+    
     const notification = new Notification({
       title,
       body,
-      icon: path.join(__dirname, '..', 'build', 'icon.png')
+      icon: iconPath
     });
     
     notification.show();
@@ -239,6 +320,15 @@ ipcMain.on('show-notification', (_event, title: string, body: string) => {
       }
     });
   }
+});
+
+// Show message box dialog
+ipcMain.handle('show-message-box', async (_event, options: any) => {
+  const { dialog } = require('electron');
+  if (mainWindow) {
+    return await dialog.showMessageBox(mainWindow, options);
+  }
+  return await dialog.showMessageBox(options);
 });
 
 // Check for updates

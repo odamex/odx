@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { FileManagerStore } from './file-manager.store';
-import { NetworkStatusService } from '../network-status/network-status.service';
+import { NetworkStatusService } from '@shared/services/network-status/network-status.service';
 
 export interface InstallationInfo {
   installed: boolean;

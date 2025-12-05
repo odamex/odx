@@ -1,47 +1,242 @@
 
-    .server-browser-container {
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-      overflow: hidden;
-    }
+.server-browser-container {
+  display: flex;
+  flex-direction: column;
+  height: calc(100% + 4rem); // Compensate for parent padding
+  margin: -2rem; // Negative margin to expand to edges
+  gap: 0;
+  background: #1e1e1e;
+  overflow: hidden;
+  position: relative;
+}
 
-    .server-list-area {
-      flex: 1;
-      overflow-y: auto;
-      overflow-x: hidden;
+.server-list-area {
+  flex: 1;
+  min-height: 200px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: #1e1e1e;
+  padding-bottom: 30%; // Make room for details panel
+  
+  .container-fluid {
+    padding: 1rem;
+  }
+}.server-details-panel {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 30%;
+  overflow: hidden;
+  background: #1e1e1e;
+  display: flex;
+  flex-direction: column;
+  border-top: 2px solid #0d6efd;
+  box-shadow: 0 -4px 8px rgba(0, 0, 0, 0.3);
+  
+  &.collapsed {
+    height: 72px; // Header height (60px) + resize handle (8px) + padding
+    transition: height 0.3s ease;
+  }
+  
+  .resize-handle {
+    height: 8px;
+    background: linear-gradient(135deg, #2a2a2a 0%, #1e1e1e 100%);
+    cursor: ns-resize;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+    border-bottom: 1px solid #3a3a3a;
+    flex-shrink: 0;
+    
+    &:hover {
+      background: linear-gradient(135deg, #3a3a3a 0%, #2a2a2a 100%);
+    }
+    
+    &::before {
+      content: '';
+      width: 40px;
+      height: 3px;
+      background: #555;
+      border-radius: 2px;
+    }
+    
+    &:active {
+      background: #0d6efd;
+    }
+  }
       
-      &.has-details {
-        padding-bottom: 0;
+      .card {
+        background: transparent;
+        border: none;
+        border-radius: 0;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        margin: 0;
+        
+        .card-header {
+          background: linear-gradient(135deg, #2a2a2a 0%, #1e1e1e 100%);
+          border-bottom: 1px solid #3a3a3a;
+          padding: 0.75rem 1rem;
+          display: flex;
+          align-items: center;
+          flex-shrink: 0;
+          
+          h5 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #fff;
+            margin: 0;
+            
+            i {
+              opacity: 0.7;
+            }
+          }
+          
+          .btn {
+            i.bi {
+              margin: 0;
+            }
+          }
+          
+          .btn-close {
+            font-size: 0.75rem;
+            margin: 0;
+            padding: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+        }
+        
+        .card-body {
+          flex: 1;
+          overflow-y: auto;
+          transition: all 0.3s ease;
+          padding: 1rem;
+          font-size: 0.85rem;
+          
+          h6 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #ddd;
+            margin-bottom: 0.75rem;
+          }
+          
+          .table {
+            font-size: 0.8rem;
+            margin-bottom: 0;
+            
+            td {
+              padding: 0.375rem 0.5rem;
+              
+              &:first-child {
+                font-weight: 500;
+                color: #aaa;
+                width: 120px;
+              }
+            }
+          }
+          
+          .list-group-item {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.8rem;
+            background: #252525;
+            border-color: #3a3a3a;
+          }
+          
+          .badge {
+            font-size: 0.7rem;
+          }
+        }
       }
     }
 
-    .server-details-panel {
-      position: fixed;
-      bottom: 0;
-      left: 80px; // Account for navigation sidebar width
-      right: 0;
-      z-index: 1000;
-      max-height: 50vh;
-      overflow-y: auto;
-      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
+    .empty-details {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 150px;
+      color: #666;
+      padding: 2rem;
       
-      .card {
-        border-radius: 0;
-        border-left: 0;
-        border-right: 0;
-        border-bottom: 0;
+      i {
+        font-size: 2.5rem;
+        margin-bottom: 0.75rem;
+        opacity: 0.5;
+      }
+      
+      p {
+        font-size: 0.9rem;
+        margin: 0;
+      }
+    }
+
+    // Filter card styling to match settings theme
+    .server-list-area .card {
+      background: linear-gradient(135deg, #2a2a2a 0%, #1e1e1e 100%);
+      border: 1px solid #3a3a3a;
+      border-radius: 8px;
+      box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+      
+      .card-body {
+        padding: 1rem;
+        
+        h6 {
+          font-size: 0.9rem;
+          font-weight: 600;
+          color: #fff;
+          
+          i {
+            color: #0d6efd;
+          }
+        }
+      }
+    }
+
+    // Header styling
+    h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    // Button enhancements to match settings
+    .btn {
+      font-weight: 500;
+      transition: all 0.2s;
+      
+      i.bi {
+        margin: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      &.btn-outline-secondary {
+        border-color: #495057;
+        
+        &:hover:not(:disabled) {
+          background-color: #495057;
+          border-color: #495057;
+        }
       }
     }
 
     .table {
-      font-size: 0.9rem;
+      font-size: 0.85rem;
+      margin-bottom: 0;
       
       th, td {
         white-space: nowrap;
+        padding: 0.5rem;
       }
       
-      // Server name column can wrap and take less space
+      // Server name column can wrap
       td:first-child {
         white-space: normal;
         max-width: 250px;
@@ -58,19 +253,20 @@
     .ping-poor { color: #dc3545; }
 
     .table-active {
-      --bs-table-active-bg: rgba(96, 165, 250, 0.2);
+      --bs-table-active-bg: rgba(13, 110, 253, 0.2);
     }
 
     th.sortable {
       cursor: pointer;
       user-select: none;
+      font-size: 0.85rem;
       
       &:hover {
         background-color: rgba(255, 255, 255, 0.05);
       }
       
       i.bi {
-        font-size: 0.8rem;
+        font-size: 0.75rem;
         margin-left: 0.25rem;
       }
     }

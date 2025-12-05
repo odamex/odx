@@ -6,7 +6,18 @@ export interface ElectronAPI {
   restoreWindow: () => void;
   quitApp: () => void;
   flashWindow: () => void;
+  updateTrayIcon: (status: 'online' | 'offline' | 'degraded') => void;
+  updateTrayTooltip: (tooltip: string) => void;
   showNotification: (title: string, body: string) => void;
+  showMessageBox: (options: {
+    type?: 'none' | 'info' | 'error' | 'question' | 'warning';
+    title?: string;
+    message?: string;
+    detail?: string;
+    buttons?: string[];
+    defaultId?: number;
+    cancelId?: number;
+  }) => Promise<{ response: number; checkboxChecked: boolean }>;
   checkForUpdates: () => void;
   downloadUpdate: () => void;
   quitAndInstall: () => Promise<void>;

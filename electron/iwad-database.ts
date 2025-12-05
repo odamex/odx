@@ -317,7 +317,7 @@ export const GAME_METADATA: Record<GameType, GameMetadata> = {
     type: GameType.HACX,
     displayName: 'HACX',
     description: 'Cyberpunk total conversion',
-    imageFilename: 'icon-doom-128.png',
+    imageFilename: 'icon-hacx-128.png',
     commercial: false
   },
   [GameType.REKKR]: {

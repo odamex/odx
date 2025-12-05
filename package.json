@@ -98,10 +98,20 @@
       {
         "from": "build/tray-icon.png",
         "to": "tray-icon.png"
+      },
+      {
+        "from": "build/overlay-icons",
+        "to": "overlay-icons"
       }
     ],
     "win": {
       "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
         {
           "target": "zip",
           "arch": [
@@ -109,7 +119,8 @@
           ]
         }
       ],
-      "icon": "build/icon.ico"
+      "icon": "build/icon.ico",
+      "sign": false
     },
     "mac": {
       "target": [

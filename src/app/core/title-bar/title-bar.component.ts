@@ -5,9 +5,11 @@ import {
   bootstrapSquare,
   bootstrapX,
   bootstrapWifi,
-  bootstrapWifiOff
+  bootstrapWifiOff,
+  bootstrapCircleFill
 } from '@ng-icons/bootstrap-icons';
-import { NetworkStatusService } from '../../shared/services/network-status/network-status.service';
+import { NetworkStatusService } from '@shared/services/network-status/network-status.service';
+import { OdamexServiceStatusService } from '@shared/services/odamex-service-status/odamex-service-status.service';
 
 /**
  * Custom title bar component with window controls and network status indicator
@@ -18,17 +20,18 @@ import { NetworkStatusService } from '../../shared/services/network-status/netwo
 @Component({
   selector: 'app-title-bar',
   imports: [NgIconComponent],
-  viewProviders: [provideIcons({ bootstrapDash, bootstrapSquare, bootstrapX, bootstrapWifi, bootstrapWifiOff })],
+  viewProviders: [provideIcons({ bootstrapDash, bootstrapSquare, bootstrapX, bootstrapWifi, bootstrapWifiOff, bootstrapCircleFill })],
   templateUrl: './title-bar.component.html',
   styleUrls: ['./title-bar.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TitleBarComponent {
   private networkStatus = inject(NetworkStatusService);
+  private serviceStatus = inject(OdamexServiceStatusService);
   
   protected readonly appTitle = signal('ODX');
   protected readonly isOnline = this.networkStatus.isOnline;
-  protected readonly lastChecked = this.networkStatus.status;
+  protected readonly connectionStatus = this.serviceStatus.connectionStatus;
 
   /**
    * Minimize the application window

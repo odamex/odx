@@ -22,20 +22,51 @@
   color: #aaa;
 }
 
+.status-indicators {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  -webkit-app-region: no-drag;
+}
+
 .network-status {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 12px;
   color: #4a9eff;
   font-size: 14px;
   transition: color 0.3s ease;
-  -webkit-app-region: no-drag;
   cursor: help;
   
   &.offline {
     color: #ff4a4a;
     animation: pulse 2s ease-in-out infinite;
+  }
+  
+  ng-icon {
+    display: flex;
+  }
+}
+
+.service-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  transition: color 0.3s ease;
+  cursor: help;
+  
+  &.online {
+    color: #00ff00;
+  }
+  
+  &.degraded {
+    color: #ff0000;
+  }
+  
+  &.offline {
+    color: #666;
   }
   
   ng-icon {

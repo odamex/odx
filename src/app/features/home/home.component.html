@@ -1,73 +1,174 @@
 <div class="home-container">
-  <h1>Welcome to ODX</h1>
-  
-  <div class="home-grid">
-    <div class="card">
-      <div class="card-icon text-primary">
-        <i class="bi bi-newspaper"></i>
-      </div>
-      <h3>Latest News</h3>
-      <p>Odamex 11.2.0 has been released!</p>
-    </div>
-
-    <div class="card">
-      <div class="card-icon text-success">
-        <i class="bi bi-download"></i>
-      </div>
-      <h3>Latest Release</h3>
-      @if (loading()) {
-        <p class="text-muted">Checking...</p>
-      } @else if (latestRelease()) {
-        <p>{{ latestRelease()!.tag_name }}</p>
-        <small>{{ latestRelease()!.name }}</small>
-        @if (installInfo()?.installed && !installInfo()?.needsUpdate) {
-          <div class="mt-3">
-            <p class="mb-0">
-              <i class="bi bi-check-circle-fill text-success"></i>
-              <span class="ms-2">You're all set!</span>
-            </p>
+  <!-- Hero Section -->
+  <div class="hero-section">
+    <div class="hero-content">
+      <h1 class="hero-title">
+        <span class="main-text">ODX</span>
+        <span class="subtitle">Modern Odamex Launcher</span>
+      </h1>
+      <p class="hero-description">
+        Your gateway to classic DOOM multiplayer action
+      </p>
+      
+      <!-- Quick Stats Bar -->
+      <div class="quick-stats">
+        @if (serverCount() > 0) {
+          <div class="stat-badge">
+            <i class="bi bi-server"></i>
+            <div class="stat-content">
+              <span class="stat-value">{{ serverCount() }}</span>
+              <span class="stat-label">Servers</span>
+            </div>
+          </div>
+          <div class="stat-badge">
+            <i class="bi bi-people-fill"></i>
+            <div class="stat-content">
+              <span class="stat-value">{{ playerCount() }}</span>
+              <span class="stat-label">Players</span>
+            </div>
           </div>
         } @else {
-          <div class="mt-3">
-            <button class="btn btn-success" (click)="navigateToSettings()">
-              <i class="bi bi-{{ getPlatformIcon() }}"></i>
-              <span>{{ getPlatformText() }}</span>
-            </button>
+          <div class="stat-badge loading">
+            <i class="bi bi-hourglass-split"></i>
+            <span class="stat-label">Loading servers...</span>
           </div>
         }
-      } @else {
-        <p>Version 11.2.0</p>
-        <small>Released: November 15, 2025</small>
-      }
-    </div>
-
-    <div class="card">
-      <div class="card-icon text-warning">
-        <i class="bi bi-calendar-event"></i>
-      </div>
-      <h3>Upcoming Event</h3>
-      <p>Check Discord for the next community event</p>
-    </div>
-
-    <div class="card">
-      <div class="card-icon text-info">
-        <i class="bi bi-hdd-network"></i>
-      </div>
-      <h3>Active Servers</h3>
-      @if (serverCount() > 0) {
-        <div class="server-stats">
-          <div class="stat-item">
-            <i class="bi bi-server"></i>
-            <span>{{ serverCount() }} server{{ serverCount() !== 1 ? 's' : '' }}</span>
+        @if (installInfo()?.installed && !installInfo()?.needsUpdate) {
+          <div class="stat-badge success">
+            <i class="bi bi-check-circle-fill"></i>
+            <span class="stat-label">Up to date</span>
           </div>
-          <div class="stat-item">
-            <i class="bi bi-people"></i>
-            <span>{{ playerCount() }} player{{ playerCount() !== 1 ? 's' : '' }}</span>
-          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="quick-actions">
+    <h2 class="section-title">Quick Actions</h2>
+    <div class="action-grid">
+      <a routerLink="/servers" class="action-card primary">
+        <div class="action-icon">
+          <i class="bi bi-list-ul"></i>
         </div>
-      } @else {
-        <p class="text-muted">Checking servers...</p>
-      }
+        <div class="action-content">
+          <h3>Browse Servers</h3>
+          <p>Find and join active matches</p>
+        </div>
+        <i class="bi bi-chevron-right action-arrow"></i>
+      </a>
+      
+      <a routerLink="/multiplayer" class="action-card">
+        <div class="action-icon">
+          <i class="bi bi-play-circle-fill"></i>
+        </div>
+        <div class="action-content">
+          <h3>Quick Match</h3>
+          <p>Jump into a game instantly</p>
+        </div>
+        <i class="bi bi-chevron-right action-arrow"></i>
+      </a>
+      
+      <a routerLink="/singleplayer" class="action-card">
+        <div class="action-icon">
+          <i class="bi bi-person-fill"></i>
+        </div>
+        <div class="action-content">
+          <h3>Single Player</h3>
+          <p>Play offline campaigns</p>
+        </div>
+        <i class="bi bi-chevron-right action-arrow"></i>
+      </a>
+      
+      <a routerLink="/settings" class="action-card">
+        <div class="action-icon">
+          <i class="bi bi-gear-fill"></i>
+        </div>
+        <div class="action-content">
+          <h3>Settings</h3>
+          <p>Configure your setup</p>
+        </div>
+        <i class="bi bi-chevron-right action-arrow"></i>
+      </a>
+    </div>
+  </div>
+
+  <!-- Info Cards -->
+  <div class="info-section">
+    <div class="info-grid">
+      <!-- Release Info -->
+      <div class="info-card">
+        <div class="info-header">
+          <i class="bi bi-download"></i>
+          <h3>Latest Release</h3>
+        </div>
+        <div class="info-body">
+          @if (loading()) {
+            <p class="text-muted">Checking...</p>
+          } @else if (latestRelease()) {
+            <div class="release-info">
+              <div class="version-row">
+                <span class="version-label">Latest:</span>
+                <span class="version-badge">{{ latestRelease()!.tag_name }}</span>
+              </div>
+              @if (installInfo()?.installed) {
+                <div class="version-row">
+                  <span class="version-label">Installed:</span>
+                  <span class="version-text">{{ installInfo()!.version || 'Unknown' }}</span>
+                </div>
+              }
+            </div>
+            @if (installInfo()?.installed && !installInfo()?.needsUpdate) {
+              <div class="status-indicator success">
+                <i class="bi bi-check-circle-fill"></i>
+                <span>You're up to date!</span>
+              </div>
+            } @else if (!installInfo()?.installed) {
+              <button class="btn btn-primary btn-sm" (click)="navigateToSettings()">
+                <i class="bi bi-{{ getPlatformIcon() }}"></i>
+                <span>{{ getPlatformText() }}</span>
+              </button>
+            } @else {
+              <button class="btn btn-warning btn-sm" (click)="navigateToSettings()">
+                <i class="bi bi-arrow-up-circle-fill"></i>
+                <span>Update Available</span>
+              </button>
+            }
+          } @else {
+            <p>Version 11.2.0</p>
+            <small class="text-muted">Released: November 15, 2025</small>
+          }
+        </div>
+      </div>
+
+      <!-- News Card -->
+      <div class="info-card highlight">
+        <div class="info-header">
+          <i class="bi bi-newspaper"></i>
+          <h3>Latest News</h3>
+        </div>
+        <div class="info-body">
+          <p class="news-title">Odamex 11.2.0 Released!</p>
+          <p class="news-excerpt">Major update with improved netcode and new features</p>
+          <a href="https://odamex.net" target="_blank" class="info-link">
+            Read more <i class="bi bi-arrow-right"></i>
+          </a>
+        </div>
+      </div>
+
+      <!-- Community Card -->
+      <div class="info-card">
+        <div class="info-header">
+          <i class="bi bi-discord"></i>
+          <h3>Community</h3>
+        </div>
+        <div class="info-body">
+          <p>Join our Discord server for events, discussions, and more!</p>
+          <a href="https://discord.gg/aMTk7fh" target="_blank" class="info-link">
+            Join Discord <i class="bi bi-box-arrow-up-right"></i>
+          </a>
+        </div>
+      </div>
     </div>
   </div>
 </div>

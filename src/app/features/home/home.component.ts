@@ -1,7 +1,7 @@
 import { Component, ChangeDetectionStrategy, inject, signal, OnInit, computed } from '@angular/core';
 import { Router } from '@angular/router';
-import { FileManagerService, InstallationInfo } from '../../shared/services/file-manager/file-manager.service';
-import { ServersStore } from '../../shared/services/odalpapi/servers.store';
+import { FileManagerService, InstallationInfo } from '@shared/services/file-manager/file-manager.service';
+import { ServersStore } from '@shared/services/odalpapi/servers.store';
 
 @Component({
   selector: 'app-home',

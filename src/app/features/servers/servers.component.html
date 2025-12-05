@@ -1,7 +1,7 @@
 
     <div class="server-browser-container">
-      <div class="server-list-area" [class.has-details]="selectedServer()">
-        <div class="container-fluid py-4">
+      <div class="server-list-area">
+        <div class="container-fluid">
           
           <!-- Offline Mode Notice -->
           @if (!isOnline()) {
@@ -15,7 +15,7 @@
           
           <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-              <h2 class="mb-0" id="server-browser-title">Server Browser</h2>
+              <h1 class="mb-0" id="server-browser-title">Server Browser</h1>
               @if (autoRefreshEnabled()) {
                 <small class="text-muted" role="status" aria-live="polite">
                   <i class="bi bi-arrow-clockwise" aria-hidden="true"></i> 
@@ -263,21 +263,34 @@
       </div>
     </div>
 
-    <!-- Server Details Panel (Fixed at bottom) -->
-    @if (selectedServer()) {
-      <div class="server-details-panel" role="region" aria-labelledby="server-details-title">
+    <!-- Server Details Panel (Bottom Panel) -->
+    <div class="server-details-panel" [class.collapsed]="detailsPanelCollapsed()">
+      <!-- Resize Handle -->
+      <div class="resize-handle" 
+           (mousedown)="startResize($event)"
+           role="separator"
+           aria-label="Resize server details panel"
+           aria-orientation="horizontal"></div>
+      
+      @if (selectedServer()) {
         <div class="card bg-dark border-secondary mb-0">
           <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0" id="server-details-title">{{ selectedServer()!.name || 'Unnamed Server' }}</h5>
+            <h5 class="mb-0" id="server-details-title">
+              <i class="bi bi-hdd-network me-2"></i>
+              {{ selectedServer()!.name || 'Unnamed Server' }}
+            </h5>
             <button 
-              class="btn-close btn-close-white" 
-              (click)="selectedServer.set(null)"
-              aria-label="Close server details panel"></button>
+              class="btn btn-sm btn-outline-secondary" 
+              (click)="toggleDetailsPanel()"
+              [attr.aria-label]="detailsPanelCollapsed() ? 'Expand details panel' : 'Collapse details panel'"
+              title="Toggle details panel">
+              <i class="bi" [class.bi-chevron-down]="!detailsPanelCollapsed()" [class.bi-chevron-up]="detailsPanelCollapsed()"></i>
+            </button>
           </div>
           <div class="card-body">
             <div class="row">
               <div class="col-md-6">
-                <h6>Server Info</h6>
+                <h6><i class="bi bi-server me-2"></i>Server Info</h6>
                 <table class="table table-sm table-dark" aria-label="Server information">
                   <tbody>
                     <tr>
@@ -328,7 +341,7 @@
                 </table>
               </div>
               <div class="col-md-6">
-                <h6 id="player-list-title">Players ({{ selectedServer()!.players.length }})</h6>
+                <h6 id="player-list-title"><i class="bi bi-people me-2"></i>Players ({{ selectedServer()!.players.length }})</h6>
                 @if (selectedServer()!.players.length > 0) {
                   <ul class="list-group list-group-flush" aria-labelledby="player-list-title">
                     @for (player of selectedServer()!.players; track player.name) {
@@ -362,6 +375,28 @@
             </div>
           </div>
         </div>
-      </div>
-    }
+      } @else {
+        <div class="card bg-dark border-secondary mb-0">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+              <i class="bi bi-hdd-network me-2"></i>
+              Server Details
+            </h5>
+            <button 
+              class="btn btn-sm btn-outline-secondary" 
+              (click)="toggleDetailsPanel()"
+              [attr.aria-label]="detailsPanelCollapsed() ? 'Expand details panel' : 'Collapse details panel'"
+              title="Toggle details panel">
+              <i class="bi" [class.bi-chevron-down]="!detailsPanelCollapsed()" [class.bi-chevron-up]="detailsPanelCollapsed()"></i>
+            </button>
+          </div>
+          <div class="card-body">
+            <div class="empty-details">
+              <i class="bi bi-arrow-up-circle"></i>
+              <p>Select a server to view details</p>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
   

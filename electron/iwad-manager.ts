@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * IWAD detection and management service for Electron main process
  * 

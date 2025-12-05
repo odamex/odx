@@ -1,11 +1,11 @@
 import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ServersStore } from '../../shared/services/odalpapi/servers.store';
-import { OdalPapi } from '../../shared/services/odalpapi/odalpapi.models';
-import { FileManagerService } from '../../shared/services/file-manager/file-manager.service';
-import { IWADService } from '../../shared/services/iwad/iwad.service';
-import { ServerRefreshService } from '../../shared/services/server-refresh/server-refresh.service';
-import { NetworkStatusService } from '../../shared/services/network-status/network-status.service';
+import { ServersStore } from '@shared/services/odalpapi/servers.store';
+import { OdalPapi } from '@shared/services/odalpapi/odalpapi.models';
+import { FileManagerService } from '@shared/services/file-manager/file-manager.service';
+import { IWADService } from '@shared/services/iwad/iwad.service';
+import { ServerRefreshService } from '@shared/services/server-refresh/server-refresh.service';
+import { NetworkStatusService } from '@shared/services/network-status/network-status.service';
 
 @Component({
   selector: 'app-servers',
@@ -23,6 +23,13 @@ export class ServersComponent {
   
   selectedServer = signal<OdalPapi.ServerInfo | null>(null);
   joiningServer = signal(false);
+  
+  // Panel resize and collapse
+  detailsPanelCollapsed = signal(true);
+  private resizing = false;
+  private startY = 0;
+  private startHeight = 0;
+  private savedPanelHeight: string | null = null;
   
   // Network status
   readonly isOnline = this.networkStatus.isOnline;
@@ -219,6 +226,10 @@ export class ServersComponent {
 
   selectServer(server: OdalPapi.ServerInfo) {
     this.selectedServer.set(server);
+    // Auto-expand the details panel when a server is selected
+    if (this.detailsPanelCollapsed()) {
+      this.detailsPanelCollapsed.set(false);
+    }
   }
 
   handleServerClick(server: OdalPapi.ServerInfo) {
@@ -372,5 +383,65 @@ export class ServersComponent {
     const validNames = iwadMap[gameType] || [gameType];
     // Use exact match instead of includes to avoid doom1 matching doom
     return validNames.some(name => iwadName === name);
+  }
+  
+  // Panel resize functionality
+  startResize(event: MouseEvent) {
+    event.preventDefault();
+    this.resizing = true;
+    this.startY = event.clientY;
+    
+    const detailsPanel = document.querySelector('.server-details-panel') as HTMLElement;
+    if (detailsPanel) {
+      this.startHeight = detailsPanel.offsetHeight;
+    }
+    
+    const mouseMoveHandler = (e: MouseEvent) => {
+      if (!this.resizing) return;
+      
+      const delta = this.startY - e.clientY; // Reversed because panel is at bottom
+      const container = document.querySelector('.server-browser-container') as HTMLElement;
+      const detailsPanel = document.querySelector('.server-details-panel') as HTMLElement;
+      
+      if (container && detailsPanel) {
+        const containerHeight = container.offsetHeight;
+        const newHeight = this.startHeight + delta;
+        const minHeight = 72; // Collapsed height
+        const maxHeight = containerHeight - 200; // Leave at least 200px for server list
+        
+        if (newHeight >= minHeight && newHeight <= maxHeight) {
+          const percentage = (newHeight / containerHeight) * 100;
+          detailsPanel.style.height = `${percentage}%`;
+        }
+      }
+    };
+    
+    const mouseUpHandler = () => {
+      this.resizing = false;
+      document.removeEventListener('mousemove', mouseMoveHandler);
+      document.removeEventListener('mouseup', mouseUpHandler);
+    };
+    
+    document.addEventListener('mousemove', mouseMoveHandler);
+    document.addEventListener('mouseup', mouseUpHandler);
+  }
+  
+  toggleDetailsPanel() {
+    const detailsPanel = document.querySelector('.server-details-panel') as HTMLElement;
+    if (detailsPanel) {
+      if (!this.detailsPanelCollapsed()) {
+        // Collapsing: save current height
+        this.savedPanelHeight = detailsPanel.style.height || '30%';
+        detailsPanel.style.height = '';
+      } else {
+        // Expanding: restore saved height
+        if (this.savedPanelHeight) {
+          detailsPanel.style.height = this.savedPanelHeight;
+        } else {
+          detailsPanel.style.height = '30%';
+        }
+      }
+    }
+    this.detailsPanelCollapsed.update(val => !val);
   }
 }

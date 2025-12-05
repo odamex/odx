@@ -1,0 +1,43 @@
+.settings-card {
+  background: #1e1e1e;
+  border: 1px solid #3a3a3a;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+
+  &:hover {
+    border-color: #4a4a4a;
+  }
+
+  .card-header {
+    padding: 1.25rem 1.5rem;
+    background: linear-gradient(135deg, #2a2a2a 0%, #1e1e1e 100%);
+    border-bottom: 1px solid #3a3a3a;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .card-title {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+
+      ::ng-deep i {
+        font-size: 1.25rem;
+        color: #0d6efd;
+      }
+
+      ::ng-deep h3 {
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #ffffff;
+      }
+    }
+  }
+
+  .card-body {
+    padding: 1.5rem;
+  }
+}

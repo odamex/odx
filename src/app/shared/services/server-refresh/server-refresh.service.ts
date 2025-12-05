@@ -1,8 +1,8 @@
 import { Injectable, inject, effect, signal, DestroyRef } from '@angular/core';
-import { OdalPapiService } from '../odalpapi/odalpapi.service';
-import { ServersStore } from '../odalpapi/servers.store';
-import { OdalPapi } from '../odalpapi/odalpapi.models';
-import { NotificationService } from '../notification/notification.service';
+import { OdalPapiService } from '@shared/services/odalpapi/odalpapi.service';
+import { ServersStore } from '@shared/services/odalpapi/servers.store';
+import { OdalPapi } from '@shared/services/odalpapi/odalpapi.models';
+import { NotificationService } from '@shared/services/notification/notification.service';
 
 @Injectable({ providedIn: 'root' })
 export class ServerRefreshService {
@@ -113,7 +113,7 @@ export class ServerRefreshService {
     }
 
     this.isRefreshing = true;
-    this.store.setLoading(true);
+    // Don't show loading overlay - we'll update servers progressively
     this.store.clearError();
 
     // Create new abort controller for this refresh
@@ -134,27 +134,8 @@ export class ServerRefreshService {
         return;
       }
 
-      // Query game servers with concurrency limit
-      const results = await this.queryServersWithLimit(masterList, signal);
-      // Check if cancelled
-      if (signal.aborted) {
-        return;
-      }
-
-      const validServers = results.filter((s): s is OdalPapi.ServerInfo => s !== null && s.responded);
-
-      if (validServers.length === 0) {
-        this.store.setError('No valid servers found. All servers timed out or returned invalid responses.');
-        return;
-      }
-
-      // Check for player activity changes before updating
-      this.checkForPlayerActivity(validServers);
-
-      this.store.setServers(validServers);
-
-      // Start pinging servers for more accurate ping times
-      this.pingAllServers(validServers);
+      // Query game servers with progressive updates
+      await this.queryServersWithProgressiveUpdate(masterList, signal);
 
     } catch (err: any) {
       // Don't show error if manually cancelled
@@ -165,6 +146,71 @@ export class ServerRefreshService {
     } finally {
       this.isRefreshing = false;
       this.abortController = null;
+    }
+  }
+
+  /**
+   * Query servers with progressive updates - shows results as they come in
+   */
+  private async queryServersWithProgressiveUpdate(
+    serverList: OdalPapi.MasterResponse[],
+    signal: AbortSignal
+  ): Promise<void> {
+    const CONCURRENT_QUERIES = 10;
+    const results: (OdalPapi.ServerInfo | null)[] = new Array(serverList.length);
+    const inProgress = new Set<Promise<void>>();
+    let completedCount = 0;
+
+    for (let i = 0; i < serverList.length; i++) {
+      // Check if cancelled
+      if (signal.aborted) {
+        return;
+      }
+
+      // Wait if we've hit the concurrency limit
+      while (inProgress.size >= CONCURRENT_QUERIES) {
+        await Promise.race(inProgress);
+      }
+
+      const index = i;
+      const serverAddr = serverList[i];
+
+      const promise = (async () => {
+        try {
+          const { server, pong } = await this.odalPapi.queryGameServer(serverAddr);
+          server.ping = pong;
+          results[index] = server;
+
+          // Update store progressively (every 5 servers or on completion)
+          completedCount++;
+          if (completedCount % 5 === 0 || completedCount === serverList.length) {
+            const validServers = results.filter((s): s is OdalPapi.ServerInfo => s !== null && s.responded);
+            if (validServers.length > 0) {
+              this.checkForPlayerActivity(validServers);
+              this.store.setServers(validServers);
+              this.pingAllServers(validServers);
+            }
+          }
+        } catch (err) {
+          results[index] = null;
+        }
+      })();
+
+      inProgress.add(promise);
+      promise.finally(() => inProgress.delete(promise));
+    }
+
+    // Wait for all queries to complete
+    await Promise.all(inProgress);
+
+    // Final update with all valid servers
+    const validServers = results.filter((s): s is OdalPapi.ServerInfo => s !== null && s.responded);
+    if (validServers.length === 0) {
+      this.store.setError('No valid servers found. All servers timed out or returned invalid responses.');
+    } else {
+      this.checkForPlayerActivity(validServers);
+      this.store.setServers(validServers);
+      this.pingAllServers(validServers);
     }
   }
 

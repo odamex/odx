@@ -13,7 +13,10 @@ contextBridge.exposeInMainWorld('electron', {
   restoreWindow: () => ipcRenderer.send('window-restore'),
   quitApp: () => ipcRenderer.send('app-quit'),
   flashWindow: () => ipcRenderer.send('flash-window'),
+  updateTrayIcon: (status: 'online' | 'offline' | 'degraded') => ipcRenderer.send('update-tray-icon', status),
+  updateTrayTooltip: (tooltip: string) => ipcRenderer.send('update-tray-tooltip', tooltip),
   showNotification: (title: string, body: string) => ipcRenderer.send('show-notification', title, body),
+  showMessageBox: (options: any) => ipcRenderer.invoke('show-message-box', options),
 
   // Updates
   checkForUpdates: () => ipcRenderer.send('check-for-updates'),

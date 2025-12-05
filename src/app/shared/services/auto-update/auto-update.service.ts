@@ -1,5 +1,5 @@
 import { Injectable, inject, signal, DestroyRef } from '@angular/core';
-import { SplashService } from '../../../core/splash/splash.service';
+import { SplashService } from '@core/splash/splash.service';
 
 /**
  * Information about an available update
@@ -67,11 +67,13 @@ export class AutoUpdateService {
   private readonly _updateInfo = signal<UpdateInfo | null>(null);
   private readonly _downloadProgress = signal<UpdateProgress | null>(null);
   private readonly _error = signal<string | null>(null);
+  private readonly _autoUpdateEnabled = signal<boolean>(this.loadAutoUpdateSetting());
 
   readonly state = this._state.asReadonly();
   readonly updateInfo = this._updateInfo.asReadonly();
   readonly downloadProgress = this._downloadProgress.asReadonly();
   readonly error = this._error.asReadonly();
+  readonly autoUpdateEnabled = this._autoUpdateEnabled.asReadonly();
 
   constructor() {
     if (!window.electron) {
@@ -147,6 +149,50 @@ export class AutoUpdateService {
     this._state.set('idle');
     this._updateInfo.set(null);
     this._downloadProgress.set(null);
+  }
+
+  /**
+   * Check if automatic updates are enabled
+   * 
+   * @returns True if auto-updates are enabled
+   */
+  isAutoUpdateEnabled(): boolean {
+    return this._autoUpdateEnabled();
+  }
+
+  /**
+   * Enable or disable automatic updates
+   * 
+   * @param enabled - Whether to enable automatic updates
+   */
+  setAutoUpdateEnabled(enabled: boolean): void {
+    this._autoUpdateEnabled.set(enabled);
+    this.saveAutoUpdateSetting(enabled);
+    console.log(`[AutoUpdate] Automatic updates ${enabled ? 'enabled' : 'disabled'}`);
+  }
+
+  /**
+   * Load auto-update setting from localStorage
+   */
+  private loadAutoUpdateSetting(): boolean {
+    try {
+      const stored = localStorage.getItem('autoUpdateEnabled');
+      return stored !== null ? stored === 'true' : false; // Default: disabled, prompt user
+    } catch (err) {
+      console.warn('[AutoUpdate] Failed to load auto-update setting:', err);
+      return false;
+    }
+  }
+
+  /**
+   * Save auto-update setting to localStorage
+   */
+  private saveAutoUpdateSetting(enabled: boolean): void {
+    try {
+      localStorage.setItem('autoUpdateEnabled', String(enabled));
+    } catch (err) {
+      console.warn('[AutoUpdate] Failed to save auto-update setting:', err);
+    }
   }
 
   /**

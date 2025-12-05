@@ -1,21 +1,22 @@
 import { Component, OnInit, inject, signal, viewChild } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
-import { TitleBarComponent } from './core/title-bar/title-bar.component';
-import { NavigationComponent } from './core/navigation/navigation';
-import { SplashComponent } from './core/splash/splash.component';
-import { UpdateBannerComponent } from './core/update-banner/update-banner.component';
-import { FirstRunDialogComponent, FirstRunChoice } from './core/first-run-dialog/first-run-dialog.component';
-import { GameSelectionDialogComponent } from './core/game-selection-dialog/game-selection-dialog.component';
-import { SplashService } from './core/splash/splash.service';
-import { FileManagerService } from './shared/services/file-manager/file-manager.service';
-import { OdalPapiService } from './shared/services/odalpapi/odalpapi.service';
-import { ServersStore } from './shared/services/odalpapi/servers.store';
-import { UpdatesService } from './shared/services/updates/updates.service';
-import { IWADService, type DetectedIWAD } from './shared/services/iwad/iwad.service';
-import { ServerRefreshService } from './shared/services/server-refresh/server-refresh.service';
-import { NetworkStatusService } from './shared/services/network-status/network-status.service';
-import { PeriodicUpdateService } from './shared/services/periodic-update/periodic-update.service';
-import { AutoUpdateService } from './shared/services/auto-update/auto-update.service';
+import { TitleBarComponent } from '@core/title-bar/title-bar.component';
+import { NavigationComponent } from '@core/navigation/navigation';
+import { SplashComponent } from '@core/splash/splash.component';
+import { UpdateBannerComponent } from '@core/update-banner/update-banner.component';
+import { FirstRunDialogComponent, FirstRunChoice } from '@core/first-run-dialog/first-run-dialog.component';
+import { GameSelectionDialogComponent } from '@core/game-selection-dialog/game-selection-dialog.component';
+import { SplashService } from '@core/splash/splash.service';
+import { FileManagerService } from '@shared/services/file-manager/file-manager.service';
+import { OdalPapiService } from '@shared/services/odalpapi/odalpapi.service';
+import { ServersStore } from '@shared/services/odalpapi/servers.store';
+import { UpdatesService } from '@shared/services/updates/updates.service';
+import { IWADService, type DetectedIWAD } from '@shared/services/iwad/iwad.service';
+import { ServerRefreshService } from '@shared/services/server-refresh/server-refresh.service';
+import { NetworkStatusService } from '@shared/services/network-status/network-status.service';
+import { OdamexServiceStatusService } from '@shared/services/odamex-service-status/odamex-service-status.service';
+import { PeriodicUpdateService } from '@shared/services/periodic-update/periodic-update.service';
+import { AutoUpdateService } from '@shared/services/auto-update/auto-update.service';
 import versions from '../_versions';
 
 @Component({
@@ -33,6 +34,7 @@ export class App implements OnInit {
   private iwadService = inject(IWADService);
   private refreshService = inject(ServerRefreshService); // Initialize auto-refresh service
   private networkStatus = inject(NetworkStatusService);
+  private serviceStatus = inject(OdamexServiceStatusService); // Initialize service status monitoring
   private periodicUpdate = inject(PeriodicUpdateService); // Initialize periodic update checker
   private autoUpdateService = inject(AutoUpdateService); // Initialize ODX auto-updater
   private router = inject(Router);
@@ -51,6 +53,13 @@ export class App implements OnInit {
   async ngOnInit() {
     // Always start at home
     this.router.navigate(['/']);
+    
+    // Expose service status for debugging
+    if (typeof window !== 'undefined') {
+      (window as any).testOverlay = () => this.serviceStatus.testOverlayIcons();
+      console.log('Debug: Run testOverlay() in console to test overlay icons');
+    }
+    
     await this.initializeApp();
   }
 
@@ -88,11 +97,99 @@ export class App implements OnInit {
         return;
       }
 
-      // Step 3: Check for updates if installed
+      // Step 3: Check for ODX launcher updates (if online)
+      if (this.networkStatus.isOnline()) {
+        this.splashService.setMessages('Checking for ODX updates...', 'Looking for launcher updates');
+        this.autoUpdateService.checkForUpdates();
+        
+        // Wait for update check to complete (with timeout)
+        const maxWaitTime = 5000; // 5 seconds max
+        const startTime = Date.now();
+        
+        while (this.autoUpdateService.state() === 'checking' && (Date.now() - startTime) < maxWaitTime) {
+          await this.delay(100);
+        }
+        
+        const odxState = this.autoUpdateService.state();
+        const odxInfo = this.autoUpdateService.updateInfo();
+        
+        if (odxState === 'available' && odxInfo) {
+          // Check if auto-updates are enabled
+          if (this.autoUpdateService.isAutoUpdateEnabled()) {
+            // Auto-update enabled: download and install automatically
+            this.splashService.setMessages('ODX Update Available', `Downloading version ${odxInfo.version}...`);
+            this.autoUpdateService.downloadUpdate();
+            
+            // Wait for download to complete
+            while (this.autoUpdateService.state() === 'downloading') {
+              const progress = this.autoUpdateService.downloadProgress();
+              if (progress) {
+                this.splashService.setProgress(progress.percent);
+                this.splashService.setSubMessage(`${Math.round(progress.percent)}% - ${this.autoUpdateService.formatBytes(progress.bytesPerSecond)}/s`);
+              }
+              await this.delay(100);
+            }
+            
+            if (this.autoUpdateService.state() === 'downloaded') {
+              // Download complete, install and restart
+              this.splashService.setMessages('Installing ODX Update...', 'Application will restart');
+              this.splashService.setProgress(null);
+              await this.delay(500);
+              await this.autoUpdateService.installAndRestart();
+              // App will quit and restart - no code after this will run
+              return;
+            }
+          } else {
+            // Auto-update disabled: ask user
+            this.splashService.setMessages('ODX Update Available', `Version ${odxInfo.version} is available`);
+            this.splashService.setSubMessage('Install now?');
+            await this.delay(1000);
+            
+            // Show a simple confirm via Electron dialog
+            const shouldUpdate = await this.showUpdatePrompt(odxInfo.version);
+            
+            if (shouldUpdate) {
+              // User chose to update
+              this.splashService.setMessages('Downloading ODX Update...', `Version ${odxInfo.version}`);
+              this.autoUpdateService.downloadUpdate();
+              
+              // Wait for download to complete
+              while (this.autoUpdateService.state() === 'downloading') {
+                const progress = this.autoUpdateService.downloadProgress();
+                if (progress) {
+                  this.splashService.setProgress(progress.percent);
+                  this.splashService.setSubMessage(`${Math.round(progress.percent)}% - ${this.autoUpdateService.formatBytes(progress.bytesPerSecond)}/s`);
+                }
+                await this.delay(100);
+              }
+              
+              if (this.autoUpdateService.state() === 'downloaded') {
+                // Download complete, install and restart
+                this.splashService.setMessages('Installing ODX Update...', 'Application will restart');
+                this.splashService.setProgress(null);
+                await this.delay(500);
+                await this.autoUpdateService.installAndRestart();
+                // App will quit and restart - no code after this will run
+                return;
+              }
+            } else {
+              // User chose to skip
+              this.splashService.setMessages('Update skipped', 'You can update later from the banner');
+              await this.delay(800);
+            }
+          }
+        } else if (odxState === 'idle') {
+          this.splashService.setSubMessage('ODX is up to date');
+          await this.delay(500);
+        }
+      }
+
+      // Step 4: Check for Odamex updates if installed
       if (installInfo.installed && installInfo.version) {
         // Only check for updates if online
         if (this.networkStatus.isOnline()) {
-          this.splashService.setMessages('Checking for updates...', `Current version: ${installInfo.version}`);
+          this.splashService.setMessages('Checking for Odamex updates...', `Current version: ${installInfo.version}`);
+          this.splashService.setProgress(null);
           await this.updatesService.checkForUpdates();
           
           const updateInfo = this.updatesService.updateDetails();
@@ -109,7 +206,7 @@ export class App implements OnInit {
         }
       }
 
-      // Step 3.5: Check for configured WAD directories
+      // Step 5: Check for configured WAD directories
       const hasDirectories = await this.iwadService.hasWADDirectories();
       if (!hasDirectories) {
         // Show game selection dialog
@@ -118,39 +215,25 @@ export class App implements OnInit {
         return; // Wait for game selection before continuing
       }
 
-      // Step 3.6: Detect IWADs
+      // Step 6: Detect IWADs
       this.splashService.setMessages('Scanning for IWADs...', 'Detecting installed games');
       await this.iwadService.getWADDirectories();
       const detected = await this.iwadService.detectIWADs();
       this.splashService.setSubMessage(`${detected.length} IWAD${detected.length !== 1 ? 's' : ''} detected`);
       await this.delay(500);
 
-      // Step 4: Query master server (only if online)
+      // Step 7: Query master server (only if online)
       if (this.networkStatus.isOnline()) {
-        this.splashService.setMessages('Connecting to master server...', 'Checking for available servers');
+        this.splashService.setMessages('Connecting to master server...', 'Finding servers');
         this.serversStore.setLoading(true);
         try {
           const masterList = await this.odalPapi.queryMasterServer('master.odamex.net');
-          const serverCount = masterList.length;
-          this.splashService.setSubMessage(`Found ${serverCount} server${serverCount !== 1 ? 's' : ''} online`);
+          this.splashService.setSubMessage('Servers found');
           
-          // Query game servers in parallel (limit concurrency for performance)
-          const serverPromises = masterList.map(async (serverAddr) => {
-            try {
-              const { server, pong } = await this.odalPapi.queryGameServer(serverAddr);
-              server.ping = pong;
-              return server;
-            } catch (err) {
-              return null;
-            }
-          });
-
-          const results = await Promise.all(serverPromises);
-          const validServers = results.filter((s): s is any => s !== null && s.responded);
+          // Query game servers in background (don't wait)
+          this.queryServersInBackground(masterList);
           
-          this.serversStore.setServers(validServers);
-          this.splashService.setSubMessage(`${validServers.length} server${validServers.length !== 1 ? 's' : ''} responding`);
-          await this.delay(800);
+          await this.delay(500);
         } catch (err) {
           console.warn('Failed to query master server:', err);
           this.serversStore.setError('Unable to reach master server');
@@ -161,14 +244,14 @@ export class App implements OnInit {
         this.splashService.setMessages('Offline mode', 'Server browser disabled');
         this.splashService.setSubMessage('Single player and local servers available');
         this.serversStore.setServers([]);
-        await this.delay(800);
+        await this.delay(500);
       }
 
-      // Step 5: Initialize services
+      // Step 8: Initialize services
       this.splashService.setMessages('Starting services...', 'Almost ready');
       await this.delay(400);
 
-      // Step 6: Ready!
+      // Step 9: Ready!
       this.splashService.setMessages('Ready!', 'Welcome to ODX');
       await this.delay(600);
 
@@ -182,6 +265,60 @@ export class App implements OnInit {
     }
   }
 
+  /**
+   * Query game servers in the background without blocking startup
+   */
+  private async queryServersInBackground(masterList: any[]): Promise<void> {
+    try {
+      // Query game servers in parallel with concurrency limit
+      const CONCURRENT_QUERIES = 10;
+      const results: any[] = new Array(masterList.length);
+      const inProgress = new Set<Promise<void>>();
+      let completedCount = 0;
+
+      for (let i = 0; i < masterList.length; i++) {
+        // Wait if we've hit the concurrency limit
+        while (inProgress.size >= CONCURRENT_QUERIES) {
+          await Promise.race(inProgress);
+        }
+
+        const index = i;
+        const serverAddr = masterList[i];
+        
+        const promise = (async () => {
+          try {
+            const { server, pong } = await this.odalPapi.queryGameServer(serverAddr);
+            server.ping = pong;
+            results[index] = server;
+            
+            // Update with valid servers as they come in (every 5 servers)
+            completedCount++;
+            if (completedCount % 5 === 0 || completedCount === masterList.length) {
+              const validServers = results.filter((s): s is any => s !== null && s.responded);
+              if (validServers.length > 0) {
+                this.serversStore.setServers(validServers);
+              }
+            }
+          } catch (err) {
+            results[index] = null;
+          }
+        })();
+
+        inProgress.add(promise);
+        promise.finally(() => inProgress.delete(promise));
+      }
+
+      // Wait for all queries to complete
+      await Promise.all(inProgress);
+
+      // Final update with all valid servers
+      const validServers = results.filter((s): s is any => s !== null && s.responded);
+      this.serversStore.setServers(validServers);
+    } catch (err) {
+      console.warn('Background server query failed:', err);
+    }
+  }
+
   private delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
@@ -190,6 +327,36 @@ export class App implements OnInit {
     // Check if user has completed first run setup
     const hasConfigured = await this.fileManager.hasConfiguredInstallation();
     return !hasConfigured;
+  }
+
+  /**
+   * Show a dialog asking user if they want to install ODX update
+   * 
+   * @param version - The version to update to
+   * @returns Promise resolving to true if user wants to update, false otherwise
+   */
+  private async showUpdatePrompt(version: string): Promise<boolean> {
+    if (!window.electron) {
+      return false;
+    }
+
+    try {
+      // Use Electron dialog to show message box
+      const response = await window.electron.showMessageBox({
+        type: 'question',
+        title: 'ODX Update Available',
+        message: `A new version of ODX (${version}) is available.`,
+        detail: 'Would you like to download and install it now? The application will restart after installation.',
+        buttons: ['Install Now', 'Skip'],
+        defaultId: 0,
+        cancelId: 1
+      });
+
+      return response.response === 0; // 'Install Now' button
+    } catch (err) {
+      console.error('[App] Failed to show update prompt:', err);
+      return false;
+    }
   }
 
   async handleFirstRunChoice(choice: FirstRunChoice) {
@@ -393,29 +560,16 @@ export class App implements OnInit {
   }
 
   private async queryServers() {
-    this.splashService.setMessages('Connecting to master server...', 'Checking for available servers');
+    this.splashService.setMessages('Connecting to master server...', 'Finding servers');
     this.serversStore.setLoading(true);
     try {
       const masterList = await this.odalPapi.queryMasterServer('master.odamex.net');
-      const serverCount = masterList.length;
-      this.splashService.setSubMessage(`Found ${serverCount} server${serverCount !== 1 ? 's' : ''} online`);
+      this.splashService.setSubMessage('Servers found');
       
-      const serverPromises = masterList.map(async (serverAddr) => {
-        try {
-          const { server, pong } = await this.odalPapi.queryGameServer(serverAddr);
-          server.ping = pong;
-          return server;
-        } catch (err) {
-          return null;
-        }
-      });
-
-      const results = await Promise.all(serverPromises);
-      const validServers = results.filter((s): s is any => s !== null && s.responded);
+      // Query servers in background
+      this.queryServersInBackground(masterList);
       
-      this.serversStore.setServers(validServers);
-      this.splashService.setSubMessage(`${validServers.length} server${validServers.length !== 1 ? 's' : ''} responding`);
-      await this.delay(800);
+      await this.delay(500);
     } catch (err) {
       console.warn('Failed to query master server:', err);
       this.serversStore.setError('Unable to reach master server');

@@ -247,3 +247,6 @@ i.bi + span {
     animation: fadeIn 0.3s ease-in-out;
   }
 }
+
+// Shared settings component styles
+@import 'app/shared/styles/settings-common';

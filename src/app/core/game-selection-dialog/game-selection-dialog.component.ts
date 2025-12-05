@@ -1,5 +1,5 @@
 import { Component, inject, output, input, effect } from '@angular/core';
-import { IWADService } from '../../shared/services/iwad/iwad.service';
+import { IWADService } from '@shared/services/iwad/iwad.service';
 
 @Component({
   selector: 'app-game-selection-dialog',

@@ -1,5 +1,5 @@
 import { Injectable, signal } from '@angular/core';
-import { FileManagerService } from '../file-manager/file-manager.service';
+import { FileManagerService } from '@shared/services/file-manager/file-manager.service';
 
 export interface UpdateInfo {
   available: boolean;

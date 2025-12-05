@@ -6,6 +6,14 @@ import { Injectable, signal } from '@angular/core';
 export interface NotificationSettings {
   /** Master switch for all notifications */
   enabled: boolean;
+  
+  // Notification Methods (how notifications are delivered)
+  /** Show system/desktop notifications */
+  systemNotifications: boolean;
+  /** Flash taskbar and play sound */
+  taskbarFlash: boolean;
+  
+  // Notification Types (what triggers notifications)
   /** Enable notifications for server activity (player joins/leaves) */
   serverActivity: boolean;
   /** Enable notifications for software updates */
@@ -60,8 +68,17 @@ export class NotificationService {
     }
     
     try {
-      window.electron.showNotification(title, body);
-      console.log(`[NotificationService] Showed ${type} notification:`, title);
+      // Show system notification if enabled
+      if (settings.systemNotifications) {
+        window.electron.showNotification(title, body);
+        console.log(`[NotificationService] Showed ${type} notification:`, title);
+      }
+      
+      // Flash taskbar and play sound if enabled
+      if (settings.taskbarFlash) {
+        window.electron.flashWindow();
+        console.log('[NotificationService] Flashed taskbar');
+      }
     } catch (err) {
       console.warn('[NotificationService] Failed to show notification:', err);
     }
@@ -89,21 +106,27 @@ export class NotificationService {
     try {
       // Load individual settings with fallback to defaults
       const enabled = localStorage.getItem('notificationsEnabled');
+      const systemNotifications = localStorage.getItem('notificationsSystem');
       const serverActivity = localStorage.getItem('notificationsServerActivity');
       const updates = localStorage.getItem('notificationsUpdates');
+      const taskbarFlash = localStorage.getItem('notificationsTaskbarFlash');
       
       return {
         enabled: enabled !== null ? enabled === 'true' : true,
+        systemNotifications: systemNotifications !== null ? systemNotifications === 'true' : true,
         serverActivity: serverActivity !== null ? serverActivity === 'true' : true,
-        updates: updates !== null ? updates === 'true' : true
+        updates: updates !== null ? updates === 'true' : true,
+        taskbarFlash: taskbarFlash !== null ? taskbarFlash === 'true' : true
       };
     } catch (err) {
       console.warn('[NotificationService] Failed to load settings from localStorage:', err);
       // Return defaults if localStorage fails
       return {
         enabled: true,
+        systemNotifications: true,
         serverActivity: true,
-        updates: true
+        updates: true,
+        taskbarFlash: true
       };
     }
   }
@@ -114,8 +137,10 @@ export class NotificationService {
   private saveSettings(settings: NotificationSettings): void {
     try {
       localStorage.setItem('notificationsEnabled', String(settings.enabled));
+      localStorage.setItem('notificationsSystem', String(settings.systemNotifications));
       localStorage.setItem('notificationsServerActivity', String(settings.serverActivity));
       localStorage.setItem('notificationsUpdates', String(settings.updates));
+      localStorage.setItem('notificationsTaskbarFlash', String(settings.taskbarFlash));
     } catch (err) {
       console.warn('[NotificationService] Failed to save settings to localStorage:', err);
     }
