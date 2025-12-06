@@ -56,6 +56,7 @@ export interface ElectronAPI {
     download: (url: string, filename: string) => Promise<string>;
     extractZip: (zipPath: string) => Promise<void>;
     runInstaller: (installerPath: string, installDir?: string) => Promise<void>;
+    installFlatpak: (flatpakPath: string) => Promise<void>;
     findInstallerAsset: (release: any) => Promise<string | null>;
     saveVersion: (version: string) => Promise<void>;
     getDirectories: () => Promise<{odx: string; bin: string; wads: string; config: string}>;

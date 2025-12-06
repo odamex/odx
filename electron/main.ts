@@ -548,6 +548,15 @@ ipcMain.handle('file:run-installer', async (_event, installerPath: string, insta
   }
 });
 
+ipcMain.handle('file:install-flatpak', async (_event, flatpakPath: string) => {
+  try {
+    await fileManager.installFlatpak(flatpakPath);
+  } catch (err: any) {
+    console.error(`[IPC] Flatpak installation failed for ${flatpakPath}:`, err.message);
+    throw new Error(err.message || 'Flatpak installation failed');
+  }
+});
+
 ipcMain.handle('file:find-installer-asset', async (_event, release: any) => {
   try {
     return fileManager.findInstallerAsset(release);

@@ -53,6 +53,7 @@ contextBridge.exposeInMainWorld('electron', {
     download: (url: string, filename: string) => ipcRenderer.invoke('file:download', url, filename),
     extractZip: (zipPath: string) => ipcRenderer.invoke('file:extract-zip', zipPath),
     runInstaller: (installerPath: string, installDir?: string) => ipcRenderer.invoke('file:run-installer', installerPath, installDir),
+    installFlatpak: (flatpakPath: string) => ipcRenderer.invoke('file:install-flatpak', flatpakPath),
     findInstallerAsset: (release: any) => ipcRenderer.invoke('file:find-installer-asset', release),
     saveVersion: (version: string) => ipcRenderer.invoke('file:save-version', version),
     getDirectories: () => ipcRenderer.invoke('file:get-directories'),
