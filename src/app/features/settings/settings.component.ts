@@ -58,20 +58,26 @@ export class SettingsComponent implements OnInit, AfterViewInit {
   detectedIWADs = this.iwadService.detectedIWADs;
   wadDirectories = this.iwadService.wadDirectories;
   
-  // Group IWADs by game type to avoid long lists
+  // Group IWADs by game type to avoid long lists - includes non-commercial games with 0 detected
   readonly groupedIWADs = computed(() => {
-    const iwads = this.detectedIWADs();
-    const groups = new Map<string, { metadata: GameMetadata | undefined, iwads: typeof iwads }>();
+    const displayGames = this.iwadService.displayGames();
+    const groups = new Map<string, { metadata: GameMetadata | undefined, iwads: typeof displayGames, count: number }>();
     
-    for (const iwad of iwads) {
-      const gameType = iwad.entry.game;
+    for (const game of displayGames) {
+      const gameType = game.entry.game;
       if (!groups.has(gameType)) {
         groups.set(gameType, {
           metadata: this.getGameMetadata(gameType),
-          iwads: []
+          iwads: [],
+          count: 0
         });
       }
-      groups.get(gameType)!.iwads.push(iwad);
+      const group = groups.get(gameType)!;
+      // Only add to iwads array if it's an actual detected file (has a path)
+      if (game.path) {
+        group.iwads.push(game);
+      }
+      group.count = game.detectedCount || 0;
     }
     
     const result = Array.from(groups.values()).filter(g => g.metadata);

@@ -139,12 +139,18 @@ export class ServersComponent {
 
   // Get unique games from detected IWADs for filtering
   getUniqueGames = computed(() => {
-    const iwads = this.iwadService.detectedIWADs();
-    const uniqueGames = new Map<string, {game: string; displayName: string}>();
+    const displayGames = this.iwadService.displayGames();
+    const gameMetadata = this.iwadService.gameMetadata();
+    const uniqueGames = new Map<string, {game: string; displayName: string; commercial: boolean; detectedCount: number}>();
     
-    iwads.forEach(iwad => {
-      let gameKey = iwad.entry.game;
-      let displayName = this.getGameDisplayName(iwad.entry.game);
+    displayGames.forEach(game => {
+      let gameKey = game.entry.game;
+      let displayName = game.entry.name || game.entry.groupName;
+      const detectedCount = game.detectedCount || 0;
+      
+      // Get metadata for this game
+      const metadata = gameMetadata[gameKey];
+      const commercial = metadata?.commercial ?? true;
       
       // Capitalize and format display names
       if (gameKey === 'doom') displayName = 'DOOM';
@@ -167,12 +173,20 @@ export class ServersComponent {
       if (!uniqueGames.has(gameKey)) {
         uniqueGames.set(gameKey, {
           game: gameKey,
-          displayName: displayName
+          displayName: displayName,
+          commercial: commercial,
+          detectedCount: detectedCount
         });
+      } else {
+        const existing = uniqueGames.get(gameKey)!;
+        existing.detectedCount += detectedCount;
       }
     });
     
-    return Array.from(uniqueGames.values());
+    return Array.from(uniqueGames.values()).sort((a, b) => {
+      // Sort by display name
+      return a.displayName.localeCompare(b.displayName);
+    });
   });
 
   constructor() {

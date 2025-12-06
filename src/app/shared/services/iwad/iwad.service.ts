@@ -13,6 +13,7 @@ export class IWADService {
   readonly detectedIWADs = this.store.detectedIWADs;
   readonly wadDirectories = this.store.wadDirectories;
   readonly gameMetadata = this.store.gameMetadata;
+  readonly displayGames = this.store.displayGames;
   readonly loading = this.store.loading;
   readonly error = this.store.error;
 

@@ -582,13 +582,6 @@ export class IWADManager {
   }
 
   /**
-   * Get game metadata
-   */
-  getGameMetadata() {
-    return GAME_METADATA;
-  }
-
-  /**
    * Get cache statistics
    */
   getCacheStats() {
@@ -615,5 +608,12 @@ export class IWADManager {
   clearCache(): void {
     this.cache = this.createEmptyCache();
     this.saveCache();
+  }
+
+  /**
+   * Get game metadata for all game types
+   */
+  getGameMetadata(): Record<string, any> {
+    return GAME_METADATA;
   }
 }

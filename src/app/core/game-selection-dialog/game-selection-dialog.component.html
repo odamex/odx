@@ -29,7 +29,7 @@
                 <div class="directory-actions">
                   <button 
                     class="btn btn-sm" 
-                    [class.btn-primary]="dir.recursive"
+                    [class.btn-warning]="dir.recursive"
                     [class.btn-outline-secondary]="!dir.recursive"
                     (click)="toggleRecursive(dir.path)"
                     title="Toggle recursive subdirectory scanning">

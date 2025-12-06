@@ -912,7 +912,7 @@
                             <div class="directory-actions">
                               <button 
                                 class="btn btn-sm" 
-                                [class.btn-primary]="dir.recursive"
+                                [class.btn-warning]="dir.recursive"
                                 [class.btn-outline-secondary]="!dir.recursive"
                                 (click)="toggleRecursiveScan(dir.path, !dir.recursive)"
                                 title="Toggle recursive subdirectory scanning">
@@ -989,7 +989,12 @@
                               <h5>{{ group.metadata?.displayName }}</h5>
                               <p class="game-description">{{ group.metadata?.description }}</p>
                               <div class="game-details">
-                                @if (group.iwads.length === 1) {
+                                @if (group.count === 0) {
+                                  <div class="detail-item text-muted">
+                                    <i class="bi bi-inbox"></i>
+                                    <span>0 versions found</span>
+                                  </div>
+                                } @else if (group.iwads.length === 1) {
                                   <div class="detail-item">
                                     <i class="bi bi-hdd"></i>
                                     <span class="text-truncate">{{ group.iwads[0].path }}</span>

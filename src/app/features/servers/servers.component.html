@@ -37,7 +37,7 @@
           </div>
 
       <!-- IWAD Filter -->
-      @if (iwadService.detectedIWADs().length > 0) {
+      @if (iwadService.detectedIWADs().length > 0 || getUniqueGames().length > 0) {
         <div class="card bg-dark border-secondary mb-3">
           <div class="card-body">
             <h6 class="mb-3" id="game-filter-label">
@@ -60,7 +60,8 @@
                   [class.btn-success]="isGameFilterEnabled(iwad.game)"
                   (click)="toggleGameFilter(iwad.game)"
                   [attr.aria-pressed]="isGameFilterEnabled(iwad.game)"
-                  [attr.aria-label]="'Filter by ' + iwad.displayName">
+                  [attr.aria-label]="'Filter by ' + iwad.displayName"
+                  [title]="iwad.detectedCount === 0 ? '0 versions found' : iwad.detectedCount + ' version(s) found'">
                   {{ iwad.displayName }}
                 </button>
               }

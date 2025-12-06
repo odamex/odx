@@ -227,6 +227,7 @@ export class App implements OnInit {
       // Step 6: Detect IWADs
       this.splashService.setMessages('Scanning for IWADs...', 'Detecting installed games');
       await this.iwadService.getWADDirectories();
+      await this.iwadService.getGameMetadata(); // Load game metadata
       const detected = await this.iwadService.detectIWADs();
       this.splashService.setSubMessage(`${detected.length} IWAD${detected.length !== 1 ? 's' : ''} detected`);
       await this.delay(500);
