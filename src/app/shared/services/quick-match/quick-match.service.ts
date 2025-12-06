@@ -132,14 +132,24 @@ export class QuickMatchService {
       // Check ping (if available)
       if (server.ping !== undefined && server.ping > criteria.maxPing) return false;
 
-      // Check player count
-      const playerCount = server.players?.length || 0;
+      // Check player and client counts
+      const allPlayers = server.players || [];
+      const totalClients = allPlayers.length; // All players including spectators
+      const activePlayers = allPlayers.filter(p => !p.spectator).length; // Only non-spectators
       const maxClients = server.maxClients || 0;
+      const maxPlayers = server.maxPlayers || 0;
 
-      if (criteria.avoidEmpty && playerCount === 0) return false;
-      if (criteria.avoidFull && playerCount >= maxClients) return false;
-      if (playerCount < criteria.minPlayers) return false;
-      if (playerCount > criteria.maxPlayers) return false;
+      // ALWAYS avoid servers at max clients (no slots for anyone, including spectators)
+      if (totalClients >= maxClients) return false;
+
+      if (criteria.avoidEmpty && totalClients === 0) return false;
+      
+      // If avoidFull is enabled, also check if active player slots are full
+      if (criteria.avoidFull && activePlayers >= maxPlayers) return false;
+      
+      // Check against user's min/max player preferences (active players only)
+      if (activePlayers < criteria.minPlayers) return false;
+      if (activePlayers > criteria.maxPlayers) return false;
 
       // Check game type
       if (criteria.preferredGameTypes && criteria.preferredGameTypes.length > 0) {
@@ -170,12 +180,12 @@ export class QuickMatchService {
 
     // Rank servers by score
     const ranked = candidates.map(server => {
-      const playerCount = server.players?.length || 0;
+      const activePlayers = server.players?.filter(p => !p.spectator).length || 0;
       const ping = server.ping || 999;
       
-      // Score formula: prioritize player count, penalize high ping
+      // Score formula: prioritize active player count, penalize high ping
       // More players = better (up to a point), lower ping = better
-      const playerScore = Math.min(playerCount, 8) * 10; // Cap benefit at 8 players
+      const playerScore = Math.min(activePlayers, 8) * 10; // Cap benefit at 8 players
       const pingPenalty = ping / 10;
       const score = playerScore - pingPenalty;
 
