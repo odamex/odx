@@ -29,7 +29,12 @@ jobs:
             name: macOS Apple Silicon
           - os: ubuntu-latest
             platform: linux
-            name: Linux
+            arch: x64
+            name: Linux x64
+          - os: ubuntu-latest
+            platform: linux
+            arch: arm64
+            name: Linux ARM64
 
     steps:
       - name: Checkout code
@@ -53,6 +58,8 @@ jobs:
         run: |
           if [ "${{ matrix.platform }}" = "mac" ]; then
             npm run package:${{ matrix.platform }} -- --${{ matrix.arch }}
+          elif [ "${{ matrix.platform }}" = "linux" ] && [ "${{ matrix.arch }}" = "arm64" ]; then
+            npm run package:${{ matrix.platform }} -- --arm64
           else
             npm run package:${{ matrix.platform }}
           fi
