@@ -216,12 +216,20 @@ export class FileManagerService {
   }
 
   /**
-   * Run the Windows installer silently (Windows only)
+   * Run Windows installer silently
    * @param installerPath - Path to the installer EXE
    * @param installDir - Optional custom installation directory
    */
   async runInstaller(installerPath: string, installDir?: string): Promise<void> {
     return window.electron.fileManager.runInstaller(installerPath, installDir);
+  }
+
+  /**
+   * Install Flatpak file (Linux only)
+   * @param flatpakPath - Path to the downloaded Flatpak file
+   */
+  async installFlatpak(flatpakPath: string): Promise<void> {
+    return window.electron.fileManager.installFlatpak(flatpakPath);
   }
 
   /**
