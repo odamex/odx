@@ -9,11 +9,7 @@
   CreateDirectory "$INSTDIR\data\ODX\wads"
   CreateDirectory "$INSTDIR\data\ODX\config"
   
-  ; Set permissions so Users group can write to the data directory
-  ; This allows the app to store Odamex files without requiring elevation
-  AccessControl::GrantOnFile "$INSTDIR\data" "(BU)" "FullAccess"
-  
-  DetailPrint "Created writable data directory at $INSTDIR\data"
+  DetailPrint "Created data directory at $INSTDIR\data"
 !macroend
 
 !macro customUnInstall
