@@ -75,11 +75,12 @@ export interface ElectronAPI {
   iwadManager: {
     detectIWADs: () => Promise<any[]>;
     verifyIWAD: (filePath: string) => Promise<any>;
-    getWADDirectories: () => Promise<{directories: string[]; scanSteam: boolean; lastScan?: string}>;
-    saveWADDirectories: (config: {directories: string[]; scanSteam: boolean}) => Promise<void>;
+    getWADDirectories: () => Promise<{directories: {path: string; recursive: boolean}[]; scanSteam: boolean; lastScan?: string}>;
+    saveWADDirectories: (config: {directories: {path: string; recursive: boolean}[]; scanSteam: boolean}) => Promise<void>;
     addWADDirectory: (directory: string) => Promise<void>;
     removeWADDirectory: (directory: string) => Promise<void>;
     setSteamScan: (enabled: boolean) => Promise<void>;
+    toggleRecursiveScan: (directoryPath: string, recursive: boolean) => Promise<void>;
     hasWADDirectories: () => Promise<boolean>;
     hasWADConfigFile: () => Promise<boolean>;
     rescanIWADs: (forceRescan?: boolean) => Promise<any[]>;

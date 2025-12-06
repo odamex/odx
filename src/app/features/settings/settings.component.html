@@ -906,14 +906,28 @@
                       </div>
                     } @else {
                       <div class="list-group directory-list mb-3">
-                        @for (dir of wadDirectories().directories; track dir) {
+                        @for (dir of wadDirectories().directories; track dir.path) {
                           <div class="list-group-item">
-                            <span><i class="bi bi-folder"></i>{{ dir }}</span>
-                            <button class="btn btn-sm btn-outline-danger" 
-                                    (click)="removeWADDirectory(dir)"
-                                    title="Remove directory">
-                              <i class="bi bi-trash"></i>
-                            </button>
+                            <span><i class="bi bi-folder"></i>{{ dir.path }}</span>
+                            <div class="directory-actions">
+                              <div class="form-check form-switch me-2">
+                                <input 
+                                  class="form-check-input" 
+                                  type="checkbox" 
+                                  [id]="'recursive-' + dir.path"
+                                  [checked]="dir.recursive"
+                                  (change)="toggleRecursiveScan(dir.path, $event)"
+                                  title="Scan subdirectories recursively">
+                                <label class="form-check-label" [for]="'recursive-' + dir.path">
+                                  <i class="bi bi-folder-symlink"></i>
+                                </label>
+                              </div>
+                              <button class="btn btn-sm btn-outline-danger" 
+                                      (click)="removeWADDirectory(dir.path)"
+                                      title="Remove directory">
+                                <i class="bi bi-trash"></i>
+                              </button>
+                            </div>
                           </div>
                         }
                       </div>

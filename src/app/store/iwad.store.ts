@@ -15,8 +15,13 @@ export interface DetectedIWAD {
   exists: boolean;
 }
 
+export interface WADDirectory {
+  path: string;
+  recursive: boolean;
+}
+
 export interface WADDirectoryConfig {
-  directories: string[];
+  directories: WADDirectory[];
   scanSteam: boolean;
   lastScan?: string;
 }

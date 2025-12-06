@@ -114,6 +114,30 @@
             text-overflow: ellipsis;
           }
         }
+        
+        .directory-actions {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          flex-shrink: 0;
+          
+          .btn {
+            font-size: 0.875rem;
+            padding: 0.375rem 0.625rem;
+            
+            i {
+              font-size: 1rem;
+            }
+            
+            &.btn-primary i {
+              color: #fff;
+            }
+            
+            &.btn-outline-secondary i {
+              color: #6c757d;
+            }
+          }
+        }
       }
       
       .empty-state {

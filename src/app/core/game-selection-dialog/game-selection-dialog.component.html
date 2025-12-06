@@ -20,15 +20,25 @@
           <p class="text-muted mb-3">Add folders where your game IWADs and PWADs are located</p>
 
           <div class="directory-list">
-            @for (dir of directories(); track dir) {
+            @for (dir of directories(); track dir.path) {
               <div class="directory-item">
                 <div class="directory-info">
                   <i class="bi bi-folder"></i>
-                  <span class="directory-path">{{ dir }}</span>
+                  <span class="directory-path">{{ dir.path }}</span>
                 </div>
-                <button class="btn btn-sm btn-outline-danger" (click)="removeDirectory(dir)">
-                  <i class="bi bi-trash"></i>
-                </button>
+                <div class="directory-actions">
+                  <button 
+                    class="btn btn-sm" 
+                    [class.btn-primary]="dir.recursive"
+                    [class.btn-outline-secondary]="!dir.recursive"
+                    (click)="toggleRecursive(dir.path)"
+                    title="Toggle recursive subdirectory scanning">
+                    <i class="bi bi-folder-symlink"></i>
+                  </button>
+                  <button class="btn btn-sm btn-outline-danger" (click)="removeDirectory(dir.path)">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
               </div>
             }
 

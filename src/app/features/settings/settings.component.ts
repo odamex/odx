@@ -621,6 +621,18 @@ export class SettingsComponent implements OnInit, AfterViewInit {
     }
   }
 
+  async toggleRecursiveScan(directory: string, event: Event) {
+    const target = event.target as HTMLInputElement;
+    const recursive = target.checked;
+    try {
+      await this.iwadService.toggleRecursiveScan(directory, recursive);
+      await this.iwadService.detectIWADs(); // Rescan after changing recursive setting
+    } catch (err) {
+      console.error('Failed to toggle recursive scan:', err);
+      alert('Failed to update recursive scan setting. Please try again.');
+    }
+  }
+
   async rescanIWADs() {
     try {
       await this.iwadService.rescanIWADs();

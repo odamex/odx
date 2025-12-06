@@ -1,5 +1,5 @@
 import { Component, inject, output, input, signal, effect } from '@angular/core';
-import { IWADService } from '@shared/services';
+import { IWADService, type WADDirectory } from '@shared/services';
 
 @Component({
   selector: 'app-game-selection-dialog',
@@ -15,7 +15,7 @@ export class GameSelectionDialogComponent {
   confirmed = output<void>();
   cancelled = output<void>();
 
-  directories = signal<string[]>([]);
+  directories = signal<WADDirectory[]>([]);
   steamScan = signal(true);
   isLoading = signal(false);
 
@@ -41,16 +41,24 @@ export class GameSelectionDialogComponent {
   async addDirectory() {
     try {
       const directory = await window.electron.fileManager.pickDirectory();
-      if (directory && !this.directories().includes(directory)) {
-        this.directories.set([...this.directories(), directory]);
+      if (directory && !this.directories().some(d => d.path === directory)) {
+        this.directories.set([...this.directories(), { path: directory, recursive: false }]);
       }
     } catch (err) {
       console.error('Failed to pick directory:', err);
     }
   }
 
-  removeDirectory(dir: string) {
-    this.directories.set(this.directories().filter(d => d !== dir));
+  removeDirectory(dirPath: string) {
+    this.directories.set(this.directories().filter(d => d.path !== dirPath));
+  }
+
+  toggleRecursive(dirPath: string) {
+    this.directories.set(
+      this.directories().map(d => 
+        d.path === dirPath ? { ...d, recursive: !d.recursive } : d
+      )
+    );
   }
 
   toggleSteamScan() {

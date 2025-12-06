@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
-import { IWADStore, type DetectedIWAD, type WADDirectoryConfig, type GameMetadata } from '@app/store';
+import { IWADStore, type DetectedIWAD, type WADDirectoryConfig, type WADDirectory, type GameMetadata } from '@store/iwad.store';
 
-export type { DetectedIWAD, WADDirectoryConfig, GameMetadata } from '@app/store';
+export type { DetectedIWAD, WADDirectoryConfig, WADDirectory, GameMetadata } from '@store/iwad.store';
 
 @Injectable({
   providedIn: 'root'
@@ -109,7 +109,20 @@ export class IWADService {
       // Refresh directory config
       await this.getWADDirectories();
     } catch (err: any) {
-      throw new Error(err.message || 'Failed to set Steam scan');
+      throw new Error(err.message || 'Failed to update Steam scan setting');
+    }
+  }
+
+  /**
+   * Toggle recursive scanning for a specific directory
+   */
+  async toggleRecursiveScan(directoryPath: string, recursive: boolean): Promise<void> {
+    try {
+      await window.electron.iwadManager.toggleRecursiveScan(directoryPath, recursive);
+      // Refresh directory config
+      await this.getWADDirectories();
+    } catch (err: any) {
+      throw new Error(err.message || 'Failed to update recursive scan setting');
     }
   }
 

@@ -769,6 +769,15 @@ ipcMain.handle('iwad:set-steam-scan', async (_event, enabled: boolean) => {
   }
 });
 
+ipcMain.handle('iwad:toggle-recursive-scan', async (_event, directoryPath: string, recursive: boolean) => {
+  try {
+    iwadManager.toggleRecursiveScan(directoryPath, recursive);
+  } catch (err: any) {
+    console.error(`[IPC] Failed to toggle recursive scan for ${directoryPath}:`, err.message);
+    throw new Error(err.message || 'Failed to toggle recursive scan');
+  }
+});
+
 ipcMain.handle('iwad:has-directories', async () => {
   try {
     return iwadManager.hasWADDirectories();

@@ -35,10 +35,8 @@ export class App implements OnInit {
   private serversStore = inject(ServersStore);
   private updatesService = inject(UpdatesService);
   private iwadService = inject(IWADService);
-  private refreshService = inject(ServerRefreshService); // Initialize auto-refresh service
   private networkStatus = inject(NetworkStatusService);
   private serviceStatus = inject(OdamexServiceStatusService); // Initialize service status monitoring
-  private periodicUpdate = inject(PeriodicUpdateService); // Initialize periodic update checker
   private autoUpdateService = inject(AutoUpdateService); // Initialize ODX auto-updater
   private router = inject(Router);
 

@@ -79,6 +79,7 @@ contextBridge.exposeInMainWorld('electron', {
     addWADDirectory: (directory: string) => ipcRenderer.invoke('iwad:add-directory', directory),
     removeWADDirectory: (directory: string) => ipcRenderer.invoke('iwad:remove-directory', directory),
     setSteamScan: (enabled: boolean) => ipcRenderer.invoke('iwad:set-steam-scan', enabled),
+    toggleRecursiveScan: (directoryPath: string, recursive: boolean) => ipcRenderer.invoke('iwad:toggle-recursive-scan', directoryPath, recursive),
     hasWADDirectories: () => ipcRenderer.invoke('iwad:has-directories'),
     hasWADConfigFile: () => ipcRenderer.invoke('iwad:has-config-file'),
     rescanIWADs: (forceRescan?: boolean) => ipcRenderer.invoke('iwad:rescan', forceRescan),

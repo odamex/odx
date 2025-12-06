@@ -28,11 +28,21 @@ export interface DetectedIWAD {
 }
 
 /**
+ * WAD directory entry
+ */
+export interface WADDirectory {
+  /** Path to directory */
+  path: string;
+  /** Whether to scan subdirectories recursively */
+  recursive: boolean;
+}
+
+/**
  * WAD directory configuration
  */
 export interface WADDirectoryConfig {
   /** List of directories to scan for IWADs */
-  directories: string[];
+  directories: WADDirectory[];
   /** Whether to automatically scan Steam game directories */
   scanSteam: boolean;
   /** Timestamp of last scan (ISO string) */
@@ -329,7 +339,7 @@ export class IWADManager {
   /**
    * Scan a directory for IWAD files (with caching)
    */
-  private scanDirectoryForIWADs(directory: string): DetectedIWAD[] {
+  private scanDirectoryForIWADs(directory: string, recursive: boolean = false): DetectedIWAD[] {
     const detected: DetectedIWAD[] = [];
 
     if (!fs.existsSync(directory)) {
@@ -340,11 +350,20 @@ export class IWADManager {
       const files = fs.readdirSync(directory);
       
       for (const file of files) {
-        if (!file.toLowerCase().endsWith('.wad')) continue;
-
         const filePath = path.join(directory, file);
         
         try {
+          const stats = fs.statSync(filePath);
+          
+          // If recursive and this is a directory, scan it
+          if (recursive && stats.isDirectory()) {
+            detected.push(...this.scanDirectoryForIWADs(filePath, true));
+            continue;
+          }
+          
+          // Only process .wad files
+          if (!stats.isFile() || !file.toLowerCase().endsWith('.wad')) continue;
+          
           const md5 = this.calculateMD5(filePath);
           
           // Find matching IWAD entry
@@ -358,7 +377,7 @@ export class IWADManager {
             });
           }
         } catch (err) {
-          console.warn(`Failed to calculate MD5 for ${file}:`, err);
+          console.warn(`Failed to process ${file}:`, err);
         }
       }
     } catch (err) {
@@ -391,8 +410,8 @@ export class IWADManager {
     this.cache.stats.totalScans++;
 
     // Scan configured WAD directories
-    for (const directory of config.directories) {
-      allDetected.push(...this.scanDirectoryForIWADs(directory));
+    for (const dir of config.directories) {
+      allDetected.push(...this.scanDirectoryForIWADs(dir.path, dir.recursive));
     }
 
     // Scan Steam directories if enabled
@@ -454,18 +473,30 @@ export class IWADManager {
     if (!fs.existsSync(configFile)) {
       // Default: include the WADs directory and scan Steam
       return {
-        directories: [this.wadsDir],
+        directories: [{ path: this.wadsDir, recursive: false }],
         scanSteam: true
       };
     }
 
     try {
       const data = fs.readFileSync(configFile, 'utf-8');
-      return JSON.parse(data);
+      const config = JSON.parse(data);
+      
+      // Migration: convert old string[] format to new WADDirectory[] format
+      if (config.directories && config.directories.length > 0 && typeof config.directories[0] === 'string') {
+        config.directories = config.directories.map((dir: string) => ({
+          path: dir,
+          recursive: false
+        }));
+        // Save migrated config
+        this.saveWADDirectories(config);
+      }
+      
+      return config;
     } catch (err) {
       console.error('Failed to read WAD directories config:', err);
       return {
-        directories: [this.wadsDir],
+        directories: [{ path: this.wadsDir, recursive: false }],
         scanSteam: true
       };
     }
@@ -497,8 +528,8 @@ export class IWADManager {
     const config = this.getWADDirectories();
     
     // Don't add duplicates
-    if (!config.directories.includes(directory)) {
-      config.directories.push(directory);
+    if (!config.directories.some(d => d.path === directory)) {
+      config.directories.push({ path: directory, recursive: false });
       this.saveWADDirectories(config);
     }
   }
@@ -508,7 +539,7 @@ export class IWADManager {
    */
   removeWADDirectory(directory: string): void {
     const config = this.getWADDirectories();
-    config.directories = config.directories.filter(d => d !== directory);
+    config.directories = config.directories.filter(d => d.path !== directory);
     this.saveWADDirectories(config);
   }
 
@@ -519,6 +550,18 @@ export class IWADManager {
     const config = this.getWADDirectories();
     config.scanSteam = enabled;
     this.saveWADDirectories(config);
+  }
+
+  /**
+   * Toggle recursive scanning for a specific directory
+   */
+  toggleRecursiveScan(directoryPath: string, recursive: boolean): void {
+    const config = this.getWADDirectories();
+    const dir = config.directories.find(d => d.path === directoryPath);
+    if (dir) {
+      dir.recursive = recursive;
+      this.saveWADDirectories(config);
+    }
   }
 
   /**
