@@ -53,6 +53,7 @@
     "package:mac": "npm run build && electron-builder build --mac --publish never",
     "package:linux": "npm run build && electron-builder build --linux --publish never",
     "test": "ng test",
+    "pretest": "ts-appversion",
     "prebuild": "ts-appversion",
     "prestart": "ts-appversion"
   },
