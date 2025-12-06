@@ -50,6 +50,7 @@ export class App implements OnInit {
   readonly splashProgress = this.splashService.progress;
   readonly splashFadeOut = this.splashService.fadeOut;
   readonly version = versions.version;
+  readonly platform = signal<string>(window.electron?.platform || 'unknown');
 
   showFirstRunDialog = signal(false);
   showGameSelectionDialog = signal(false);

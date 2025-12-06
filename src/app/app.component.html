@@ -24,7 +24,7 @@
     (cancelled)="handleGameSelectionCancelled()" />
 }
 
-<div class="app-container">
+<div class="app-container" [class]="'platform-' + platform()">
   <app-title-bar />
   <app-update-banner />
   <div class="main-layout">

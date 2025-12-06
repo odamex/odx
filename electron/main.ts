@@ -63,7 +63,7 @@ function createWindow(): void {
   const primaryDisplay = electronScreen.getPrimaryDisplay();
   const { width, height } = primaryDisplay.workAreaSize;
 
-  // Create the browser window with borderless frame
+  // Create the browser window with platform-specific frame settings
   mainWindow = new BrowserWindow({
     x: Math.floor((width - baseWidth) / 2),
     y: Math.floor((height - baseHeight) / 2),
@@ -71,7 +71,9 @@ function createWindow(): void {
     height: baseHeight,
     minWidth: 960,
     minHeight: 600,
-    frame: false, // Borderless window
+    frame: process.platform === 'darwin', // Native frame on macOS, custom on Windows/Linux
+    titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : undefined, // macOS hidden title bar with traffic lights
+    trafficLightPosition: process.platform === 'darwin' ? { x: 12, y: 12 } : undefined,
     transparent: false,
     backgroundColor: '#2c2c2c',
     title: 'ODX',
