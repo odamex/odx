@@ -39,13 +39,13 @@
       <!-- IWAD Filter -->
       @if (iwadService.detectedIWADs().length > 0 || getUniqueGames().length > 0) {
         <div class="card bg-dark border-secondary mb-3">
-          <div class="card-body">
-            <h6 class="mb-3" id="game-filter-label">
+          <div class="card-body py-2">
+            <h6 class="mb-2 small" id="game-filter-label">
               <i class="bi bi-funnel" aria-hidden="true"></i> Filter by Game
             </h6>
-            <div class="d-flex flex-wrap gap-2" role="group" aria-labelledby="game-filter-label">
+            <div class="d-flex flex-wrap gap-1" role="group" aria-labelledby="game-filter-label">
               <button 
-                class="btn btn-sm"
+                class="btn btn-sm px-2 py-1 small"
                 [class.btn-outline-light]="!showAllGames()"
                 [class.btn-warning]="showAllGames()"
                 (click)="toggleAllGames()"
@@ -55,7 +55,7 @@
               </button>
               @for (iwad of getUniqueGames(); track iwad.game) {
                 <button 
-                  class="btn btn-sm"
+                  class="btn btn-sm px-2 py-1 small"
                   [class.btn-outline-light]="!isGameFilterEnabled(iwad.game)"
                   [class.btn-success]="isGameFilterEnabled(iwad.game)"
                   (click)="toggleGameFilter(iwad.game)"
