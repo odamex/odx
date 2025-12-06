@@ -86,6 +86,7 @@ export class SettingsComponent implements OnInit, AfterViewInit {
   
   // Application settings
   filterByVersion = signal(true);
+  quitOnClose = signal(false);
   
   // Notification settings (computed from services)
   notificationsEnabled = computed(() => this.notificationService.settings().enabled);
@@ -142,6 +143,7 @@ export class SettingsComponent implements OnInit, AfterViewInit {
   readonly appVersion = versions.version;
   readonly appVersionDate = new Date(versions.versionDate).toLocaleDateString();
   readonly appCommitHash = versions.gitCommitHash;
+  readonly appPath = signal<string>('');
   
   // Make Math available in template
   protected readonly Math = Math;
@@ -161,6 +163,11 @@ export class SettingsComponent implements OnInit, AfterViewInit {
     const savedFilterByVersion = localStorage.getItem('filterByVersion');
     if (savedFilterByVersion !== null) {
       this.filterByVersion.set(savedFilterByVersion === 'true');
+    }
+
+    const savedQuitOnClose = localStorage.getItem('quitOnClose');
+    if (savedQuitOnClose !== null) {
+      this.quitOnClose.set(savedQuitOnClose === 'true');
     }
 
     // Load Quick Match settings from localStorage
@@ -390,6 +397,16 @@ export class SettingsComponent implements OnInit, AfterViewInit {
     const newValue = !this.filterByVersion();
     this.filterByVersion.set(newValue);
     localStorage.setItem('filterByVersion', newValue.toString());
+  }
+
+  async toggleQuitOnClose() {
+    const newValue = !this.quitOnClose();
+    this.quitOnClose.set(newValue);
+    localStorage.setItem('quitOnClose', newValue.toString());
+    // Update Electron preference
+    if (window.electron) {
+      await window.electron.setQuitOnClose(newValue);
+    }
   }
   
   toggleAutoRefresh() {

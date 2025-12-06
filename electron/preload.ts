@@ -5,6 +5,8 @@ import { ipcRenderer, contextBridge } from 'electron';
 contextBridge.exposeInMainWorld('electron', {
   // Platform info
   platform: process.platform,
+  getAppPath: () => ipcRenderer.invoke('app:getPath'),
+  setQuitOnClose: (enabled: boolean) => ipcRenderer.invoke('app:setQuitOnClose', enabled),
 
   // Window controls
   minimizeWindow: () => ipcRenderer.send('window-minimize'),

@@ -8,26 +8,25 @@ import { FirstRunDialogComponent, FirstRunChoice } from '@core/first-run-dialog/
 import { GameSelectionDialogComponent } from '@core/game-selection-dialog/game-selection-dialog.component';
 import { SplashService } from '@core/splash/splash.service';
 import { 
-  FileManagerService, 
-  OdalPapiService, 
-  UpdatesService, 
-  IWADService, 
-  ServerRefreshService, 
-  NetworkStatusService, 
-  OdamexServiceStatusService, 
-  PeriodicUpdateService, 
-  AutoUpdateService,
-  LocalNetworkDiscoveryService,
-  type DetectedIWAD
+  FileManagerService,
+  OdalPapiService,
+  UpdatesService,
+  IWADService,
+  ServerRefreshService,
+  NetworkStatusService,
+  OdamexServiceStatusService,
+  PeriodicUpdateService,
+  AutoUpdateService
 } from '@shared/services';
-import { ServersStore } from './store';
+import type { DetectedIWAD } from '@shared/services/iwad/iwad.service';
+import { ServersStore } from '@store/servers.store';
 import versions from '../_versions';
 
 @Component({
   selector: 'app-root',
   imports: [RouterOutlet, TitleBarComponent, NavigationComponent, SplashComponent, UpdateBannerComponent, FirstRunDialogComponent, GameSelectionDialogComponent],
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+  styleUrl: './app.component.scss'
 })
 export class App implements OnInit {
   private splashService = inject(SplashService);
@@ -41,7 +40,6 @@ export class App implements OnInit {
   private serviceStatus = inject(OdamexServiceStatusService); // Initialize service status monitoring
   private periodicUpdate = inject(PeriodicUpdateService); // Initialize periodic update checker
   private autoUpdateService = inject(AutoUpdateService); // Initialize ODX auto-updater
-  private localNetworkDiscovery = inject(LocalNetworkDiscoveryService); // Initialize local network discovery
   private router = inject(Router);
 
   readonly splashVisible = this.splashService.visible;
@@ -59,6 +57,19 @@ export class App implements OnInit {
   async ngOnInit() {
     // Always start at home
     this.router.navigate(['/']);
+    
+    // Load quit on close preference from localStorage and send to Electron
+    if (window.electron) {
+      const savedQuitOnClose = localStorage.getItem('quitOnClose');
+      const quitOnClose = savedQuitOnClose === 'true';
+      await window.electron.setQuitOnClose(quitOnClose);
+    }
+    
+    // Expose service status for debugging
+    if (typeof window !== 'undefined') {
+      (window as any).testOverlay = () => this.serviceStatus.testOverlayIcons();
+      console.log('Debug: Run testOverlay() in console to test overlay icons');
+    }
     
     await this.initializeApp();
   }
@@ -80,8 +91,7 @@ export class App implements OnInit {
       
       if (isFirstRun) {
         console.log('Showing first run dialog');
-        // Keep splash visible with message about first run
-        this.splashService.setMessages('First Run Setup', 'Please configure Odamex installation');
+        this.splashService.hide();
         this.showFirstRunDialog.set(true);
         
         // Set detected path in dialog if found
@@ -207,8 +217,8 @@ export class App implements OnInit {
         }
       }
 
-      // Check for configured WAD directories
-      const hasDirectories = await this.iwadService.hasWADConfigFile();
+      // Step 5: Check for configured WAD directories
+      const hasDirectories = await this.iwadService.hasWADDirectories();
       if (!hasDirectories) {
         // Show game selection dialog
         this.splashService.hide();
@@ -362,7 +372,7 @@ export class App implements OnInit {
 
   async handleFirstRunChoice(choice: FirstRunChoice) {
     this.showFirstRunDialog.set(false);
-    // Splash is already visible, just update the message
+    this.splashService.show();
 
     switch (choice.action) {
       case 'detected':
@@ -442,12 +452,10 @@ export class App implements OnInit {
           await this.delay(1000);
         } catch (err: any) {
           console.error('Download/Install failed:', err);
-          this.splashService.setMessages('Installation failed', err.message || 'Please try again');
+          this.splashService.setMessages('Installation failed', err.message || 'Please try again from Settings');
           this.splashService.setProgress(null);
           this.fileManager.clearDownloadProgress();
           await this.delay(3000);
-          // On failure, don't proceed - stay on splash
-          return;
         }
         break;
 
@@ -459,23 +467,6 @@ export class App implements OnInit {
         break;
     }
 
-    await this.delay(500);
-    
-    // Verify installation before continuing - force refresh to bypass cache
-    this.splashService.setMessages('Verifying installation...', 'Checking Odamex');
-    const installInfo = await this.fileManager.getInstallationInfo(undefined, true);
-    
-    if (!installInfo.installed) {
-      // Installation not detected - show error and don't proceed
-      console.error('Odamex installation not detected after first run setup');
-      this.splashService.setMessages('Installation not detected', 'Odamex could not be found. Please restart and try again.');
-      await this.delay(5000);
-      // Stay on splash screen - don't proceed to main app
-      return;
-    }
-    
-    console.log('Installation verified, continuing initialization');
-    this.splashService.setSubMessage(`Version ${installInfo.version} detected`);
     await this.delay(500);
     
     // Continue with normal initialization
@@ -501,10 +492,10 @@ export class App implements OnInit {
         await this.delay(800);
       }
 
-      // Check for configured WAD directories (check if user has set them up, not just defaults)
-      const hasConfiguredWADs = await this.iwadService.hasWADConfigFile();
-      if (!hasConfiguredWADs) {
-        // First run - show game selection dialog to configure WAD directories
+      // Check for configured WAD directories
+      const hasDirectories = await this.iwadService.hasWADDirectories();
+      if (!hasDirectories) {
+        // Show game selection dialog
         this.splashService.hide();
         this.showGameSelectionDialog.set(true);
         return; // Wait for game selection before continuing

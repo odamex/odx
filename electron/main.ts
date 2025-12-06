@@ -47,6 +47,7 @@ registerNetworkDiscoveryHandlers();
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
 let isQuitting = false;
+let quitOnClose = false; // Setting for quit on close behavior
 let isMonitoringQueue = false; // Track queue monitoring state
 const odalPapiService = new OdalPapiMainService();
 const fileManager = new FileManagerService();
@@ -121,13 +122,36 @@ function createWindow(): void {
     console.error('Failed to load:', errorCode, errorDescription);
   });
 
-  // Handle close button - minimize to tray instead of quit
-  mainWindow.on('close', (event) => {
-    if (!isQuitting) {
+  // Handle close button - minimize to tray or quit based on user preference
+  mainWindow.on('close', async (event) => {
+    if (!isQuitting && !quitOnClose) {
+      // Minimize to tray
       event.preventDefault();
       mainWindow?.hide();
       return false;
     }
+    
+    if (!isQuitting && quitOnClose) {
+      // Show confirmation dialog when quit on close is enabled
+      event.preventDefault();
+      
+      const response = await dialog.showMessageBox(mainWindow!, {
+        type: 'question',
+        buttons: ['Quit', 'Cancel'],
+        defaultId: 0,
+        title: 'Quit ODX',
+        message: 'Are you sure you want to quit?',
+        detail: 'This will close the application completely.'
+      });
+      
+      if (response.response === 0) {
+        // User clicked Quit
+        isQuitting = true;
+        app.quit();
+      }
+      return false;
+    }
+    
     return true;
   });
 
@@ -347,6 +371,15 @@ ipcMain.handle('show-message-box', async (_event, options: any) => {
     return await dialog.showMessageBox(mainWindow, options);
   }
   return await dialog.showMessageBox(options);
+});
+
+// Get app path
+ipcMain.handle('app:getPath', () => {
+  return app.getAppPath();
+});
+
+ipcMain.handle('app:setQuitOnClose', (_event, enabled: boolean) => {
+  quitOnClose = enabled;
 });
 
 // Check for updates

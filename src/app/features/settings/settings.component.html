@@ -67,6 +67,11 @@
                           }
                         </div>
                         
+                        <div class="installation-source">
+                          <i class="bi bi-folder2-open"></i>
+                          <span>Application Bundle</span>
+                        </div>
+                        
                         @if (autoUpdateService.state() === 'downloading' && autoUpdateService.downloadProgress(); as progress) {
                           <div class="update-progress">
                             <div class="progress">
@@ -392,7 +397,7 @@
                       }
                     </div>
 
-                    <div class="setting-item mb-0">
+                    <div class="setting-item">
                       <div class="form-check form-switch">
                         <input 
                           class="form-check-input" 
@@ -420,6 +425,23 @@
                           <span class="input-group-text">minutes</span>
                         </div>
                       }
+                    </div>
+
+                    <div class="setting-item mb-0">
+                      <div class="form-check form-switch">
+                        <input 
+                          class="form-check-input" 
+                          type="checkbox" 
+                          id="quitOnClose"
+                          [checked]="quitOnClose()"
+                          (change)="toggleQuitOnClose()">
+                        <label class="form-check-label" for="quitOnClose">
+                          Quit application when closing window
+                        </label>
+                      </div>
+                      <small class="text-muted">
+                        Exit the application completely when closing the main window. When disabled, the app minimizes to system tray instead.
+                      </small>
                     </div>
                   </div>
                 </div>

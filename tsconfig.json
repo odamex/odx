@@ -29,6 +29,7 @@
       "@app/*": ["app/*"],
       "@core/*": ["app/core/*"],
       "@shared/*": ["app/shared/*"],
+      "@store/*": ["app/store/*"],
       "@electron/*": ["../electron/*"]
     }
   },
