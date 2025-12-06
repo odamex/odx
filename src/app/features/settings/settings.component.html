@@ -910,18 +910,14 @@
                           <div class="list-group-item">
                             <span><i class="bi bi-folder"></i>{{ dir.path }}</span>
                             <div class="directory-actions">
-                              <div class="form-check form-switch me-2">
-                                <input 
-                                  class="form-check-input" 
-                                  type="checkbox" 
-                                  [id]="'recursive-' + dir.path"
-                                  [checked]="dir.recursive"
-                                  (change)="toggleRecursiveScan(dir.path, $event)"
-                                  title="Scan subdirectories recursively">
-                                <label class="form-check-label" [for]="'recursive-' + dir.path">
-                                  <i class="bi bi-folder-symlink"></i>
-                                </label>
-                              </div>
+                              <button 
+                                class="btn btn-sm" 
+                                [class.btn-primary]="dir.recursive"
+                                [class.btn-outline-secondary]="!dir.recursive"
+                                (click)="toggleRecursiveScan(dir.path, !dir.recursive)"
+                                title="Toggle recursive subdirectory scanning">
+                                <i class="bi bi-folder-symlink"></i>
+                              </button>
                               <button class="btn btn-sm btn-outline-danger" 
                                       (click)="removeWADDirectory(dir.path)"
                                       title="Remove directory">

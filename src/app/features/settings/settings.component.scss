@@ -205,29 +205,7 @@
       .directory-actions {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
-        .form-check {
-          margin: 0;
-          padding: 0;
-          display: flex;
-          align-items: center;
-        }
-        .form-check-input {
-          margin: 0;
-          cursor: pointer;
-        }
-        .form-check-label {
-          margin: 0;
-          padding-left: 0.25rem;
-          cursor: pointer;
-          i {
-            font-size: 1rem;
-            color: #6c757d;
-          }
-        }
-        .form-check-input:checked ~ .form-check-label i {
-          color: #0d6efd;
-        }
+        gap: 1rem;
       }
       .btn {
         font-size: 0.8rem;
