@@ -16,9 +16,6 @@
     "doom2",
     "doom 2",
     "doom ii",
-    "heretic",
-    "hexen",
-    "strife",
     "freedoom",
     "chex quest",
     "chex",
@@ -37,11 +34,7 @@
     "server",
     "fps",
     "retro",
-    "id software",
-    "amusement",
-    "action game",
-    "adventure game",
-    "arcade game"
+    "id software"
   ],
   "scripts": {
     "ng": "ng",
@@ -122,6 +115,7 @@
   "build": {
     "appId": "net.odamex.launcher",
     "productName": "ODX",
+    "artifactName": "${productName}-${os}-${version}.${ext}",
     "directories": {
       "output": "release",
       "buildResources": "build"
@@ -178,7 +172,7 @@
         "deb"
       ],
       "icon": "public/favicon.512x512.png",
-      "category": "Game",
+      "category": "Amusement;Game;ActionGame;AdventureGame;ArcadeGame",
       "desktop": {
         "Name": "ODX",
         "GenericName": "Odamex Launcher",
@@ -191,7 +185,8 @@
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
+      "createStartMenuShortcut": true,
+      "artifactName": "${productName}-Setup-${version}.${ext}"
     },
     "publish": {
       "provider": "github",

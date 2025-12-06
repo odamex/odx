@@ -116,6 +116,30 @@
           <table class="table table-dark table-hover" aria-labelledby="server-browser-title">
             <thead>
               <tr>
+                <th class="sortable" (click)="sortBy('players')"
+                    tabindex="0"
+                    role="button"
+                    (keydown.enter)="sortBy('players')"
+                    (keydown.space)="sortBy('players'); $event.preventDefault()"
+                    [attr.aria-sort]="sortColumn() === 'players' ? (sortDirection() === 'asc' ? 'ascending' : 'descending') : 'none'"
+                    aria-label="Sort by player count">
+                  Players
+                  @if (sortColumn() === 'players') {
+                    <i class="bi" [class.bi-arrow-up]="sortDirection() === 'asc'" [class.bi-arrow-down]="sortDirection() === 'desc'" aria-hidden="true"></i>
+                  }
+                </th>
+                <th class="sortable" (click)="sortBy('ping')"
+                    tabindex="0"
+                    role="button"
+                    (keydown.enter)="sortBy('ping')"
+                    (keydown.space)="sortBy('ping'); $event.preventDefault()"
+                    [attr.aria-sort]="sortColumn() === 'ping' ? (sortDirection() === 'asc' ? 'ascending' : 'descending') : 'none'"
+                    aria-label="Sort by ping">
+                  Ping
+                  @if (sortColumn() === 'ping') {
+                    <i class="bi" [class.bi-arrow-up]="sortDirection() === 'asc'" [class.bi-arrow-down]="sortDirection() === 'desc'" aria-hidden="true"></i>
+                  }
+                </th>
                 <th class="sortable" (click)="sortBy('name')" 
                     tabindex="0" 
                     role="button"
@@ -152,18 +176,6 @@
                     <i class="bi" [class.bi-arrow-up]="sortDirection() === 'asc'" [class.bi-arrow-down]="sortDirection() === 'desc'" aria-hidden="true"></i>
                   }
                 </th>
-                <th class="sortable" (click)="sortBy('players')"
-                    tabindex="0"
-                    role="button"
-                    (keydown.enter)="sortBy('players')"
-                    (keydown.space)="sortBy('players'); $event.preventDefault()"
-                    [attr.aria-sort]="sortColumn() === 'players' ? (sortDirection() === 'asc' ? 'ascending' : 'descending') : 'none'"
-                    aria-label="Sort by player count">
-                  Players
-                  @if (sortColumn() === 'players') {
-                    <i class="bi" [class.bi-arrow-up]="sortDirection() === 'asc'" [class.bi-arrow-down]="sortDirection() === 'desc'" aria-hidden="true"></i>
-                  }
-                </th>
                 <th class="sortable" (click)="sortBy('gameType')"
                     tabindex="0"
                     role="button"
@@ -176,18 +188,6 @@
                     <i class="bi" [class.bi-arrow-up]="sortDirection() === 'asc'" [class.bi-arrow-down]="sortDirection() === 'desc'" aria-hidden="true"></i>
                   }
                 </th>
-                <th class="sortable" (click)="sortBy('ping')"
-                    tabindex="0"
-                    role="button"
-                    (keydown.enter)="sortBy('ping')"
-                    (keydown.space)="sortBy('ping'); $event.preventDefault()"
-                    [attr.aria-sort]="sortColumn() === 'ping' ? (sortDirection() === 'asc' ? 'ascending' : 'descending') : 'none'"
-                    aria-label="Sort by ping">
-                  Ping
-                  @if (sortColumn() === 'ping') {
-                    <i class="bi" [class.bi-arrow-up]="sortDirection() === 'asc'" [class.bi-arrow-down]="sortDirection() === 'desc'" aria-hidden="true"></i>
-                  }
-                </th>
                 <th class="sortable" (click)="sortBy('version')"
                     tabindex="0"
                     role="button"
@@ -197,18 +197,6 @@
                     aria-label="Sort by version">
                   Version
                   @if (sortColumn() === 'version') {
-                    <i class="bi" [class.bi-arrow-up]="sortDirection() === 'asc'" [class.bi-arrow-down]="sortDirection() === 'desc'" aria-hidden="true"></i>
-                  }
-                </th>
-                <th class="sortable" (click)="sortBy('address')"
-                    tabindex="0"
-                    role="button"
-                    (keydown.enter)="sortBy('address')"
-                    (keydown.space)="sortBy('address'); $event.preventDefault()"
-                    [attr.aria-sort]="sortColumn() === 'address' ? (sortDirection() === 'asc' ? 'ascending' : 'descending') : 'none'"
-                    aria-label="Sort by server address">
-                  Address
-                  @if (sortColumn() === 'address') {
                     <i class="bi" [class.bi-arrow-up]="sortDirection() === 'asc'" [class.bi-arrow-down]="sortDirection() === 'desc'" aria-hidden="true"></i>
                   }
                 </th>
@@ -226,6 +214,17 @@
                   role="button"
                   [attr.aria-label]="'Server: ' + (server.name || 'Unnamed Server') + ', ' + server.players.length + ' of ' + server.maxPlayers + ' players, ping ' + server.ping + 'ms'"
                   style="cursor: pointer;">
+                  <td 
+                    [title]="server.players.length + ' active player(s) / ' + server.maxPlayers + ' max player slot(s)' + (server.maxClients && server.maxClients !== server.maxPlayers ? '\n' + (server.maxClients - (server.maxPlayers || 0)) + ' spectator slot(s) available' : '')">
+                    {{ server.players.length }} / {{ server.maxPlayers || 0 }}
+                  </td>
+                  <td>
+                    @if (server.ping > 0) {
+                      <span [class]="getPingClass(server.ping)">{{ server.ping }}ms</span>
+                    } @else {
+                      <span class="text-muted">-</span>
+                    }
+                  </td>
                   <td>
                     {{ server.name || 'Unnamed Server' }}
                     @if (isLocalServer(server)) {
@@ -241,20 +240,7 @@
                     <span class="badge bg-secondary">{{ getServerGame(server) }}</span>
                   </td>
                   <td>{{ server.currentMap || 'N/A' }}</td>
-                  <td>
-                    {{ server.players.length }} / {{ server.maxPlayers || 0 }}
-                    @if (server.maxClients && server.maxClients !== server.maxPlayers) {
-                      <br><small class="text-muted">({{ server.maxClients }} clients)</small>
-                    }
-                  </td>
                   <td>{{ getGameTypeName(server.gameType) }}</td>
-                  <td>
-                    @if (server.ping > 0) {
-                      <span [class]="getPingClass(server.ping)">{{ server.ping }}ms</span>
-                    } @else {
-                      <span class="text-muted">-</span>
-                    }
-                  </td>
                   <td>
                     @if (server.versionMajor !== null) {
                       {{ server.versionMajor }}.{{ server.versionMinor }}.{{ server.versionPatch }}

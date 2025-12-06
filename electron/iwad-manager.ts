@@ -234,12 +234,39 @@ export class IWADManager {
     const platform = os.platform();
     
     if (platform === 'win32') {
+      // First, try to read from Windows Registry
+      try {
+        const { execSync } = require('child_process');
+        // Query registry for Steam installation path
+        const regQuery = 'reg query "HKEY_CURRENT_USER\\Software\\Valve\\Steam" /v SteamPath';
+        const output = execSync(regQuery, { encoding: 'utf-8' });
+        const match = output.match(/SteamPath\s+REG_SZ\s+(.+)/);
+        if (match && match[1]) {
+          const steamPath = match[1].trim().replace(/\//g, '\\');
+          if (fs.existsSync(steamPath)) {
+            return steamPath;
+          }
+        }
+      } catch (err) {
+        // Registry query failed, continue to default paths
+      }
+
       // Check common Windows Steam locations
       const steamPaths = [
         'C:\\Program Files (x86)\\Steam',
         'C:\\Program Files\\Steam',
-        path.join(process.env['ProgramFiles'] || 'C:\\Program Files (x86)', 'Steam')
+        path.join(process.env['ProgramFiles'] || 'C:\\Program Files (x86)', 'Steam'),
+        path.join(process.env['ProgramFiles(x86)'] || 'C:\\Program Files (x86)', 'Steam')
       ];
+
+      // Also check other common drive letters for custom installations
+      const drives = ['D:', 'E:', 'F:', 'G:', 'H:'];
+      for (const drive of drives) {
+        steamPaths.push(path.join(drive, 'Steam'));
+        steamPaths.push(path.join(drive, 'Program Files (x86)', 'Steam'));
+        steamPaths.push(path.join(drive, 'Program Files', 'Steam'));
+        steamPaths.push(path.join(drive, 'Games', 'Steam'));
+      }
 
       for (const steamPath of steamPaths) {
         if (fs.existsSync(steamPath)) {
@@ -247,14 +274,32 @@ export class IWADManager {
         }
       }
     } else if (platform === 'darwin') {
-      const steamPath = path.join(os.homedir(), 'Library/Application Support/Steam');
-      if (fs.existsSync(steamPath)) {
-        return steamPath;
+      // macOS: Check default location and common alternatives
+      const steamPaths = [
+        path.join(os.homedir(), 'Library/Application Support/Steam'),
+        '/Applications/Steam.app/Contents/MacOS',
+        path.join(os.homedir(), '.steam/steam')
+      ];
+      
+      for (const steamPath of steamPaths) {
+        if (fs.existsSync(steamPath)) {
+          return steamPath;
+        }
       }
     } else if (platform === 'linux') {
-      const steamPath = path.join(os.homedir(), '.steam/steam');
-      if (fs.existsSync(steamPath)) {
-        return steamPath;
+      // Linux: Check multiple common locations
+      const steamPaths = [
+        path.join(os.homedir(), '.steam/steam'),
+        path.join(os.homedir(), '.local/share/Steam'),
+        path.join(os.homedir(), '.var/app/com.valvesoftware.Steam/.local/share/Steam'), // Flatpak
+        '/usr/share/steam',
+        '/usr/local/share/steam'
+      ];
+      
+      for (const steamPath of steamPaths) {
+        if (fs.existsSync(steamPath)) {
+          return steamPath;
+        }
       }
     }
 
