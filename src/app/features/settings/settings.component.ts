@@ -135,6 +135,7 @@ export class SettingsComponent implements OnInit, AfterViewInit {
     avoidEmpty: true,
     avoidFull: true,
     monitoringTimeoutMinutes: 15,
+    autoStartMonitoring: true,
     preferredGameTypes: [
       OdalPapi.GameType.GT_Deathmatch,
       OdalPapi.GameType.GT_TeamDeathmatch,
@@ -708,6 +709,7 @@ export class SettingsComponent implements OnInit, AfterViewInit {
       avoidEmpty: true,
       avoidFull: true,
       monitoringTimeoutMinutes: 15,
+      autoStartMonitoring: true,
       preferredGameTypes: [
         OdalPapi.GameType.GT_Deathmatch,
         OdalPapi.GameType.GT_TeamDeathmatch,

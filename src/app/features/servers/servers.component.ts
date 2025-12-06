@@ -1,12 +1,13 @@
 import { Component, ChangeDetectionStrategy, inject, signal, computed, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ServersStore } from '@app/store';
 import { OdalPapi, FileManagerService, IWADService, ServerRefreshService, NetworkStatusService } from '@shared/services';
 
 @Component({
   selector: 'app-servers',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './servers.component.html',
   styleUrl: './servers.component.scss',
 })
@@ -43,6 +44,9 @@ export class ServersComponent {
   filterByVersion = signal(true);
   currentMajorVersion = signal<number | null>(null);
   
+  // Search filtering
+  searchText = signal('');
+  
   // Combined servers (local network servers + master server servers)
   allServers = computed(() => {
     const localServers = this.store.localServers();
@@ -57,12 +61,31 @@ export class ServersComponent {
     const direction = this.sortDirection();
     const versionFilter = this.filterByVersion();
     const currentMajor = this.currentMajorVersion();
+    const search = this.searchText().toLowerCase().trim();
     
     let servers = this.allServers();
     
     // Apply version filtering
     if (versionFilter && currentMajor !== null) {
       servers = servers.filter(server => server.versionMajor === currentMajor);
+    }
+    
+    // Apply search text filtering
+    if (search) {
+      servers = servers.filter(server => {
+        // Search in server name
+        if (server.name?.toLowerCase().includes(search)) return true;
+        // Search in address
+        if (server.address.ip.includes(search)) return true;
+        if (server.address.port.toString().includes(search)) return true;
+        // Search in map name
+        if (server.currentMap?.toLowerCase().includes(search)) return true;
+        // Search in game type
+        if (this.getGameTypeName(server.gameType).toLowerCase().includes(search)) return true;
+        // Search in WAD names
+        if (server.wads?.some(wad => wad.name.toLowerCase().includes(search))) return true;
+        return false;
+      });
     }
     
     // Apply game filters

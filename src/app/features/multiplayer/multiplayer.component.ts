@@ -104,7 +104,13 @@ export class MultiplayerComponent implements OnInit, OnDestroy {
       // Get the reason why no match was found
       const matchResult = this.quickMatchService.findBestMatch();
       this.noMatchReason.set(matchResult.reason || 'No suitable servers found');
-      this.state.set('no-match');
+      
+      // Auto-start monitoring if enabled
+      if (this.quickMatchService.criteria().autoStartMonitoring) {
+        this.startMonitoring();
+      } else {
+        this.state.set('no-match');
+      }
     }
   }
 

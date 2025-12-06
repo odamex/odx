@@ -721,6 +721,29 @@
 
                     <hr>
 
+                    <!-- Auto-Start Monitoring -->
+                    <div class="setting-item">
+                      <label class="form-label">
+                        <i class="bi bi-lightning-charge"></i>
+                        Auto-Start Monitoring
+                      </label>
+                      <p class="setting-description">Automatically start monitoring for matches when no server is found immediately</p>
+                      <div class="form-check form-switch">
+                        <input 
+                          class="form-check-input" 
+                          type="checkbox" 
+                          role="switch"
+                          [(ngModel)]="quickMatchCriteria.autoStartMonitoring"
+                          (ngModelChange)="saveQuickMatchSettings()"
+                          id="autoStartMonitoring">
+                        <label class="form-check-label" for="autoStartMonitoring">
+                          Enable automatic monitoring
+                        </label>
+                      </div>
+                    </div>
+
+                    <hr>
+
                     <!-- Monitoring Timeout -->
                     <div class="setting-item">
                       <label class="form-label">

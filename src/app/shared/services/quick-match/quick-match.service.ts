@@ -21,6 +21,8 @@ export interface QuickMatchCriteria {
   preferredGameTypes?: OdalPapi.GameType[];
   /** Maximum time in minutes to monitor for matches (default: 15) */
   monitoringTimeoutMinutes?: number;
+  /** If true, automatically start monitoring when no immediate match is found (default: true) */
+  autoStartMonitoring?: boolean;
 }
 
 /**
@@ -40,6 +42,7 @@ const DEFAULT_CRITERIA: QuickMatchCriteria = {
   avoidEmpty: true,
   avoidFull: true,
   monitoringTimeoutMinutes: 15,
+  autoStartMonitoring: true,
   preferredGameTypes: [
     OdalPapi.GameType.GT_Deathmatch,
     OdalPapi.GameType.GT_TeamDeathmatch,

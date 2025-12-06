@@ -36,6 +36,30 @@
             </button>
           </div>
 
+      <!-- Search Box -->
+      <div class="mb-3">
+        <div class="input-group">
+          <span class="input-group-text bg-dark border-secondary">
+            <i class="bi bi-search"></i>
+          </span>
+          <input 
+            type="text" 
+            class="form-control bg-dark text-light border-secondary" 
+            placeholder="Search servers by name, address, map, or WAD..."
+            [(ngModel)]="searchText"
+            aria-label="Search servers">
+          @if (searchText()) {
+            <button 
+              class="btn btn-outline-secondary" 
+              type="button"
+              (click)="searchText.set('')"
+              aria-label="Clear search">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          }
+        </div>
+      </div>
+
       <!-- IWAD Filter -->
       @if (iwadService.detectedIWADs().length > 0 || getUniqueGames().length > 0) {
         <div class="card bg-dark border-secondary mb-3">
@@ -152,6 +176,7 @@
                     <i class="bi" [class.bi-arrow-up]="sortDirection() === 'asc'" [class.bi-arrow-down]="sortDirection() === 'desc'" aria-hidden="true"></i>
                   }
                 </th>
+                <th>WADs</th>
                 <th class="sortable" (click)="sortBy('game')"
                     tabindex="0"
                     role="button"
@@ -161,18 +186,6 @@
                     aria-label="Sort by game">
                   Game
                   @if (sortColumn() === 'game') {
-                    <i class="bi" [class.bi-arrow-up]="sortDirection() === 'asc'" [class.bi-arrow-down]="sortDirection() === 'desc'" aria-hidden="true"></i>
-                  }
-                </th>
-                <th class="sortable" (click)="sortBy('map')"
-                    tabindex="0"
-                    role="button"
-                    (keydown.enter)="sortBy('map')"
-                    (keydown.space)="sortBy('map'); $event.preventDefault()"
-                    [attr.aria-sort]="sortColumn() === 'map' ? (sortDirection() === 'asc' ? 'ascending' : 'descending') : 'none'"
-                    aria-label="Sort by map">
-                  Map
-                  @if (sortColumn() === 'map') {
                     <i class="bi" [class.bi-arrow-up]="sortDirection() === 'asc'" [class.bi-arrow-down]="sortDirection() === 'desc'" aria-hidden="true"></i>
                   }
                 </th>
@@ -206,6 +219,7 @@
               @for (server of filteredServers(); track server.address.ip + ':' + server.address.port) {
                 <tr 
                   [class.table-active]="selectedServer() && selectedServer()!.address.ip === server.address.ip && selectedServer()!.address.port === server.address.port"
+                  [class.has-players]="server.players.length > 0"
                   (click)="handleServerClick(server)"
                   (dblclick)="handleServerDoubleClick(server)"
                   (keydown.enter)="handleServerClick(server)"
@@ -237,17 +251,20 @@
                     }
                   </td>
                   <td>
+                    @if (getServerPWADs(server).length > 0) {
+                      <small class="text-muted">{{ getServerPWADs(server).join(', ') }}</small>
+                    } @else {
+                      <small class="text-muted">-</small>
+                    }
+                  </td>
+                  <td>
                     <span class="badge bg-secondary">{{ getServerGame(server) }}</span>
                   </td>
-                  <td>{{ server.currentMap || 'N/A' }}</td>
                   <td>{{ getGameTypeName(server.gameType) }}</td>
                   <td>
                     @if (server.versionMajor !== null) {
                       {{ server.versionMajor }}.{{ server.versionMinor }}.{{ server.versionPatch }}
                     }
-                  </td>
-                  <td>
-                    <small class="font-monospace">{{ server.address.ip }}:{{ server.address.port }}</small>
                   </td>
                 </tr>
               }
