@@ -301,6 +301,10 @@ export class SettingsComponent implements OnInit, AfterViewInit {
       } else if (assetName.endsWith('.dmg')) {
         console.log('DMG downloaded - manual installation required');
         // TODO: Handle macOS DMG mounting/installation
+      } else if (assetName.endsWith('.flatpak')) {
+        console.log('Installing Flatpak...');
+        await this.fileManager.installFlatpak(downloadPath);
+        console.log('Flatpak installation complete');
       } else if (assetName.endsWith('.AppImage')) {
         console.log('AppImage downloaded - making executable');
         // TODO: Make AppImage executable

@@ -617,8 +617,12 @@ export class FileManagerService {
     } else if (platform === 'darwin') {
       return 'odamex-macos.dmg';
     } else if (platform === 'linux') {
-      // Prefer AppImage for Linux
-      return 'odamex-linux-x86_64.AppImage';
+      // Use Flatpak for Linux - architecture determined by system
+      if (arch === 'arm64' || arch === 'aarch64') {
+        return 'odamex-linux-arm64-*.flatpak';
+      } else {
+        return 'odamex-linux-x86_64-*.flatpak';
+      }
     }
 
     throw new Error(`Unsupported platform: ${platform}`);
@@ -642,6 +646,39 @@ export class FileManagerService {
           reject(new Error(`Failed to extract ZIP: ${error.message}`));
           return;
         }
+        resolve();
+      });
+    });
+  }
+
+  /**
+   * Install Flatpak file
+   * Requires flatpak to be installed on the system
+   */
+  async installFlatpak(flatpakPath: string): Promise<void> {
+    if (process.platform !== 'linux') {
+      throw new Error('Flatpak installation is only supported on Linux');
+    }
+
+    return new Promise((resolve, reject) => {
+      const { exec } = require('child_process');
+      
+      // Install flatpak with user scope (no root required)
+      const command = `flatpak install --user -y "${flatpakPath}"`;
+      console.log('Running flatpak install:', command);
+
+      exec(command, { timeout: 300000 }, (error: any, stdout: any, stderr: any) => {
+        if (error) {
+          reject(new Error(`Flatpak installation failed: ${error.message}`));
+          return;
+        }
+        if (stderr && !stderr.includes('Installing')) {
+          console.warn('Flatpak stderr:', stderr);
+        }
+        if (stdout) {
+          console.log('Flatpak output:', stdout);
+        }
+        console.log('Flatpak installation completed successfully');
         resolve();
       });
     });
