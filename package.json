@@ -191,7 +191,9 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "artifactName": "${productName}-Setup-${version}.${ext}",
-      "include": "build/installer.nsh"
+      "include": "build/installer.nsh",
+      "perMachine": false,
+      "runAfterFinish": false
     },
     "publish": {
       "provider": "github",
