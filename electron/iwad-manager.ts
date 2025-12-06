@@ -297,8 +297,8 @@ export class IWADManager {
       ];
       
       // Check XDG_DATA_HOME if set
-      if (process.env.XDG_DATA_HOME) {
-        steamPaths.unshift(path.join(process.env.XDG_DATA_HOME, 'Steam'));
+      if (process.env['XDG_DATA_HOME']) {
+        steamPaths.unshift(path.join(process.env['XDG_DATA_HOME'], 'Steam'));
       }
       
       for (const steamPath of steamPaths) {

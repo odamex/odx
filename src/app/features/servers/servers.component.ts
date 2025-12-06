@@ -43,6 +43,8 @@ export class ServersComponent {
   // Version filtering
   filterByVersion = signal(true);
   currentMajorVersion = signal<number | null>(null);
+  currentMinorVersion = signal<number | null>(null);
+  currentPatchVersion = signal<number | null>(null);
   
   // Search filtering
   searchText = signal('');
@@ -66,8 +68,8 @@ export class ServersComponent {
     let servers = this.allServers();
     
     // Apply version filtering
-    if (versionFilter && currentMajor !== null) {
-      servers = servers.filter(server => server.versionMajor === currentMajor);
+    if (versionFilter) {
+      servers = servers.filter(server => this.isServerVersionCompatible(server));
     }
     
     // Apply search text filtering
@@ -227,15 +229,37 @@ export class ServersComponent {
     try {
       const info = await this.fileManager.getInstallationInfo();
       if (info.installed && info.version) {
-        // Parse version string like "12.0.1" to get major version
-        const match = info.version.match(/^(\d+)\.(\d+)/);
+        // Parse version string like "12.0.1" to get major, minor, patch
+        const match = info.version.match(/^(\d+)\.(\d+)\.(\d+)/);
         if (match) {
           this.currentMajorVersion.set(parseInt(match[1], 10));
+          this.currentMinorVersion.set(parseInt(match[2], 10));
+          this.currentPatchVersion.set(parseInt(match[3], 10));
         }
       }
     } catch (err) {
       console.warn('Failed to detect current version:', err);
     }
+  }
+
+  /**
+   * Check if a server version is compatible with the current client version
+   * Compatible if: same major version AND server minor version <= client minor version
+   * Example: Client 11.2.0 can connect to 11.0.x, 11.1.x, 11.2.x but NOT 11.3.x
+   */
+  private isServerVersionCompatible(server: OdalPapi.ServerInfo): boolean {
+    const clientMajor = this.currentMajorVersion();
+    const clientMinor = this.currentMinorVersion();
+    
+    // If we don't have version info, allow connection (no filtering)
+    if (clientMajor === null || clientMinor === null) return true;
+    if (server.versionMajor === null || server.versionMinor === null) return true;
+    
+    // Major version must match
+    if (server.versionMajor !== clientMajor) return false;
+    
+    // Server minor version must be <= client minor version
+    return server.versionMinor <= clientMinor;
   }
 
   async refreshServers() {
@@ -293,6 +317,22 @@ export class ServersComponent {
       if (!installInfo.installed) {
         alert('Odamex is not installed. Please install it from Settings first.');
         return;
+      }
+
+      // Check version compatibility
+      if (!this.isServerVersionCompatible(server)) {
+        const serverVer = `${server.versionMajor}.${server.versionMinor}.${server.versionPatch}`;
+        const clientVer = `${this.currentMajorVersion()}.${this.currentMinorVersion()}.${this.currentPatchVersion()}`;
+        const proceed = confirm(
+          `Version mismatch!\n\n` +
+          `Server version: ${serverVer}\n` +
+          `Your version: ${clientVer}\n\n` +
+          `You may experience compatibility issues or connection failures.\n` +
+          `Continue anyway?`
+        );
+        if (!proceed) {
+          return;
+        }
       }
 
       // Build connection arguments

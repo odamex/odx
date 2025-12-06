@@ -1,7 +1,7 @@
 import { Injectable, signal, computed, effect, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { ServersStore } from '@app/store';
-import { OdalPapi, IWADService, type DetectedIWAD } from '@shared/services';
+import { OdalPapi, IWADService, FileManagerService, type DetectedIWAD } from '@shared/services';
 
 /**
  * Criteria for filtering and ranking servers in Quick Match
@@ -90,6 +90,7 @@ const DEFAULT_CRITERIA: QuickMatchCriteria = {
 export class QuickMatchService {
   private serversStore = inject(ServersStore);
   private iwadService = inject(IWADService);
+  private fileManager = inject(FileManagerService);
   private router = inject(Router);
 
   /** Whether the service is currently monitoring for matches */
@@ -97,12 +98,55 @@ export class QuickMatchService {
   
   private monitoringTimer: any = null;
   private monitoringStartTime: number = 0;
+  
+  // Current client version for compatibility checking
+  private currentMajorVersion: number | null = null;
+  private currentMinorVersion: number | null = null;
+  private currentPatchVersion: number | null = null;
 
   /** The server that was found during monitoring, null if none */
   matchFound = signal<OdalPapi.ServerInfo | null>(null);
   
   /** Match criteria - can be customized in settings */
   criteria = signal<QuickMatchCriteria>(DEFAULT_CRITERIA);
+
+  constructor() {
+    // Detect current Odamex version for compatibility checking
+    this.detectCurrentVersion();
+  }
+
+  private async detectCurrentVersion() {
+    try {
+      const info = await this.fileManager.getInstallationInfo();
+      if (info.installed && info.version) {
+        const match = info.version.match(/^(\d+)\.(\d+)\.(\d+)/);
+        if (match) {
+          this.currentMajorVersion = parseInt(match[1], 10);
+          this.currentMinorVersion = parseInt(match[2], 10);
+          this.currentPatchVersion = parseInt(match[3], 10);
+        }
+      }
+    } catch (err) {
+      console.warn('Quick match: Failed to detect current version:', err);
+    }
+  }
+
+  /**
+   * Check if a server version is compatible with the current client version
+   * Compatible if: same major version AND server minor version <= client minor version
+   * Example: Client 11.2.0 can connect to 11.0.x, 11.1.x, 11.2.x but NOT 11.3.x
+   */
+  private isServerVersionCompatible(server: OdalPapi.ServerInfo): boolean {
+    // If we don't have version info, allow connection (no filtering)
+    if (this.currentMajorVersion === null || this.currentMinorVersion === null) return true;
+    if (server.versionMajor === null || server.versionMinor === null) return true;
+    
+    // Major version must match
+    if (server.versionMajor !== this.currentMajorVersion) return false;
+    
+    // Server minor version must be <= client minor version
+    return server.versionMinor <= this.currentMinorVersion;
+  }
 
   /**
    * Find the best server match based on criteria
@@ -153,6 +197,9 @@ export class QuickMatchService {
       // Check against user's min/max player preferences (active players only)
       if (activePlayers < criteria.minPlayers) return false;
       if (activePlayers > criteria.maxPlayers) return false;
+
+      // Check version compatibility
+      if (!this.isServerVersionCompatible(server)) return false;
 
       // Check game type
       if (criteria.preferredGameTypes && criteria.preferredGameTypes.length > 0) {

@@ -131,14 +131,45 @@ export class FileManagerService {
   private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache lifetime
 
   constructor() {
-    // Determine platform-specific paths
-    const userDataPath = app.getPath('userData');
+    // Determine platform-specific paths based on installation type
+    let baseDir: string;
     
-    // Main ODX directory in AppData/Roaming
-    this.odxDir = path.join(userDataPath, 'ODX');
+    if (process.platform === 'win32') {
+      // For Windows, check if we're running from a system-wide install with a data directory
+      const exePath = app.getPath('exe');
+      const exeDir = path.dirname(exePath);
+      
+      // Check if we're installed in Program Files (system-wide install)
+      const isProgramFiles = exeDir.toLowerCase().includes('program files');
+      const dataDir = path.join(exeDir, 'data');
+      
+      if (isProgramFiles && fs.existsSync(dataDir)) {
+        // Use portable data directory next to the executable
+        // This directory is created by the installer with proper write permissions
+        baseDir = path.join(dataDir, 'ODX');
+        console.log('System-wide install detected, using data directory:', baseDir);
+      } else {
+        // Fall back to AppData/Roaming (standard for per-user installs)
+        baseDir = path.join(app.getPath('userData'), 'ODX');
+        console.log('Per-user install or portable mode, using AppData:', baseDir);
+      }
+    } else {
+      // On non-Windows platforms, always use userData
+      baseDir = path.join(app.getPath('userData'), 'ODX');
+    }
+    
+    // Set up ODX directory structure
+    this.odxDir = baseDir;
     this.binDir = path.join(this.odxDir, 'bin');
     this.wadsDir = path.join(this.odxDir, 'wads');
     this.configDir = path.join(this.odxDir, 'config');
+
+    console.log('ODX directories initialized:', {
+      base: this.odxDir,
+      bin: this.binDir,
+      wads: this.wadsDir,
+      config: this.configDir
+    });
 
     // Ensure directories exist
     this.ensureDirectories();
@@ -581,8 +612,13 @@ export class FileManagerService {
         res.pipe(file);
 
         file.on('finish', () => {
-          file.close();
-          resolve();
+          file.close(() => {
+            // Ensure file handle is fully released before resolving
+            // Add extra delay to avoid file locking issues with antivirus/Windows Defender
+            setTimeout(() => {
+              resolve();
+            }, 500);
+          });
         });
 
         file.on('error', (err) => {
