@@ -1,5 +1,6 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { ServersStore } from '@app/store';
+import { OdalPapiService } from '@shared/services';
 import type { OdalPapi } from '@shared/services';
 
 /**
@@ -16,7 +17,7 @@ export interface LocalNetworkDiscoverySettings {
   portRangeEnd: number;
   /** Timeout in milliseconds for each query */
   scanTimeout: number;
-  /** Refresh interval in milliseconds */
+  /** Refresh interval in seconds */
   refreshInterval: number;
   /** Maximum concurrent queries */
   maxConcurrent: number;
@@ -47,6 +48,7 @@ export interface NetworkInterface {
 })
 export class LocalNetworkDiscoveryService {
   private readonly serversStore = inject(ServersStore);
+  private readonly odalPapi = inject(OdalPapiService);
   
   private readonly _settings = signal<LocalNetworkDiscoverySettings>(this.loadSettings());
   private readonly _scanning = signal<boolean>(false);
@@ -68,10 +70,10 @@ export class LocalNetworkDiscoveryService {
   readonly detectedNetworks = this._detectedNetworks.asReadonly();
 
   constructor() {
-    console.log('[LocalNetworkDiscoveryService] Initialized with settings:', this._settings());
+    const settings = this._settings();
     
     // Start discovery if enabled
-    if (this._settings().enabled) {
+    if (settings.enabled) {
       this.start();
     }
   }
@@ -87,8 +89,6 @@ export class LocalNetworkDiscoveryService {
     
     this._settings.set(updated);
     this.saveSettings(updated);
-    
-    console.log('[LocalNetworkDiscoveryService] Settings updated:', updated);
     
     // Restart discovery if enabled state changed
     if ('enabled' in settings) {
@@ -108,14 +108,14 @@ export class LocalNetworkDiscoveryService {
    */
   async start(): Promise<void> {
     if (!this._settings().enabled) {
-      console.log('[LocalNetworkDiscoveryService] Cannot start - discovery is disabled');
       return;
     }
 
-    console.log('[LocalNetworkDiscoveryService] Starting local network discovery');
-    
     // Detect networks first
     await this.detectNetworks();
+    
+    // Add a small delay before first scan to ensure network stack is ready
+    await new Promise(resolve => setTimeout(resolve, 500));
     
     // Perform initial scan
     await this.scan();
@@ -128,8 +128,6 @@ export class LocalNetworkDiscoveryService {
    * Stop local network discovery
    */
   stop(): void {
-    console.log('[LocalNetworkDiscoveryService] Stopping local network discovery');
-    
     if (this.refreshIntervalId !== null) {
       clearTimeout(this.refreshIntervalId);
       this.refreshIntervalId = null;
@@ -149,21 +147,21 @@ export class LocalNetworkDiscoveryService {
 
   /**
    * Perform a single scan of the local network
+   * @param force If true, scan even if auto-discovery is disabled
    */
-  async scan(): Promise<void> {
+  async scan(force: boolean = false): Promise<void> {
     if (this._scanning()) {
-      console.log('[LocalNetworkDiscoveryService] Scan already in progress');
+      console.log('[LocalNetworkDiscoveryService] Scan already in progress, skipping');
       return;
     }
 
     const settings = this._settings();
-    if (!settings.enabled) {
-      console.log('[LocalNetworkDiscoveryService] Cannot scan - discovery is disabled');
+    if (!settings.enabled && !force) {
+      console.log('[LocalNetworkDiscoveryService] Discovery disabled and not forced, skipping scan');
       return;
     }
 
     this._scanning.set(true);
-    console.log('[LocalNetworkDiscoveryService] Starting network scan...');
     
     try {
       const servers = await window.electron.discoverLocalServers({
@@ -172,13 +170,28 @@ export class LocalNetworkDiscoveryService {
         scanTimeout: settings.scanTimeout,
         maxConcurrent: settings.maxConcurrent
       });
-
-      console.log(`[LocalNetworkDiscoveryService] Scan complete - found ${servers.length} servers`);
+      
+      // Query each discovered server for full information
+      const fullServerInfo: OdalPapi.ServerInfo[] = [];
+      for (const server of servers) {
+        try {
+          const result = await this.odalPapi.queryGameServer({
+            ip: server.address.ip,
+            port: server.address.port
+          });
+          // Use the ping from the full OdalPapi query (more accurate, includes server processing time)
+          if (result.pong) {
+            result.server.ping = result.pong;
+          }
+          fullServerInfo.push(result.server);
+        } catch (err) {
+          // If query fails, use the basic info we have
+          fullServerInfo.push(server as OdalPapi.ServerInfo);
+        }
+      }
       
       // Update store with discovered servers
-      // Note: The servers from local discovery need to be properly formatted as ServerInfo
-      // For now, we cast them - in production, the network-discovery-main should return fully parsed ServerInfo
-      this.serversStore.setLocalServers(servers as OdalPapi.ServerInfo[]);
+      this.serversStore.setLocalServers(fullServerInfo);
       
       this._lastScanTime.set(new Date());
     } catch (err) {
@@ -195,7 +208,6 @@ export class LocalNetworkDiscoveryService {
     try {
       const networks = await window.electron.getLocalNetworks();
       this._detectedNetworks.set(networks);
-      console.log('[LocalNetworkDiscoveryService] Detected networks:', networks);
     } catch (err) {
       console.error('[LocalNetworkDiscoveryService] Failed to detect networks:', err);
       this._detectedNetworks.set([]);
@@ -218,7 +230,7 @@ export class LocalNetworkDiscoveryService {
           this.scheduleNextScan();
         });
       }
-    }, settings.refreshInterval);
+    }, settings.refreshInterval * 1000);
   }
 
   /**
@@ -238,7 +250,7 @@ export class LocalNetworkDiscoveryService {
         portRangeStart: portRangeStart !== null ? parseInt(portRangeStart, 10) : 10666,
         portRangeEnd: portRangeEnd !== null ? parseInt(portRangeEnd, 10) : 10675,
         scanTimeout: scanTimeout !== null ? parseInt(scanTimeout, 10) : 200,
-        refreshInterval: refreshInterval !== null ? parseInt(refreshInterval, 10) : 60000, // 60 seconds
+        refreshInterval: refreshInterval !== null ? parseInt(refreshInterval, 10) : 60, // 60 seconds
         maxConcurrent: maxConcurrent !== null ? parseInt(maxConcurrent, 10) : 50
       };
     } catch (err) {
@@ -249,7 +261,7 @@ export class LocalNetworkDiscoveryService {
         portRangeStart: 10666,
         portRangeEnd: 10675,
         scanTimeout: 200,
-        refreshInterval: 60000,
+        refreshInterval: 60,
         maxConcurrent: 50
       };
     }

@@ -542,7 +542,7 @@ export class SettingsComponent implements OnInit, AfterViewInit {
   }
 
   triggerLocalScan(): void {
-    this.localNetworkDiscoveryService.scan();
+    this.localNetworkDiscoveryService.scan(true); // Force scan even if disabled
   }
 
   

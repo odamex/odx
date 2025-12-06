@@ -92,9 +92,15 @@ export class ServersComponent {
     
     // Apply game filters
     // Always filter by owned games - only show servers for IWADs we have
+    // Exception: Local servers are always shown regardless of filters
     const ownedGames = this.getUniqueGames().map(g => g.game);
     if (ownedGames.length > 0) {
       servers = servers.filter(server => {
+        // Always show local servers
+        if (this.isLocalServer(server)) {
+          return true;
+        }
+        
         if (!server.wads || server.wads.length === 0) {
           return false;
         }
@@ -117,6 +123,13 @@ export class ServersComponent {
     
     // Apply sorting
     return [...servers].sort((a, b) => {
+      // Local servers always appear first, regardless of sort
+      const aIsLocal = this.isLocalServer(a);
+      const bIsLocal = this.isLocalServer(b);
+      
+      if (aIsLocal && !bIsLocal) return -1;
+      if (!aIsLocal && bIsLocal) return 1;
+      
       let aVal: any, bVal: any;
       
       switch (column) {
@@ -403,6 +416,11 @@ export class ServersComponent {
   }
   
   getServerGame(server: OdalPapi.ServerInfo): string {
+    // Local servers may not have full WAD info yet
+    if (this.isLocalServer(server) && (!server.wads || server.wads.length === 0)) {
+      return 'Local Server';
+    }
+    
     if (!server.wads || server.wads.length === 0) {
       return 'Unknown';
     }

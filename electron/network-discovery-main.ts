@@ -76,7 +76,6 @@ export function getLocalNetworks(): NetworkInterface[] {
     }
   }
   
-  console.log('[Network Discovery] Detected networks:', networks);
   return networks;
 }
 
@@ -87,19 +86,28 @@ function getIPRange(cidr: string): string[] {
   const [baseIP, prefixStr] = cidr.split('/');
   const prefix = parseInt(prefixStr, 10);
   
-  // Only support /24 for now (254 hosts) - most common home network
-  if (prefix !== 24) {
-    console.warn(`[Network Discovery] Unsupported prefix /${prefix}, only /24 is supported`);
-    return [];
-  }
-  
   const parts = baseIP.split('.').map(Number);
-  const networkBase = `${parts[0]}.${parts[1]}.${parts[2]}`;
-  
   const ips: string[] = [];
-  // Skip .0 (network address) and .255 (broadcast address)
-  for (let i = 1; i < 255; i++) {
-    ips.push(`${networkBase}.${i}`);
+  
+  // Support /24 (most common) and /16 networks
+  if (prefix === 24) {
+    const networkBase = `${parts[0]}.${parts[1]}.${parts[2]}`;
+    // Skip .0 (network address) and .255 (broadcast address)
+    for (let i = 1; i < 255; i++) {
+      ips.push(`${networkBase}.${i}`);
+    }
+  } else if (prefix === 16) {
+    const networkBase = `${parts[0]}.${parts[1]}`;
+    // For /16, scan common ranges (skip full 65k hosts)
+    // Focus on .1.x and .0.x subnets which are most common
+    for (let j = 0; j < 2; j++) {
+      for (let i = 1; i < 255; i++) {
+        ips.push(`${networkBase}.${j}.${i}`);
+      }
+    }
+  } else {
+    console.warn(`[Network Discovery] Unsupported prefix /${prefix}, only /24 and /16 are supported`);
+    return [];
   }
   
   return ips;
@@ -130,16 +138,35 @@ async function queryServer(ip: string, port: number, timeout: number): Promise<S
         const ping = Date.now() - startTime;
         
         // Parse Odamex server response
-        // This is a simplified version - in reality, you'd parse the full response
         try {
-          // Basic check if it looks like an Odamex response
-          if (msg.length > 0) {
-            socket.close();
-            resolve({
-              address: { ip, port },
-              ping,
-              // Additional parsing would go here
-            });
+          // Check if response has minimum size and valid tag
+          if (msg.length > 8) {
+            const response = msg.readUInt32LE(0);
+            const tagId = ((response >> 20) & 0x0FFF);
+            
+            // TAG_ID for Odamex is 0xAD0
+            if (tagId === 0xAD0) {
+              socket.close();
+              resolve({
+                address: { ip, port },
+                ping,
+                responded: true,
+                // Basic info - full parsing would require complete protocol implementation
+                name: `Server at ${ip}:${port}`,
+                players: [],
+                wads: [],
+                currentMap: null,
+                maxClients: null,
+                maxPlayers: null,
+                gameType: 0,
+                versionMajor: null,
+                versionMinor: null,
+                versionPatch: null,
+              } as ServerInfo);
+            } else {
+              socket.close();
+              resolve(null);
+            }
           } else {
             socket.close();
             resolve(null);
@@ -161,9 +188,9 @@ async function queryServer(ip: string, port: number, timeout: number): Promise<S
     });
     
     try {
-      // Send Odamex query packet
-      // LAUNCHER_CHALLENGE (0x00, 0x00, 0x00, 0xAD)
-      const queryPacket = Buffer.from([0x00, 0x00, 0x00, 0xAD]);
+      // Send Odamex SERVER_CHALLENGE query packet (0xAD011002)
+      const queryPacket = Buffer.alloc(4);
+      queryPacket.writeUInt32LE(0xAD011002, 0);
       socket.send(queryPacket, port, ip);
     } catch (err) {
       if (!resolved) {
@@ -180,11 +207,8 @@ async function queryServer(ip: string, port: number, timeout: number): Promise<S
  * Scan local network for Odamex servers
  */
 export async function discoverLocalServers(options: ScanOptions): Promise<ServerInfo[]> {
-  console.log('[Network Discovery] Starting scan with options:', options);
-  
   const networks = getLocalNetworks();
   if (networks.length === 0) {
-    console.log('[Network Discovery] No private networks detected');
     return [];
   }
   
@@ -194,9 +218,12 @@ export async function discoverLocalServers(options: ScanOptions): Promise<Server
     allIPs.push(...ips);
   }
   
-  console.log(`[Network Discovery] Scanning ${allIPs.length} IPs across ${networks.length} network(s)`);
-  
   const { portRangeStart, portRangeEnd, scanTimeout, maxConcurrent } = options;
+  const portCount = portRangeEnd - portRangeStart + 1;
+  
+  console.log(`[Network Discovery] Scanning ${allIPs.length} IPs on ${portCount} port(s)`);
+  console.log(`[Network Discovery] Port range: ${portRangeStart}-${portRangeEnd}`);
+  console.log(`[Network Discovery] Timeout: ${scanTimeout}ms, Concurrency: ${maxConcurrent}`);
   const ports: number[] = [];
   for (let port = portRangeStart; port <= portRangeEnd; port++) {
     ports.push(port);
@@ -222,17 +249,13 @@ export async function discoverLocalServers(options: ScanOptions): Promise<Server
     for (const result of results) {
       if (result) {
         servers.push(result);
-        console.log(`[Network Discovery] Found server at ${result.address.ip}:${result.address.port}`);
       }
     }
     
     completed += batch.length;
-    if (completed % 1000 === 0) {
-      console.log(`[Network Discovery] Progress: ${completed}/${total} (${Math.round(completed / total * 100)}%)`);
-    }
   }
   
-  console.log(`[Network Discovery] Scan complete - found ${servers.length} server(s)`);
+  console.log(`[Network Discovery] Scan complete - scanned ${completed} combinations, found ${servers.length} server(s)`);
   return servers;
 }
 
@@ -259,6 +282,4 @@ export function registerNetworkDiscoveryHandlers(): void {
       throw err;
     }
   });
-  
-  console.log('[Network Discovery] IPC handlers registered');
 }
