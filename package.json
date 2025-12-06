@@ -156,7 +156,7 @@
     "mac": {
       "target": [
         {
-          "target": "dmg",
+          "target": "zip",
           "arch": [
             "x64",
             "arm64"
@@ -165,10 +165,6 @@
       ],
       "icon": "build/icon.icns",
       "category": "public.app-category.games"
-    },
-    "dmg": {
-      "format": "UDBZ",
-      "writeUpdateInfo": false
     },
     "linux": {
       "target": [
