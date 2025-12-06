@@ -33,6 +33,8 @@
   overflow-y: auto;
   overflow-x: hidden;
   background: #1e1e1e;
+  pointer-events: auto; // Explicitly enable pointer events
+  user-select: auto; // Explicitly enable text selection
   
   .container-fluid {
     padding: 1rem;

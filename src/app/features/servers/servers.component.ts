@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, computed, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ServersStore } from '@app/store';
 import { OdalPapi, FileManagerService, IWADService, ServerRefreshService, NetworkStatusService } from '@shared/services';
@@ -15,6 +15,7 @@ export class ServersComponent {
   private refreshService = inject(ServerRefreshService);
   private networkStatus = inject(NetworkStatusService);
   protected iwadService = inject(IWADService);
+  private ngZone = inject(NgZone);
   readonly store = inject(ServersStore);
   
   selectedServer = signal<OdalPapi.ServerInfo | null>(null);
@@ -22,7 +23,7 @@ export class ServersComponent {
   
   // Panel resize and collapse
   detailsPanelCollapsed = signal(true);
-  protected resizing = false;
+  protected resizing = signal(false);
   private startY = 0;
   private startHeight = 0;
   private savedPanelHeight: string | null = null;
@@ -401,7 +402,9 @@ export class ServersComponent {
   // Panel resize functionality
   startResize(event: MouseEvent) {
     event.preventDefault();
-    this.resizing = true;
+    
+    this.resizing.set(true);
+    
     this.startY = event.clientY;
     
     const detailsPanel = document.querySelector('.server-details-panel') as HTMLElement;
@@ -419,7 +422,7 @@ export class ServersComponent {
     document.body.style.cursor = 'ns-resize';
     
     const mouseMoveHandler = (e: MouseEvent) => {
-      if (!this.resizing) return;
+      if (!this.resizing()) return;
       
       const delta = this.startY - e.clientY; // Reversed because panel is at bottom
       const newHeight = Math.max(minHeight, Math.min(maxHeight, this.startHeight + delta));
@@ -429,7 +432,7 @@ export class ServersComponent {
     };
     
     const mouseUpHandler = () => {
-      this.resizing = false;
+      this.resizing.set(false);
       
       // Restore text selection and cursor
       document.body.style.userSelect = '';
