@@ -134,7 +134,7 @@ export class SettingsComponent implements OnInit, AfterViewInit {
     maxPlayers: 32,
     avoidEmpty: true,
     avoidFull: true,
-    monitoringTimeoutMinutes: 15,
+    monitoringTimeoutMinutes: 60,
     autoStartMonitoring: true,
     preferredGameTypes: [
       OdalPapi.GameType.GT_Deathmatch,
@@ -708,7 +708,7 @@ export class SettingsComponent implements OnInit, AfterViewInit {
       maxPlayers: 32,
       avoidEmpty: true,
       avoidFull: true,
-      monitoringTimeoutMinutes: 15,
+      monitoringTimeoutMinutes: 60,
       autoStartMonitoring: true,
       preferredGameTypes: [
         OdalPapi.GameType.GT_Deathmatch,

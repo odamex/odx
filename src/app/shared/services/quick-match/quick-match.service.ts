@@ -19,7 +19,7 @@ export interface QuickMatchCriteria {
   avoidFull: boolean;
   /** Optional list of preferred game types to filter by */
   preferredGameTypes?: OdalPapi.GameType[];
-  /** Maximum time in minutes to monitor for matches (default: 15) */
+  /** Maximum time in minutes to monitor for matches (default: 60, 0 = infinite) */
   monitoringTimeoutMinutes?: number;
   /** If true, automatically start monitoring when no immediate match is found (default: true) */
   autoStartMonitoring?: boolean;
@@ -41,7 +41,7 @@ const DEFAULT_CRITERIA: QuickMatchCriteria = {
   maxPlayers: 32,
   avoidEmpty: true,
   avoidFull: true,
-  monitoringTimeoutMinutes: 15,
+  monitoringTimeoutMinutes: 60,
   autoStartMonitoring: true,
   preferredGameTypes: [
     OdalPapi.GameType.GT_Deathmatch,
@@ -231,8 +231,9 @@ export class QuickMatchService {
    * Start monitoring for a match
    * 
    * Begins a lightweight background monitoring loop that checks for suitable
-   * servers every 30 seconds. Automatically stops after 10 minutes if no match
-   * is found. Sets the matchFound signal when a server becomes available.
+   * servers every 30 seconds. Automatically stops after the configured timeout
+   * (if > 0) and prompts user to continue. If timeout is 0, monitors indefinitely.
+   * Sets the matchFound signal when a server becomes available.
    * 
    * This is a "lightweight queue" - it doesn't prevent navigation or block the UI.
    */
@@ -283,22 +284,49 @@ export class QuickMatchService {
    * Check for a match and handle monitoring timeout
    * 
    * Called periodically during monitoring to search for suitable servers.
-   * Stops monitoring if the maximum time is exceeded or if
-   * a match is found. Does not auto-connect - sets matchFound signal for
-   * user to handle.
+   * If timeout > 0 and exceeded, prompts user to continue. If timeout = 0,
+   * monitors indefinitely. Stops monitoring if a match is found.
+   * Does not auto-connect - sets matchFound signal for user to handle.
    * 
    * @private
    */
-  private checkForMatch() {
-    // Get timeout from criteria (default to 15 minutes if not set)
-    const timeoutMinutes = this.criteria().monitoringTimeoutMinutes ?? 15;
-    const maxMonitoringTime = timeoutMinutes * 60 * 1000;
+  private async checkForMatch() {
+    // Get timeout from criteria (default to 60 minutes if not set)
+    const timeoutMinutes = this.criteria().monitoringTimeoutMinutes ?? 60;
     
-    // Check if we've exceeded max monitoring time
-    const elapsed = Date.now() - this.monitoringStartTime;
-    if (elapsed > maxMonitoringTime) {
-      this.stopMonitoring();
-      return;
+    // If timeout is 0, monitor indefinitely (only manual stop)
+    if (timeoutMinutes > 0) {
+      const maxMonitoringTime = timeoutMinutes * 60 * 1000;
+      
+      // Check if we've exceeded max monitoring time
+      const elapsed = Date.now() - this.monitoringStartTime;
+      if (elapsed > maxMonitoringTime) {
+        // Prompt user to continue or stop
+        if (typeof window !== 'undefined' && window.electron) {
+          const response = await window.electron.showMessageBox({
+            type: 'question',
+            title: 'Continue Monitoring?',
+            message: `Monitoring timeout reached (${timeoutMinutes} minutes).`,
+            detail: 'No suitable servers found yet. Would you like to continue monitoring?',
+            buttons: [`Continue for ${timeoutMinutes} more minutes`, 'Stop Monitoring'],
+            defaultId: 0,
+            cancelId: 1
+          });
+          
+          if (response.response === 0) {
+            // Reset start time to continue for another period
+            this.monitoringStartTime = Date.now();
+          } else {
+            // User chose to stop
+            this.stopMonitoring();
+            return;
+          }
+        } else {
+          // Fallback if Electron API not available
+          this.stopMonitoring();
+          return;
+        }
+      }
     }
 
     const result = this.findBestMatch();

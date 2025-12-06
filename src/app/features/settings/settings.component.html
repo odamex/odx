@@ -750,15 +750,15 @@
                         <i class="bi bi-clock"></i>
                         Monitoring Timeout
                       </label>
-                      <p class="setting-description">How long to monitor for matches when no server is found immediately</p>
+                      <p class="setting-description">How long to monitor for matches (0 = infinite, prompts to continue at timeout)</p>
                       <div class="input-group" style="max-width: 200px;">
                         <input 
                           type="number" 
                           class="form-control" 
                           [(ngModel)]="quickMatchCriteria.monitoringTimeoutMinutes"
                           (ngModelChange)="saveQuickMatchSettings()"
-                          min="1"
-                          max="60"
+                          min="0"
+                          max="180"
                           step="1">
                         <span class="input-group-text">minutes</span>
                       </div>

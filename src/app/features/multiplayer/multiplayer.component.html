@@ -100,7 +100,11 @@
         <p>We'll notify you when a suitable server becomes available</p>
         <div class="monitoring-info">
           <i class="bi bi-info-circle"></i>
-          <span>Checking every 30 seconds for up to {{ quickMatchService.criteria().monitoringTimeoutMinutes ?? 15 }} minutes</span>
+          @if ((quickMatchService.criteria().monitoringTimeoutMinutes ?? 60) === 0) {
+            <span>Checking every 30 seconds until a match is found or you stop monitoring</span>
+          } @else {
+            <span>Checking every 30 seconds for up to {{ quickMatchService.criteria().monitoringTimeoutMinutes ?? 60 }} minutes</span>
+          }
         </div>
         
         @if (monitorMatchFound()) {
