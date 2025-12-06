@@ -31,6 +31,8 @@ export class TitleBarComponent {
   protected readonly appTitle = signal('ODX');
   protected readonly isOnline = this.networkStatus.isOnline;
   protected readonly connectionStatus = this.serviceStatus.connectionStatus;
+  protected readonly platform = signal<string>(window.electron?.platform || 'unknown');
+  protected readonly showWindowControls = signal(this.platform() === 'win32' || this.platform() === 'linux');
 
   /**
    * Minimize the application window

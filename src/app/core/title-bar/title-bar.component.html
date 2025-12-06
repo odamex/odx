@@ -1,5 +1,6 @@
 <div class="title-bar">
   <div class="title-drag-area">
+    <img src="icon.png" alt="ODX" class="title-icon" />
     <span class="title-text">{{ appTitle() }}</span>
   </div>
   <div class="status-indicators">
@@ -14,27 +15,29 @@
       <ng-icon name="bootstrapCircleFill" />
     </div>
   </div>
-  <div class="window-controls">
-    <button 
-      type="button"
-      class="window-control-btn minimize"
-      (click)="onMinimize()"
-      title="Minimize">
-      <ng-icon name="bootstrapDash" />
-    </button>
-    <button 
-      type="button"
-      class="window-control-btn maximize"
-      (click)="onMaximize()"
-      title="Maximize">
-      <ng-icon name="bootstrapSquare" />
-    </button>
-    <button 
-      type="button"
-      class="window-control-btn close"
-      (click)="onClose()"
-      title="Close">
-      <ng-icon name="bootstrapX" />
-    </button>
-  </div>
+  @if (showWindowControls()) {
+    <div class="window-controls">
+      <button 
+        type="button"
+        class="window-control-btn minimize"
+        (click)="onMinimize()"
+        title="Minimize">
+        <ng-icon name="bootstrapDash" />
+      </button>
+      <button 
+        type="button"
+        class="window-control-btn maximize"
+        (click)="onMaximize()"
+        title="Maximize">
+        <ng-icon name="bootstrapSquare" />
+      </button>
+      <button 
+        type="button"
+        class="window-control-btn close"
+        (click)="onClose()"
+        title="Close">
+        <ng-icon name="bootstrapX" />
+      </button>
+    </div>
+  }
 </div>

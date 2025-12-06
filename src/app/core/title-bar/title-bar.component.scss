@@ -13,13 +13,30 @@
   flex: 1;
   display: flex;
   align-items: center;
+  gap: 8px;
   padding-left: 12px;
+  
+  // macOS: Add padding for traffic light buttons
+  @media (platform: macos) {
+    padding-left: 78px;
+  }
+}
+
+.title-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+
+// Alternative approach using CSS that checks for macOS
+:host-context(.platform-darwin) .title-drag-area {
+  padding-left: 78px;
 }
 
 .title-text {
   font-size: 12px;
   font-weight: 500;
-  color: #aaa;
+  color: #fff;
 }
 
 .status-indicators {
@@ -99,6 +116,18 @@
   
   ng-icon {
     font-size: 14px;
+  }
+  
+  &.minimize ng-icon {
+    font-size: 14px;
+  }
+  
+  &.maximize ng-icon {
+    font-size: 10px;
+  }
+  
+  &.close ng-icon {
+    font-size: 18px;
   }
 
   &:hover {
