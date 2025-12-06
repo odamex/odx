@@ -141,30 +141,10 @@
     "linux": {
       "target": [
         "AppImage",
-        "deb",
-        "flatpak"
+        "deb"
       ],
       "icon": "build/icon.png",
-      "category": "Game",
-      "flatpak": {
-        "bundleName": "net.odamex.ODXLauncher",
-        "bundleId": "net.odamex.ODXLauncher",
-        "bundleDisplayName": "ODX Launcher",
-        "bundleDescription": "Cross-platform Odamex launcher with single player, multiplayer, and server management",
-        "runtime": "org.freedesktop.Platform",
-        "runtimeVersion": "23.08",
-        "sdk": "org.freedesktop.Sdk",
-        "finishArgs": [
-          "--socket=x11",
-          "--socket=wayland",
-          "--socket=pulseaudio",
-          "--share=network",
-          "--share=ipc",
-          "--device=dri",
-          "--filesystem=home",
-          "--filesystem=xdg-download"
-        ]
-      }
+      "category": "Game"
     },
     "nsis": {
       "oneClick": false,

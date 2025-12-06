@@ -68,7 +68,6 @@ jobs:
             release/*.AppImage
             release/*.deb
             release/*.rpm
-            release/*.flatpak
           retention-days: 30
 
   release:
@@ -86,10 +85,16 @@ jobs:
         with:
           path: artifacts
 
+      - name: Flatten artifacts
+        run: |
+          mkdir -p release-files
+          find artifacts -type f \( -name "*.exe" -o -name "*.dmg" -o -name "*.AppImage" -o -name "*.deb" -o -name "*.rpm" -o -name "*.flatpak" \) -exec cp {} release-files/ \;
+          ls -lah release-files/
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          files: artifacts/**/*
+          files: release-files/*
           draft: true
           generate_release_notes: true
         env:
