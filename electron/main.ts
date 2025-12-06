@@ -78,7 +78,7 @@ function createWindow(): void {
     transparent: false,
     backgroundColor: '#2c2c2c',
     title: 'ODX',
-    icon: path.join(__dirname, '../public/icon.png'),
+    icon: path.join(__dirname, '../public/favicon.256x256.png'),
     show: false, // Don't show until ready
     webPreferences: {
       nodeIntegration: false,
