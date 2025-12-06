@@ -13,7 +13,7 @@
             </div>
           }
           
-          <div class="d-flex justify-content-between align-items-center mb-4">
+          <div class="d-flex justify-content-between align-items-center mb-4 gap-4">
             <div>
               <h1 class="mb-0" id="server-browser-title">Server Browser</h1>
               @if (autoRefreshEnabled()) {
@@ -23,6 +23,32 @@
                 </small>
               }
             </div>
+            
+          
+            <!-- Search Box -->
+            <div class="d-inline-flex flex-grow-0 flex-shrink-1 ms-auto" style="flex-basis:40%;">
+              <div class="input-group">
+                <span class="input-group-text bg-dark border-secondary">
+                  <i class="bi bi-search"></i>
+                </span>
+                <input 
+                  type="text" 
+                  class="form-control bg-dark text-light border-secondary" 
+                  placeholder="Search servers by name, address, map, or WAD..."
+                  [(ngModel)]="searchText"
+                  aria-label="Search servers">
+                @if (searchText()) {
+                  <button 
+                    class="btn btn-outline-secondary" 
+                    type="button"
+                    (click)="searchText.set('')"
+                    aria-label="Clear search">
+                    <i class="bi bi-x-lg"></i>
+                  </button>
+                }
+              </div>
+            </div>
+    
             <button 
               class="btn btn-primary" 
               (click)="refreshServers()"
@@ -36,64 +62,116 @@
             </button>
           </div>
 
-      <!-- Search Box -->
-      <div class="mb-3">
-        <div class="input-group">
-          <span class="input-group-text bg-dark border-secondary">
-            <i class="bi bi-search"></i>
-          </span>
-          <input 
-            type="text" 
-            class="form-control bg-dark text-light border-secondary" 
-            placeholder="Search servers by name, address, map, or WAD..."
-            [(ngModel)]="searchText"
-            aria-label="Search servers">
-          @if (searchText()) {
-            <button 
-              class="btn btn-outline-secondary" 
-              type="button"
-              (click)="searchText.set('')"
-              aria-label="Clear search">
-              <i class="bi bi-x-lg"></i>
-            </button>
-          }
-        </div>
-      </div>
-
-      <!-- IWAD Filter -->
+      <!-- Server List Filters -->
       @if (iwadService.detectedIWADs().length > 0 || getUniqueGames().length > 0) {
-        <div class="card bg-dark border-secondary mb-3">
+        <div class="card server-list-filters bg-dark border-secondary mb-3">
           <div class="card-body py-2">
-            <h6 class="mb-2 small" id="game-filter-label">
-              <i class="bi bi-funnel" aria-hidden="true"></i> Filter by Game
-            </h6>
-            <div class="d-flex flex-wrap gap-1" role="group" aria-labelledby="game-filter-label">
-              <button 
-                class="btn btn-sm px-2 py-1 small"
-                [class.btn-outline-light]="!showAllGames()"
-                [class.btn-warning]="showAllGames()"
-                (click)="toggleAllGames()"
-                [attr.aria-pressed]="showAllGames()"
-                aria-label="Show all games">
-                All Games
-              </button>
-              @for (iwad of getUniqueGames(); track iwad.game) {
+            <div class="d-flex align-items-center gap-3">
+                <i class="bi bi-funnel" aria-hidden="true"></i>
+              <div class="dropdown" ngbDropdown>
                 <button 
-                  class="btn btn-sm px-2 py-1 small"
-                  [class.btn-outline-light]="!isGameFilterEnabled(iwad.game)"
-                  [class.btn-success]="isGameFilterEnabled(iwad.game)"
-                  (click)="toggleGameFilter(iwad.game)"
-                  [attr.aria-pressed]="isGameFilterEnabled(iwad.game)"
-                  [attr.aria-label]="'Filter by ' + iwad.displayName"
-                  [title]="iwad.detectedCount === 0 ? '0 versions found' : iwad.detectedCount + ' version(s) found'">
-                  {{ iwad.displayName }}
+                  class="btn btn-sm btn-outline-light" 
+                  type="button" 
+                  id="gameFilterDropdown"
+                  ngbDropdownToggle
+                  aria-label="Game filter menu">
+                  @if (showAllGames()) {
+                    All Games
+                  } @else {
+                    Games: <span class="badge bg-primary ms-1">{{ activeGameFilters().length }}</span>
+                  }
                 </button>
-              }
+                <div class="dropdown-menu dropdown-menu-dark" ngbDropdownMenu aria-labelledby="gameFilterDropdown">
+                  <button class="dropdown-item" type="button" (click)="toggleAllGames()">
+                    <i class="bi me-2" [class.bi-check-square-fill]="showAllGames()" [class.bi-square]="!showAllGames()" aria-hidden="true"></i>
+                    All Games
+                  </button>
+                  <div class="dropdown-divider"></div>
+                  @for (iwad of getUniqueGames(); track iwad.game) {
+                    <button class="dropdown-item" type="button" (click)="toggleGameFilter(iwad.game)"
+                       [title]="iwad.detectedCount === 0 ? '0 versions found' : iwad.detectedCount + ' version(s) found'">
+                      <i class="bi me-2" [class.bi-check-square-fill]="isGameFilterEnabled(iwad.game)" [class.bi-square]="!isGameFilterEnabled(iwad.game)" aria-hidden="true"></i>
+                      {{ iwad.displayName }}
+                    </button>
+                  }
+                </div>
+              </div>
+              
+              <div class="dropdown" ngbDropdown>
+                <button 
+                  class="btn btn-sm btn-outline-light" 
+                  type="button" 
+                  id="gameTypeFilterDropdown"
+                  ngbDropdownToggle
+                  aria-label="Game type filter menu">
+                  @if (showAllGameTypes()) {
+                    All Game Types
+                  } @else {
+                    Game Types: <span class="badge bg-primary ms-1">{{ activeGameTypeFilters().length }}</span>
+                  }
+                </button>
+                <div class="dropdown-menu dropdown-menu-dark" ngbDropdownMenu aria-labelledby="gameTypeFilterDropdown">
+                  <button class="dropdown-item" type="button" (click)="toggleAllGameTypes()">
+                    <i class="bi me-2" [class.bi-check-square-fill]="showAllGameTypes()" [class.bi-square]="!showAllGameTypes()" aria-hidden="true"></i>
+                    All Game Types
+                  </button>
+                  <div class="dropdown-divider"></div>
+                  @for (gameType of getUniqueGameTypes(); track gameType.gameType) {
+                    <button class="dropdown-item" type="button" (click)="toggleGameTypeFilter(gameType.gameType)"
+                       [title]="gameType.count + ' server(s)'">
+                      <i class="bi me-2" [class.bi-check-square-fill]="isGameTypeFilterEnabled(gameType.gameType)" [class.bi-square]="!isGameTypeFilterEnabled(gameType.gameType)" aria-hidden="true"></i>
+                      {{ gameType.displayName }}
+                    </button>
+                  }
+                </div>
+              </div>
+              
+              <div class="d-flex align-items-center gap-2">
+                <label for="maxPingInput" class="mb-0 small text-nowrap text-muted">Max Ping:</label>
+                <input 
+                  type="number" 
+                  class="form-control form-control-sm bg-dark text-light border-secondary" 
+                  id="maxPingInput"
+                  [(ngModel)]="maxPing"
+                  placeholder="Any"
+                  min="0"
+                  step="10"
+                  style="width: 80px;"
+                  aria-label="Maximum ping threshold">
+                <span class="small text-muted">ms</span>
+              </div>
+              
+              <div class="form-check form-switch">
+                <input 
+                  class="form-check-input" 
+                  type="checkbox" 
+                  id="hideEmptyCheck"
+                  [(ngModel)]="hideEmpty"
+                  role="switch"
+                  aria-label="Hide empty servers">
+                <label class="form-check-label small text-muted" for="hideEmptyCheck">
+                  Hide Empty
+                </label>
+              </div>
+              
+              <div class="ms-auto">
+                <button 
+                  class="btn btn-sm btn-outline-light"
+                  type="button"
+                  (click)="openCustomServers()"
+                  aria-label="Manage custom servers">
+                  <i class="bi bi-server" aria-hidden="true"></i>
+                  <span>Custom Servers</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
       }
-
+      
+      <!-- Custom Servers Modal -->
+      <app-custom-servers-modal></app-custom-servers-modal>
+      
       @if (store.error()) {
         <div class="alert alert-danger alert-dismissible" role="alert">
           {{ store.error() }}
@@ -244,6 +322,11 @@
                     @if (isLocalServer(server)) {
                       <span class="badge bg-info text-dark ms-2" title="Local Network Server">
                         <i class="bi bi-hdd-network me-1"></i>Local
+                      </span>
+                    }
+                    @if (isCustomServer(server)) {
+                      <span class="badge bg-warning text-dark ms-2" title="Custom Server">
+                        <i class="bi bi-star-fill me-1"></i>Custom
                       </span>
                     }
                     @if (server.passwordHash && server.passwordHash !== '') {

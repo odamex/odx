@@ -1,0 +1,140 @@
+@if (visible()) {
+  <div class="dialog-overlay" (click)="onOverlayClick($event)">
+    <div class="dialog-container" (click)="$event.stopPropagation()">
+      <div class="dialog-header">
+        <h2>Custom Servers</h2>
+        <p>Manage your list of custom servers to query</p>
+      </div>
+
+      <div class="dialog-body">
+        <div class="info-banner small">
+          <i class="bi bi-info-circle"></i>
+          <div>
+            <p>Add servers by IP:port (e.g., 192.168.1.100:10666) or domain:port (e.g., example.com:10666). These servers will be queried independently and appear at the top of your server list.</p>
+          </div>
+        </div>
+
+        <!-- Add New Server -->
+        <div class="add-server-section">
+          <h3>Add Server</h3>
+          <div class="input-group">
+            <input 
+              type="text" 
+              class="form-control"
+              placeholder="IP:port or domain:port"
+              [value]="newAddress()"
+              (input)="onInputChange($any($event.target).value, false)"
+              (keydown.enter)="canSave() && addServer()"
+              aria-label="New server address">
+            <button 
+              class="btn btn-primary"
+              (click)="addServer()"
+              [disabled]="!canSave()"
+              aria-label="Add server">
+              <i class="bi bi-plus-lg"></i>
+              <span>Add</span>
+            </button>
+          </div>
+          @if (validationError() && editingIndex() === null) {
+            <div class="validation-error">
+              <i class="bi bi-exclamation-circle"></i>
+              <span>{{ validationError() }}</span>
+            </div>
+          }
+        </div>
+
+        <!-- Server List -->
+        <div class="server-list-section">
+          <h3>Custom Servers ({{ addresses().length }})</h3>
+          
+          @if (addresses().length === 0) {
+            <div class="empty-state">
+              <i class="bi bi-server"></i>
+              <p>No custom servers added yet</p>
+            </div>
+          } @else {
+            <div class="server-list">
+              @for (server of addresses(); track server.address; let i = $index) {
+                <div class="server-item">
+                  @if (editingIndex() === i) {
+                    <!-- Edit Mode -->
+                    <div class="edit-mode">
+                      <input 
+                        type="text" 
+                        class="form-control form-control-sm"
+                        [value]="editingAddress()"
+                        (input)="onInputChange($any($event.target).value, true)"
+                        (keydown.enter)="canSave() && saveEdit()"
+                        (keydown.escape)="cancelEdit()"
+                        aria-label="Edit server address">
+                      <div class="edit-actions">
+                        <button 
+                          class="btn btn-sm btn-success"
+                          (click)="saveEdit()"
+                          [disabled]="!canSave()"
+                          title="Save">
+                          <i class="bi bi-check-lg"></i>
+                        </button>
+                        <button 
+                          class="btn btn-sm btn-secondary"
+                          (click)="cancelEdit()"
+                          title="Cancel">
+                          <i class="bi bi-x-lg"></i>
+                        </button>
+                      </div>
+                    </div>
+                    @if (validationError() && editingIndex() === i) {
+                      <div class="validation-error">
+                        <i class="bi bi-exclamation-circle"></i>
+                        <span>{{ validationError() }}</span>
+                      </div>
+                    }
+                  } @else {
+                    <!-- View Mode -->
+                    <div class="server-info">
+                      <span class="server-address">{{ server.address }}</span>
+                    </div>
+                    <div class="server-actions">
+                      <button 
+                        class="btn btn-sm btn-outline-secondary"
+                        (click)="moveUp(i)"
+                        [disabled]="i === 0"
+                        title="Move up">
+                        <i class="bi bi-arrow-up"></i>
+                      </button>
+                      <button 
+                        class="btn btn-sm btn-outline-secondary"
+                        (click)="moveDown(i)"
+                        [disabled]="i === addresses().length - 1"
+                        title="Move down">
+                        <i class="bi bi-arrow-down"></i>
+                      </button>
+                      <button 
+                        class="btn btn-sm btn-outline-primary"
+                        (click)="startEdit(i)"
+                        title="Edit">
+                        <i class="bi bi-pencil"></i>
+                      </button>
+                      <button 
+                        class="btn btn-sm btn-outline-danger"
+                        (click)="removeServer(server.address)"
+                        title="Remove">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="dialog-footer">
+        <button class="btn btn-primary" (click)="close()">
+          Done
+        </button>
+      </div>
+    </div>
+  </div>
+}

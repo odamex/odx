@@ -138,7 +138,6 @@
           font-size: 0.85rem;
           
           h6 {
-            font-size: 0.9rem;
             font-weight: 600;
             color: #ddd;
             margin-bottom: 0.75rem;
@@ -307,3 +306,9 @@
       }
     }
   
+.server-list-filters {
+  .card-body {
+    margin-left: -0.25rem;
+    margin-right: -0.25rem;
+  }
+}

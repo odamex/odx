@@ -1,23 +1,30 @@
-import { Component, ChangeDetectionStrategy, inject, signal, computed, NgZone } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, computed, NgZone, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import { ServersStore } from '@app/store';
-import { OdalPapi, FileManagerService, IWADService, ServerRefreshService, NetworkStatusService } from '@shared/services';
+import { CustomServersStore } from '@app/store/custom-servers.store';
+import { OdalPapi, FileManagerService, IWADService, ServerRefreshService, NetworkStatusService, CustomServersService } from '@shared/services';
+import { CustomServersModalComponent } from './custom-servers-modal/custom-servers-modal.component';
 
 @Component({
   selector: 'app-servers',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, NgbDropdownModule, CustomServersModalComponent],
   templateUrl: './servers.component.html',
   styleUrl: './servers.component.scss',
 })
 export class ServersComponent {
+  @ViewChild(CustomServersModalComponent) customServersModal?: CustomServersModalComponent;
+  
   private fileManager = inject(FileManagerService);
   private refreshService = inject(ServerRefreshService);
+  private customServersService = inject(CustomServersService);
   private networkStatus = inject(NetworkStatusService);
   protected iwadService = inject(IWADService);
   private ngZone = inject(NgZone);
   readonly store = inject(ServersStore);
+  readonly customStore = inject(CustomServersStore);
   
   selectedServer = signal<OdalPapi.ServerInfo | null>(null);
   joiningServer = signal(false);
@@ -36,6 +43,14 @@ export class ServersComponent {
   activeGameFilters = signal<string[]>([]);
   showAllGames = computed(() => this.activeGameFilters().length === 0);
   
+  // Game type filtering
+  activeGameTypeFilters = signal<OdalPapi.GameType[]>([]);
+  showAllGameTypes = computed(() => this.activeGameTypeFilters().length === 0);
+  
+  // Additional filters
+  hideEmpty = signal(false);
+  maxPing = signal<number | null>(null);
+  
   // Sorting
   sortColumn = signal<string>('players');
   sortDirection = signal<'asc' | 'desc'>('desc');
@@ -49,12 +64,27 @@ export class ServersComponent {
   // Search filtering
   searchText = signal('');
   
-  // Combined servers (local network servers + master server servers)
+  // Combined servers (local network servers + custom servers + master server servers)
+  // Priority: local > custom > master
+  // Deduplicate: if a custom server matches local or master, exclude it from custom list
   allServers = computed(() => {
     const localServers = this.store.localServers();
+    const customServers = this.customStore.servers();
     const masterServers = this.store.servers();
-    // Local servers always appear first
-    return [...localServers, ...masterServers];
+    
+    // Helper to check if two servers are the same
+    const isSameServer = (s1: OdalPapi.ServerInfo, s2: OdalPapi.ServerInfo) => 
+      s1.address.ip === s2.address.ip && s1.address.port === s2.address.port;
+    
+    // Filter out custom servers that are already in local or master lists
+    const deduplicatedCustom = customServers.filter(customServer => {
+      const inLocal = localServers.some(local => isSameServer(local, customServer));
+      const inMaster = masterServers.some(master => isSameServer(master, customServer));
+      return !inLocal && !inMaster;
+    });
+    
+    // Return in priority order: local, custom (deduplicated), master
+    return [...localServers, ...deduplicatedCustom, ...masterServers];
   });
   
   filteredServers = computed(() => {
@@ -64,6 +94,8 @@ export class ServersComponent {
     const versionFilter = this.filterByVersion();
     const currentMajor = this.currentMajorVersion();
     const search = this.searchText().toLowerCase().trim();
+    const hideEmptyServers = this.hideEmpty();
+    const pingThreshold = this.maxPing();
     
     let servers = this.allServers();
     
@@ -87,6 +119,28 @@ export class ServersComponent {
         // Search in WAD names
         if (server.wads?.some(wad => wad.name.toLowerCase().includes(search))) return true;
         return false;
+      });
+    }
+    
+    // Apply game type filters
+    const gameTypeFilters = this.activeGameTypeFilters();
+    if (gameTypeFilters.length > 0) {
+      servers = servers.filter(server => {
+        return gameTypeFilters.includes(server.gameType);
+      });
+    }
+    
+    // Apply hide empty filter
+    if (hideEmptyServers) {
+      servers = servers.filter(server => server.players.length > 0);
+    }
+    
+    // Apply ping filter
+    if (pingThreshold !== null && pingThreshold > 0) {
+      servers = servers.filter(server => {
+        // Always show servers without ping data
+        if (server.ping === undefined || server.ping === null) return true;
+        return server.ping <= pingThreshold;
       });
     }
     
@@ -176,6 +230,24 @@ export class ServersComponent {
   });
 
   // Get unique games from detected IWADs for filtering
+  getUniqueGameTypes = computed(() => {
+    const servers = this.allServers();
+    const gameTypeCounts = new Map<OdalPapi.GameType, number>();
+    
+    servers.forEach(server => {
+      const current = gameTypeCounts.get(server.gameType) || 0;
+      gameTypeCounts.set(server.gameType, current + 1);
+    });
+    
+    return Array.from(gameTypeCounts.entries())
+      .map(([gameType, count]) => ({
+        gameType,
+        displayName: this.getGameTypeName(gameType),
+        count
+      }))
+      .sort((a, b) => a.displayName.localeCompare(b.displayName));
+  });
+  
   getUniqueGames = computed(() => {
     const displayGames = this.iwadService.displayGames();
     const gameMetadata = this.iwadService.gameMetadata();
@@ -276,7 +348,11 @@ export class ServersComponent {
   }
 
   async refreshServers() {
-    await this.refreshService.refreshServers();
+    // Refresh both master servers and custom servers
+    await Promise.all([
+      this.refreshService.refreshServers(),
+      this.customServersService.queryCustomServers()
+    ]);
   }
   
   autoRefreshEnabled(): boolean {
@@ -387,6 +463,24 @@ export class ServersComponent {
   toggleAllGames() {
     this.activeGameFilters.set([]);
   }
+  
+  // Game type filtering methods
+  toggleGameTypeFilter(gameType: OdalPapi.GameType) {
+    const current = this.activeGameTypeFilters();
+    if (current.includes(gameType)) {
+      this.activeGameTypeFilters.set(current.filter(gt => gt !== gameType));
+    } else {
+      this.activeGameTypeFilters.set([...current, gameType]);
+    }
+  }
+  
+  toggleAllGameTypes() {
+    this.activeGameTypeFilters.set([]);
+  }
+  
+  isGameTypeFilterEnabled(gameType: OdalPapi.GameType): boolean {
+    return this.activeGameTypeFilters().includes(gameType);
+  }
 
   sortBy(column: string) {
     if (this.sortColumn() === column) {
@@ -413,6 +507,31 @@ export class ServersComponent {
     return localServers.some(s => 
       s.address.ip === server.address.ip && s.address.port === server.address.port
     );
+  }
+  
+  isCustomServer(server: OdalPapi.ServerInfo): boolean {
+    const customServers = this.customStore.servers();
+    const localServers = this.store.localServers();
+    const masterServers = this.store.servers();
+    
+    // Check if it's in custom servers
+    const inCustom = customServers.some(s => 
+      s.address.ip === server.address.ip && s.address.port === server.address.port
+    );
+    
+    // Not a custom server if it's also in local or master (deduplication)
+    const inLocal = localServers.some(s => 
+      s.address.ip === server.address.ip && s.address.port === server.address.port
+    );
+    const inMaster = masterServers.some(s => 
+      s.address.ip === server.address.ip && s.address.port === server.address.port
+    );
+    
+    return inCustom && !inLocal && !inMaster;
+  }
+  
+  openCustomServers() {
+    this.customServersModal?.open();
   }
   
   getServerGame(server: OdalPapi.ServerInfo): string {

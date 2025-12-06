@@ -1,5 +1,6 @@
 // Services barrel file - centralized exports for all shared services
 export * from './auto-update/auto-update.service';
+export * from './custom-servers/custom-servers.service';
 export * from './file-manager/file-manager.service';
 export * from './iwad/iwad.service';
 export * from './local-network-discovery/local-network-discovery.service';

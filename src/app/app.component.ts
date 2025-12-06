@@ -17,7 +17,8 @@ import {
   OdamexServiceStatusService,
   PeriodicUpdateService,
   AutoUpdateService,
-  LocalNetworkDiscoveryService
+  LocalNetworkDiscoveryService,
+  CustomServersService
 } from '@shared/services';
 import type { DetectedIWAD } from '@shared/services/iwad/iwad.service';
 import { ServersStore } from '@store/servers.store';
@@ -40,6 +41,7 @@ export class App implements OnInit {
   private serviceStatus = inject(OdamexServiceStatusService); // Initialize service status monitoring
   private autoUpdateService = inject(AutoUpdateService); // Initialize ODX auto-updater
   private localNetworkDiscovery = inject(LocalNetworkDiscoveryService); // Initialize local network discovery
+  private customServers = inject(CustomServersService); // Initialize custom servers
   private router = inject(Router);
 
   readonly splashVisible = this.splashService.visible;

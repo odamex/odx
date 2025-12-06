@@ -433,7 +433,7 @@ autoUpdater.on('update-downloaded', (info) => {
 app.on('ready', () => {
   // Set app user model ID for Windows notifications
   if (process.platform === 'win32') {
-    app.setAppUserModelId('com.odamex.odx-launcher');
+    app.setAppUserModelId('net.odamex.odx-launcher');
   }
   
   createWindow();
