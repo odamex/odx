@@ -259,10 +259,12 @@ export class SettingsComponent implements OnInit, AfterViewInit {
       const release = this.latestRelease();
       if (!release) return;
 
-      // On Windows, use installer EXE; on other platforms use appropriate package
-      const isWindows = navigator.platform.toLowerCase().includes('win');
+      // Find the appropriate asset for this platform
       let assetName: string;
       let assetObj: any;
+
+      const isWindows = navigator.platform.toLowerCase().includes('win');
+      const isLinux = navigator.platform.toLowerCase().includes('linux');
 
       if (isWindows) {
         // Find the installer EXE
@@ -270,12 +272,23 @@ export class SettingsComponent implements OnInit, AfterViewInit {
         if (!assetName) {
           throw new Error('Could not find Windows installer in release assets');
         }
+        assetObj = release.assets.find((a: any) => a.name === assetName);
+      } else if (isLinux) {
+        // For Linux, search for flatpak file matching the pattern
+        const pattern = this.platformAsset();
+        const prefix = pattern.replace('-*.flatpak', '');
+        assetObj = release.assets.find((a: any) => 
+          a.name.startsWith(prefix) && a.name.endsWith('.flatpak')
+        );
+        if (!assetObj) {
+          throw new Error(`Could not find Linux flatpak in release assets matching ${pattern}`);
+        }
+        assetName = assetObj.name;
       } else {
-        // Use platform-specific asset for Mac/Linux
+        // macOS - use DMG
         assetName = this.platformAsset();
+        assetObj = release.assets.find((a: any) => a.name === assetName);
       }
-
-      assetObj = release.assets.find((a: any) => a.name === assetName);
       
       if (!assetObj) {
         throw new Error(`Could not find asset ${assetName} in release`);
