@@ -165,7 +165,10 @@
         }
       ],
       "icon": "build/icon.icns",
-      "category": "public.app-category.games"
+      "category": "public.app-category.games",
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false,
+      "identity": null
     },
     "linux": {
       "target": [
