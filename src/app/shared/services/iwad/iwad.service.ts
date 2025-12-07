@@ -156,7 +156,8 @@ export class IWADService {
   async rescanIWADs(): Promise<DetectedIWAD[]> {
     this.store.setLoading(true);
     try {
-      const detected = await window.electron.iwadManager.rescanIWADs();
+      // Force rescan to bypass cache and refresh Steam library paths
+      const detected = await window.electron.iwadManager.rescanIWADs(true);
       this.store.setDetectedIWADs(detected);
       return detected;
     } catch (err: any) {

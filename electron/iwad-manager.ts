@@ -110,7 +110,7 @@ export interface IWADCache {
 export class IWADManager {
   private configDir: string;
   private wadsDir: string;
-  private readonly CACHE_VERSION = 1;
+  private readonly CACHE_VERSION = 2; // Bumped for id24 property addition
   private readonly STEAM_CACHE_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
   private cache: IWADCache | null = null;
 
@@ -321,12 +321,17 @@ export class IWADManager {
     if (this.cache && 
         this.cache.steamPaths.length > 0 && 
         (now - this.cache.steamPathsLastScan) < this.STEAM_CACHE_DURATION) {
+      console.log(`[IWAD Manager] Using cached Steam paths (${this.cache.steamPaths.length} paths)`);
       return this.cache.steamPaths;
     }
 
     const steamDir = this.findSteamDirectory();
-    if (!steamDir) return [];
+    if (!steamDir) {
+      console.log('[IWAD Manager] Steam installation not found');
+      return [];
+    }
 
+    console.log(`[IWAD Manager] Found Steam installation: ${steamDir}`);
     const gamePaths: string[] = [];
     
     // Read library folders from libraryfolders.vdf
@@ -342,15 +347,52 @@ export class IWADManager {
           const libraryPath = match[1].replace(/\\\\/g, '\\'); // Fix escaped backslashes
           if (fs.existsSync(libraryPath)) {
             steamLibraries.push(libraryPath);
+            console.log(`[IWAD Manager] Found Steam library: ${libraryPath}`);
           }
         }
       } catch (err) {
         console.warn('Failed to read Steam library folders:', err);
       }
+    } else {
+      console.log(`[IWAD Manager] libraryfolders.vdf not found at ${libraryFoldersPath}`);
     }
+    
+    console.log(`[IWAD Manager] Scanning ${steamLibraries.length} Steam libraries for DOOM games`);
 
     // Check for DOOM games in each Steam library
-    const doomFolders = ['Ultimate Doom', 'DOOM II', 'Final Doom', 'Doom Classic Complete', 'DOOM', 'Doom 3 BFG Edition'];
+    // Note: "DOOM + DOOM II" is the modern re-release, "Ultimate Doom" is the classic
+    const doomFolders = [
+      'DOOM + DOOM II',      // Modern re-release (2024)
+      'Ultimate Doom',       // Classic Ultimate Doom
+      'DOOM II',             // Classic DOOM II
+      'Final Doom',          // Classic Final Doom
+      'Doom Classic Complete', // Collection
+      'DOOM',                // Base DOOM
+      'Doom 3 BFG Edition'   // BFG Edition
+    ];
+    
+    // Recursive directory scanner for Steam paths
+    const scanRecursively = (dir: string, maxDepth: number = 10, currentDepth: number = 0): string[] => {
+      const paths: string[] = [dir];
+      
+      if (currentDepth >= maxDepth || !fs.existsSync(dir)) {
+        return paths;
+      }
+      
+      try {
+        const entries = fs.readdirSync(dir, { withFileTypes: true });
+        for (const entry of entries) {
+          if (entry.isDirectory()) {
+            const subPath = path.join(dir, entry.name);
+            paths.push(...scanRecursively(subPath, maxDepth, currentDepth + 1));
+          }
+        }
+      } catch (err) {
+        // Ignore read errors
+      }
+      
+      return paths;
+    };
     
     for (const library of steamLibraries) {
       const steamAppsDir = path.join(library, 'steamapps', 'common');
@@ -359,18 +401,9 @@ export class IWADManager {
         for (const folder of doomFolders) {
           const folderPath = path.join(steamAppsDir, folder);
           if (fs.existsSync(folderPath)) {
-            gamePaths.push(folderPath);
-            
-            // Check subdirectories (some games have IWADs in subfolders)
-            try {
-              const subDirs = fs.readdirSync(folderPath, { withFileTypes: true })
-                .filter(dirent => dirent.isDirectory())
-                .map(dirent => path.join(folderPath, dirent.name));
-              
-              gamePaths.push(...subDirs);
-            } catch (err) {
-              // Ignore read errors
-            }
+            // Recursively scan all subdirectories (DOOM + DOOM II has IWADs nested deeply)
+            const foundPaths = scanRecursively(folderPath);
+            gamePaths.push(...foundPaths);
           }
         }
       }

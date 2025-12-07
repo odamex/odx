@@ -9,6 +9,8 @@ export interface IWADEntry {
   game: string; // doom, doom2, tnt, plutonia, freedoom1, freedoom2, freedm, chex, hacx, rekkr
   deprecated: boolean;
   weight: number;
+  id24?: boolean; // DOOM + DOOM II release with ID24 features
+  isLatest?: boolean; // Mark the latest version of each game
 }
 
 // Game type enum for easy filtering
@@ -36,7 +38,19 @@ export const IWAD_DATABASE: IWADEntry[] = [
     groupName: 'DOOM II: Hell on Earth v1.9',
     game: GameType.DOOM2,
     deprecated: false,
-    weight: 100
+    weight: 100,
+    isLatest: true
+  },
+  {
+    name: 'DOOM II: Hell on Earth (DOOM + DOOM II) Oct 2024',
+    filename: 'DOOM2.WAD',
+    md5: '64A4C88A871DA67492AAA2020A068CD8',
+    groupName: 'DOOM II: Hell on Earth v1.9',
+    game: GameType.DOOM2,
+    deprecated: false,
+    weight: 140,
+    id24: true,
+    isLatest: true
   },
   {
     name: 'DOOM II: Hell on Earth (DOOM + DOOM II)',
@@ -45,7 +59,8 @@ export const IWAD_DATABASE: IWADEntry[] = [
     groupName: 'DOOM II: Hell on Earth v1.9',
     game: GameType.DOOM2,
     deprecated: false,
-    weight: 140
+    weight: 140,
+    id24: true
   },
   {
     name: 'DOOM II: Hell on Earth Classic Unity v1.3',
@@ -56,6 +71,15 @@ export const IWAD_DATABASE: IWADEntry[] = [
     deprecated: false,
     weight: 145
   },
+  {
+    name: 'DOOM II: Hell on Earth (DOOM 3 BFG Edition)',
+    filename: 'DOOM2.WAD',
+    md5: 'C3BEA40570C23E511A7ED3EBCD9865F7',
+    groupName: 'DOOM II: Hell on Earth v1.9',
+    game: GameType.DOOM2,
+    deprecated: false,
+    weight: 130
+  },
 
   // PLUTONIA.WAD
   {
@@ -65,16 +89,39 @@ export const IWAD_DATABASE: IWADEntry[] = [
     groupName: 'The Plutonia Experiment v1.9',
     game: GameType.PLUTONIA,
     deprecated: false,
-    weight: 100
+    weight: 100,
+    isLatest: true
+  },
+  {
+    name: 'The Plutonia Experiment (DOOM + DOOM II) Oct 2024',
+    filename: 'PLUTONIA.WAD',
+    md5: 'E47CF6D82A0CCEDF8C1C16A284BB5937',
+    groupName: 'The Plutonia Experiment v1.9',
+    game: GameType.PLUTONIA,
+    deprecated: false,
+    weight: 140,
+    id24: true,
+    isLatest: true
   },
   {
     name: 'The Plutonia Experiment (DOOM + DOOM II)',
+    filename: 'PLUTONIA.WAD',
+    md5: '24037397056E919961005E08611623F4',
+    groupName: 'The Plutonia Experiment v1.9',
+    game: GameType.PLUTONIA,
+    deprecated: false,
+    weight: 140,
+    id24: true
+  },
+  {
+    name: 'The Plutonia Experiment (DOOM + DOOM II) Old',
     filename: 'PLUTONIA.WAD',
     md5: 'C40470C873B06FDD6B150B0EB8D44F17',
     groupName: 'The Plutonia Experiment v1.9',
     game: GameType.PLUTONIA,
     deprecated: false,
-    weight: 140
+    weight: 140,
+    id24: true
   },
   {
     name: 'The Plutonia Experiment Classic Unity v1.3',
@@ -94,16 +141,39 @@ export const IWAD_DATABASE: IWADEntry[] = [
     groupName: 'TNT: Evilution v1.9',
     game: GameType.TNT,
     deprecated: false,
-    weight: 100
+    weight: 100,
+    isLatest: true
+  },
+  {
+    name: 'TNT: Evilution (DOOM + DOOM II) Oct 2024',
+    filename: 'TNT.WAD',
+    md5: 'AD7885C17A6B9B79B09D7A7634DD7E2C',
+    groupName: 'TNT: Evilution v1.9',
+    game: GameType.TNT,
+    deprecated: false,
+    weight: 140,
+    id24: true,
+    isLatest: true
   },
   {
     name: 'TNT: Evilution (DOOM + DOOM II)',
+    filename: 'TNT.WAD',
+    md5: '8974E3117ED4A1839C752D5E11AB1B7B',
+    groupName: 'TNT: Evilution v1.9',
+    game: GameType.TNT,
+    deprecated: false,
+    weight: 140,
+    id24: true
+  },
+  {
+    name: 'TNT: Evilution (DOOM + DOOM II) Old',
     filename: 'TNT.WAD',
     md5: 'CDC5F43EF9B23DCFED74B2BBBE115173',
     groupName: 'TNT: Evilution v1.9',
     game: GameType.TNT,
     deprecated: false,
-    weight: 140
+    weight: 140,
+    id24: true
   },
   {
     name: 'TNT: Evilution Classic Unity v1.3',
@@ -123,7 +193,19 @@ export const IWAD_DATABASE: IWADEntry[] = [
     groupName: 'The Ultimate DOOM v1.9',
     game: GameType.DOOM,
     deprecated: false,
-    weight: 200
+    weight: 200,
+    isLatest: true
+  },
+  {
+    name: 'The Ultimate DOOM (DOOM + DOOM II) Oct 2024',
+    filename: 'DOOM.WAD',
+    md5: '3B37188F6337F15718B617C16E6E7A9C',
+    groupName: 'The Ultimate DOOM v1.9',
+    game: GameType.DOOM,
+    deprecated: false,
+    weight: 140,
+    id24: true,
+    isLatest: true
   },
   {
     name: 'The Ultimate DOOM (DOOM + DOOM II)',
@@ -132,7 +214,8 @@ export const IWAD_DATABASE: IWADEntry[] = [
     groupName: 'The Ultimate DOOM v1.9',
     game: GameType.DOOM,
     deprecated: false,
-    weight: 140
+    weight: 140,
+    id24: true
   },
   {
     name: 'The Ultimate DOOM Classic Unity v1.3',
@@ -143,6 +226,15 @@ export const IWAD_DATABASE: IWADEntry[] = [
     deprecated: false,
     weight: 145
   },
+  {
+    name: 'The Ultimate DOOM (DOOM 3 BFG Edition)',
+    filename: 'DOOM.WAD',
+    md5: 'FB35C4A5A9FD49EC29AB6E900572C524',
+    groupName: 'The Ultimate DOOM v1.9',
+    game: GameType.DOOM,
+    deprecated: false,
+    weight: 130
+  },
 
   // DOOM.WAD (Registered - 3 episodes)
   {
@@ -152,7 +244,8 @@ export const IWAD_DATABASE: IWADEntry[] = [
     groupName: 'DOOM Registered v1.9',
     game: GameType.DOOM_REGISTERED,
     deprecated: false,
-    weight: 190
+    weight: 190,
+    isLatest: true
   },
 
   // DOOM1.WAD (Shareware - 1 episode)
@@ -160,6 +253,16 @@ export const IWAD_DATABASE: IWADEntry[] = [
     name: 'DOOM Shareware v1.9',
     filename: 'DOOM1.WAD',
     md5: 'F0CEFCA49926D00903CF57551D901ABE',
+    groupName: 'DOOM Shareware v1.9',
+    game: GameType.DOOM_SHAREWARE,
+    deprecated: false,
+    weight: 180,
+    isLatest: true
+  },
+  {
+    name: 'DOOM Shareware v1.8',
+    filename: 'DOOM1.WAD',
+    md5: '5F4EB849B1AF12887DEC04A2A12E5E62',
     groupName: 'DOOM Shareware v1.9',
     game: GameType.DOOM_SHAREWARE,
     deprecated: false,
@@ -174,6 +277,16 @@ export const IWAD_DATABASE: IWADEntry[] = [
     groupName: 'Freedoom: Phase 1',
     game: GameType.FREEDOOM1,
     deprecated: false,
+    weight: 300,
+    isLatest: true
+  },
+  {
+    name: 'Freedoom: Phase 1 v0.12.1',
+    filename: 'FREEDOOM1.WAD',
+    md5: 'ACA90CF5AC36E996EDC58BD0329B979A',
+    groupName: 'Freedoom: Phase 1',
+    game: GameType.FREEDOOM1,
+    deprecated: false,
     weight: 300
   },
 
@@ -182,6 +295,16 @@ export const IWAD_DATABASE: IWADEntry[] = [
     name: 'Freedoom: Phase 2 v0.13.0',
     filename: 'FREEDOOM2.WAD',
     md5: 'E70C19F43A23EA28C9B6AD8B1CBF1E33',
+    groupName: 'Freedoom: Phase 2',
+    game: GameType.FREEDOOM2,
+    deprecated: false,
+    weight: 300,
+    isLatest: true
+  },
+  {
+    name: 'Freedoom: Phase 2 v0.12.1',
+    filename: 'FREEDOOM2.WAD',
+    md5: '8FA57DBC7687F84528EBA39DDE3A20E0',
     groupName: 'Freedoom: Phase 2',
     game: GameType.FREEDOOM2,
     deprecated: false,
@@ -196,7 +319,8 @@ export const IWAD_DATABASE: IWADEntry[] = [
     groupName: 'FreeDM',
     game: GameType.FREEDM,
     deprecated: false,
-    weight: 300
+    weight: 300,
+    isLatest: true
   },
 
   // CHEX.WAD
@@ -207,7 +331,8 @@ export const IWAD_DATABASE: IWADEntry[] = [
     groupName: 'Chex Quest',
     game: GameType.CHEX,
     deprecated: false,
-    weight: 600
+    weight: 600,
+    isLatest: true
   },
 
   // HACX.WAD
@@ -218,7 +343,8 @@ export const IWAD_DATABASE: IWADEntry[] = [
     groupName: 'HACX',
     game: GameType.HACX,
     deprecated: false,
-    weight: 600
+    weight: 600,
+    isLatest: true
   },
 
   // REKKRSA.WAD
@@ -229,7 +355,8 @@ export const IWAD_DATABASE: IWADEntry[] = [
     groupName: 'REKKR',
     game: GameType.REKKR,
     deprecated: false,
-    weight: 600
+    weight: 600,
+    isLatest: true
   }
 ];
 

@@ -11,6 +11,8 @@ export interface DetectedIWAD {
     game: string;
     deprecated: boolean;
     weight: number;
+    id24?: boolean;
+    isLatest?: boolean;
   };
   path: string;
   exists: boolean;
@@ -63,18 +65,21 @@ export const IWADStore = signalStore(
       const metadata = store.gameMetadata();
       const games = new Map<string, DetectedIWAD & { detectedCount?: number }>();
       
-      // Add all detected IWADs
+      // Add all detected IWADs - group by game type AND id24 status
       detected.forEach(iwad => {
         const gameType = iwad.entry.game;
-        if (!games.has(gameType)) {
-          games.set(gameType, { ...iwad, detectedCount: 1 });
+        // Create a unique key combining game type and ID24 status
+        const gameKey = iwad.entry.id24 ? `${gameType}_id24` : gameType;
+        
+        if (!games.has(gameKey)) {
+          games.set(gameKey, { ...iwad, detectedCount: 1 });
         } else {
-          const existing = games.get(gameType)!;
+          const existing = games.get(gameKey)!;
           existing.detectedCount = (existing.detectedCount || 0) + 1;
         }
       });
       
-      // Add all non-commercial games even if not detected
+      // Add all non-commercial games even if not detected (only non-ID24 versions)
       Object.entries(metadata).forEach(([gameType, meta]) => {
         if (!meta.commercial && !games.has(gameType)) {
           // Create a synthetic DetectedIWAD entry for non-commercial games

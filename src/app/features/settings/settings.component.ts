@@ -64,27 +64,64 @@ export class SettingsComponent implements OnInit, AfterViewInit {
   // Group IWADs by game type to avoid long lists - includes non-commercial games with 0 detected
   readonly groupedIWADs = computed(() => {
     const displayGames = this.iwadService.displayGames();
-    const groups = new Map<string, { metadata: GameMetadata | undefined, iwads: typeof displayGames, count: number }>();
+    const groups = new Map<string, { metadata: GameMetadata | undefined, iwads: typeof displayGames, count: number, hasID24: boolean, versions: Set<string>, hasLatest: boolean }>();
     
     for (const game of displayGames) {
       const gameType = game.entry.game;
-      if (!groups.has(gameType)) {
-        groups.set(gameType, {
+      // Create separate groups for ID24 and non-ID24 versions
+      const groupKey = game.entry.id24 ? `${gameType}_id24` : gameType;
+      
+      if (!groups.has(groupKey)) {
+        groups.set(groupKey, {
           metadata: this.getGameMetadata(gameType),
           iwads: [],
-          count: 0
+          count: 0,
+          hasID24: game.entry.id24 || false,
+          versions: new Set<string>(),
+          hasLatest: false
         });
       }
-      const group = groups.get(gameType)!;
+      const group = groups.get(groupKey)!;
+      
+      // Extract version from IWAD name (e.g., "v1.9", "Oct 2024", "v0.12.1")
+      const versionMatch = game.entry.name.match(/v?\d+\.\d+(?:\.\d+)?|(?:Oct|October|Nov|November|Dec|December)\s+\d{4}|BFG Edition|Unity|Classic/i);
+      if (versionMatch) {
+        group.versions.add(versionMatch[0]);
+      }
+      
+      // Check if this group has the latest version
+      if (game.entry.isLatest) {
+        group.hasLatest = true;
+      }
+      
       // Only add to iwads array if it's an actual detected file (has a path)
       if (game.path) {
         group.iwads.push(game);
+        if (game.entry.id24) {
+          group.hasID24 = true;
+        }
       }
       group.count = game.detectedCount || 0;
     }
     
-    const result = Array.from(groups.values()).filter(g => g.metadata);
+    const result = Array.from(groups.values()).filter(g => g.metadata).map(g => ({
+      ...g,
+      versionsArray: Array.from(g.versions)
+    }));
     return result;
+  });
+  
+  // Split games into commercial (only show if found) and free (always show) categories
+  readonly commercialGames = computed(() => {
+    return this.groupedIWADs()
+      .filter(g => g.metadata?.commercial && g.count > 0)
+      .sort((a, b) => (a.metadata?.displayName || '').localeCompare(b.metadata?.displayName || ''));
+  });
+  
+  readonly freeGames = computed(() => {
+    return this.groupedIWADs()
+      .filter(g => !g.metadata?.commercial)
+      .sort((a, b) => (a.metadata?.displayName || '').localeCompare(b.metadata?.displayName || ''));
   });
   
   showGameSelection = signal(false);

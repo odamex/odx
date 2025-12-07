@@ -1042,50 +1042,130 @@
                         <small>Add WAD directories above to scan for DOOM, DOOM II, and other IWAD files</small>
                       </div>
                     } @else {
-                      <div class="games-grid">
-                        @for (group of groupedIWADs(); track group.metadata?.type) {
-                          <div class="game-card">
-                            <div class="game-icon">
-                              <img [src]="'assets/games/' + group.metadata?.imageFilename" 
-                                   [alt]="group.metadata?.displayName"
-                                   onerror="this.style.display='none'">
-                            </div>
-                            <div class="game-info">
-                              <h5>{{ group.metadata?.displayName }}</h5>
-                              <p class="game-description">{{ group.metadata?.description }}</p>
-                              <div class="game-details">
-                                @if (group.count === 0) {
-                                  <div class="detail-item text-muted">
-                                    <i class="bi bi-inbox"></i>
-                                    <span>0 versions found</span>
-                                  </div>
-                                } @else if (group.iwads.length === 1) {
-                                  <div class="detail-item">
-                                    <i class="bi bi-hdd"></i>
-                                    <span class="text-truncate">{{ group.iwads[0].path }}</span>
-                                  </div>
-                                } @else {
-                                  <div class="detail-item">
-                                    <i class="bi bi-files"></i>
-                                    <span>{{ group.iwads.length }} versions found</span>
-                                  </div>
-                                  @for (iwad of group.iwads; track iwad.path) {
-                                    <div class="detail-item small">
-                                      <i class="bi bi-dash"></i>
-                                      <span class="text-truncate">{{ iwad.path }}</span>
-                                    </div>
+                      <!-- Commercial Games -->
+                      @if (commercialGames().length > 0) {
+                        <h6 class="section-header">Commercial Games</h6>
+                        <div class="games-grid">
+                          @for (group of commercialGames(); track group.metadata?.type) {
+                            <div class="game-card">
+                              <div class="game-icon">
+                                <img [src]="'assets/games/' + group.metadata?.imageFilename" 
+                                     [alt]="group.metadata?.displayName"
+                                     onerror="this.style.display='none'">
+                              </div>
+                              <div class="game-info">
+                                <h5>
+                                  {{ group.metadata?.displayName }}
+                                  @if (group.hasID24) {
+                                    <span class="badge bg-success ms-2" title="DOOM + DOOM II release with ID24 features">ID24</span>
                                   }
-                                }
+                                  @if (group.count > 0 && !group.hasLatest) {
+                                    <span class="badge bg-warning text-dark ms-2" title="Newer version available">Outdated</span>
+                                  }
+                                </h5>
+                                <p class="game-description">
+                                  {{ group.metadata?.description }}
+                                  @if (group.versionsArray && group.versionsArray.length > 0) {
+                                    <span class="text-muted ms-1">({{ group.versionsArray.join(', ') }})</span>
+                                  }
+                                </p>
+                                <div class="game-details">
+                                  @if (group.count === 0) {
+                                    <div class="detail-item text-muted">
+                                      <i class="bi bi-inbox"></i>
+                                      <span>0 versions found</span>
+                                    </div>
+                                  } @else if (group.iwads.length === 1) {
+                                    <div class="detail-item" [title]="group.iwads[0].path">
+                                      <i class="bi bi-hdd"></i>
+                                      <span class="text-truncate">{{ group.iwads[0].path }}</span>
+                                    </div>
+                                  } @else {
+                                    <div class="detail-item">
+                                      <i class="bi bi-files"></i>
+                                      <span>{{ group.iwads.length }} versions found</span>
+                                    </div>
+                                    @for (iwad of group.iwads; track iwad.path) {
+                                      <div class="detail-item small" [title]="iwad.path">
+                                        <i class="bi bi-dash"></i>
+                                        <span class="text-truncate">{{ iwad.path }}</span>
+                                      </div>
+                                    }
+                                  }
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        }
-                      </div>
+                          }
+                        </div>
+                      }
+                      
+                      <!-- Free Games -->
+                      @if (freeGames().length > 0) {
+                        <h6 class="section-header" [class.mt-4]="commercialGames().length > 0">Free Games</h6>
+                        <div class="games-grid">
+                          @for (group of freeGames(); track group.metadata?.type) {
+                            <div class="game-card">
+                              <div class="game-icon">
+                                <img [src]="'assets/games/' + group.metadata?.imageFilename" 
+                                     [alt]="group.metadata?.displayName"
+                                     onerror="this.style.display='none'">
+                              </div>
+                              <div class="game-info">
+                                <h5>
+                                  {{ group.metadata?.displayName }}
+                                  @if (group.hasID24) {
+                                    <span class="badge bg-success ms-2" title="DOOM + DOOM II release with ID24 features">ID24</span>
+                                  }
+                                  @if (group.count > 0 && !group.hasLatest) {
+                                    <span class="badge bg-warning text-dark ms-2" title="Newer version available">Outdated</span>
+                                  }
+                                </h5>
+                                <p class="game-description">
+                                  {{ group.metadata?.description }}
+                                  @if (group.versionsArray && group.versionsArray.length > 0) {
+                                    <span class="text-muted ms-1">({{ group.versionsArray.join(', ') }})</span>
+                                  }
+                                </p>
+                                <div class="game-details">
+                                  @if (group.count === 0) {
+                                    <div class="detail-item text-muted">
+                                      <i class="bi bi-inbox"></i>
+                                      <span>0 versions found</span>
+                                    </div>
+                                  } @else if (group.iwads.length === 1) {
+                                    <div class="detail-item" [title]="group.iwads[0].path">
+                                      <i class="bi bi-hdd"></i>
+                                      <span class="text-truncate">{{ group.iwads[0].path }}</span>
+                                    </div>
+                                  } @else {
+                                    <div class="detail-item">
+                                      <i class="bi bi-files"></i>
+                                      <span>{{ group.iwads.length }} versions found</span>
+                                    </div>
+                                    @for (iwad of group.iwads; track iwad.path) {
+                                      <div class="detail-item small" [title]="iwad.path">
+                                        <i class="bi bi-dash"></i>
+                                        <span class="text-truncate">{{ iwad.path }}</span>
+                                      </div>
+                                    }
+                                  }
+                                </div>
+                              </div>
+                            </div>
+                          }
+                        </div>
+                      }
                       
                       <div class="stats-footer">
                         <small class="text-muted">
                           <i class="bi bi-info-circle me-1"></i>
-                          {{ groupedIWADs().length }} unique game{{ groupedIWADs().length !== 1 ? 's' : '' }} · 
+                          @if (commercialGames().length > 0 && freeGames().length > 0) {
+                            {{ commercialGames().length }} commercial · {{ freeGames().length }} free · 
+                          } @else if (commercialGames().length > 0) {
+                            {{ commercialGames().length }} commercial game{{ commercialGames().length !== 1 ? 's' : '' }} · 
+                          } @else if (freeGames().length > 0) {
+                            {{ freeGames().length }} free game{{ freeGames().length !== 1 ? 's' : '' }} · 
+                          }
                           {{ detectedIWADs().length }} total IWAD{{ detectedIWADs().length !== 1 ? 's' : '' }}
                         </small>
                       </div>
