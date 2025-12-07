@@ -1,0 +1,92 @@
+@if (server()) {
+  <div class="row">
+    <div class="col-md-6">
+      <h6><i class="bi bi-server me-2"></i>Server Info</h6>
+      <table class="table table-sm table-dark" aria-label="Server information">
+        <tbody>
+          <tr>
+            <td>Address:</td>
+            <td class="font-monospace">{{ server()!.address.ip }}:{{ server()!.address.port }}</td>
+          </tr>
+          <tr>
+            <td>Version:</td>
+            <td>{{ server()!.versionMajor }}.{{ server()!.versionMinor }}.{{ server()!.versionPatch }}</td>
+          </tr>
+          <tr>
+            <td>Map:</td>
+            <td>{{ server()!.currentMap }}</td>
+          </tr>
+          <tr>
+            <td>Game Type:</td>
+            <td>{{ getGameTypeName()(server()!.gameType) }}</td>
+          </tr>
+          <tr>
+            <td>Players:</td>
+            <td>{{ server()!.players.length }} / {{ server()!.maxPlayers }}</td>
+          </tr>
+          <tr>
+            <td>Max Clients:</td>
+            <td>{{ server()!.maxClients }}</td>
+          </tr>
+          <tr>
+            <td>Ping:</td>
+            <td [class]="getPingClass()(server()!.ping)">{{ server()!.ping }}ms</td>
+          </tr>
+          <tr>
+            <td>Password:</td>
+            <td>{{ server()!.passwordHash ? 'Yes 🔒' : 'No' }}</td>
+          </tr>
+          @if (getServerPWADs()(server()!).length > 0) {
+            <tr>
+              <td>PWADs:</td>
+              <td>
+                <div class="d-flex flex-wrap gap-1">
+                  @for (pwad of getServerPWADs()(server()!); track pwad) {
+                    <span class="badge bg-secondary">{{ pwad }}</span>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <div class="col-md-6">
+      <h6 id="player-list-title"><i class="bi bi-people me-2"></i>Players ({{ server()!.players.length }})</h6>
+      @if (server()!.players.length > 0) {
+        <ul class="list-group list-group-flush" aria-labelledby="player-list-title">
+          @for (player of server()!.players; track player.name) {
+            <li class="list-group-item bg-dark text-light" role="listitem">
+              <span aria-label="Player name">{{ player.name }}</span>
+              <span class="badge bg-secondary ms-2" aria-label="Frags: {{ player.frags }}">{{ player.frags }} frags</span>
+              <span class="badge bg-info ms-1" aria-label="Ping: {{ player.ping }} milliseconds">{{ player.ping }}ms</span>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="text-muted" role="status">No players online</p>
+      }
+    </div>
+  </div>
+  <div class="mt-3">
+    <button 
+      class="btn btn-success" 
+      (click)="onJoinClick()"
+      [disabled]="joiningServer()"
+      [attr.aria-busy]="joiningServer()"
+      aria-label="Join selected server">
+      @if (joiningServer()) {
+        <span class="spinner-border spinner-border-sm me-2"></span>
+        Launching...
+      } @else {
+        <i class="bi bi-play-fill"></i>
+        Join Server
+      }
+    </button>
+  </div>
+} @else {
+  <div class="empty-details">
+    <i class="bi bi-arrow-up-circle"></i>
+    <p>Select a server to view details</p>
+  </div>
+}

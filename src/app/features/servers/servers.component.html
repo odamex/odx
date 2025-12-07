@@ -1,6 +1,11 @@
 
-    <div class="server-browser-container" [class.resizing]="resizing()">
-      <div class="server-list-area">
+    <div class="server-browser-container" 
+         [class.resizing]="resizing()"
+         [class.layout-bottom]="detailsPanelPosition() === 'bottom'"
+         [class.layout-right]="detailsPanelPosition() === 'right'">
+      
+      <div class="server-content-wrapper">
+        <div class="server-list-area">
         <div class="container-fluid">
           
           <!-- Offline Mode Notice -->
@@ -154,7 +159,15 @@
                 </label>
               </div>
               
-              <div class="ms-auto">
+              <div class="ms-auto d-flex gap-2">
+                <button 
+                  class="btn btn-sm btn-outline-light"
+                  type="button"
+                  (click)="toggleDetailsPanelPosition()"
+                  [title]="detailsPanelPosition() === 'bottom' ? 'Switch to right panel' : 'Switch to bottom panel'"
+                  aria-label="Toggle details panel position">
+                  <i class="bi" [class.bi-layout-sidebar-inset-reverse]="detailsPanelPosition() === 'bottom'" [class.bi-layout-split]="detailsPanelPosition() === 'right'" aria-hidden="true"></i>
+                </button>
                 <button 
                   class="btn btn-sm btn-outline-light"
                   type="button"
@@ -356,9 +369,10 @@
         </div>
       }
       </div>
-    </div>
+      </div>
 
     <!-- Server Details Panel (Bottom Panel) -->
+    @if (detailsPanelPosition() === 'bottom') {
     <div class="server-details-panel" [class.collapsed]="detailsPanelCollapsed()">
       <!-- Resize Handle -->
       <div class="resize-handle" 
@@ -367,12 +381,11 @@
            aria-label="Resize server details panel"
            aria-orientation="horizontal"></div>
       
-      @if (selectedServer()) {
         <div class="card bg-dark border-secondary mb-0">
           <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0" id="server-details-title">
               <i class="bi bi-hdd-network me-2"></i>
-              {{ selectedServer()!.name || 'Unnamed Server' }}
+              {{ selectedServer()?.name || 'Server Details' }}
             </h5>
             <button 
               class="btn btn-sm btn-outline-secondary" 
@@ -383,115 +396,48 @@
             </button>
           </div>
           <div class="card-body">
-            <div class="row">
-              <div class="col-md-6">
-                <h6><i class="bi bi-server me-2"></i>Server Info</h6>
-                <table class="table table-sm table-dark" aria-label="Server information">
-                  <tbody>
-                    <tr>
-                      <td>Address:</td>
-                      <td class="font-monospace">{{ selectedServer()!.address.ip }}:{{ selectedServer()!.address.port }}</td>
-                    </tr>
-                    <tr>
-                      <td>Version:</td>
-                      <td>{{ selectedServer()!.versionMajor }}.{{ selectedServer()!.versionMinor }}.{{ selectedServer()!.versionPatch }}</td>
-                    </tr>
-                    <tr>
-                      <td>Map:</td>
-                      <td>{{ selectedServer()!.currentMap }}</td>
-                    </tr>
-                    <tr>
-                      <td>Game Type:</td>
-                      <td>{{ getGameTypeName(selectedServer()!.gameType) }}</td>
-                    </tr>
-                    <tr>
-                      <td>Players:</td>
-                      <td>{{ selectedServer()!.players.length }} / {{ selectedServer()!.maxPlayers }}</td>
-                    </tr>
-                    <tr>
-                      <td>Max Clients:</td>
-                      <td>{{ selectedServer()!.maxClients }}</td>
-                    </tr>
-                    <tr>
-                      <td>Ping:</td>
-                      <td [class]="getPingClass(selectedServer()!.ping)">{{ selectedServer()!.ping }}ms</td>
-                    </tr>
-                    <tr>
-                      <td>Password:</td>
-                      <td>{{ selectedServer()!.passwordHash ? 'Yes 🔒' : 'No' }}</td>
-                    </tr>
-                    @if (getServerPWADs(selectedServer()!).length > 0) {
-                      <tr>
-                        <td>PWADs:</td>
-                        <td>
-                          <div class="d-flex flex-wrap gap-1">
-                            @for (pwad of getServerPWADs(selectedServer()!); track pwad) {
-                              <span class="badge bg-secondary">{{ pwad }}</span>
-                            }
-                          </div>
-                        </td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
-              </div>
-              <div class="col-md-6">
-                <h6 id="player-list-title"><i class="bi bi-people me-2"></i>Players ({{ selectedServer()!.players.length }})</h6>
-                @if (selectedServer()!.players.length > 0) {
-                  <ul class="list-group list-group-flush" aria-labelledby="player-list-title">
-                    @for (player of selectedServer()!.players; track player.name) {
-                      <li class="list-group-item bg-dark text-light" role="listitem">
-                        <span aria-label="Player name">{{ player.name }}</span>
-                        <span class="badge bg-secondary ms-2" aria-label="Frags: {{ player.frags }}">{{ player.frags }} frags</span>
-                        <span class="badge bg-info ms-1" aria-label="Ping: {{ player.ping }} milliseconds">{{ player.ping }}ms</span>
-                      </li>
-                    }
-                  </ul>
-                } @else {
-                  <p class="text-muted" role="status">No players online</p>
-                }
-              </div>
-            </div>
-            <div class="mt-3">
-              <button 
-                class="btn btn-success" 
-                (click)="joinServer(selectedServer()!)"
-                [disabled]="joiningServer()"
-                [attr.aria-busy]="joiningServer()"
-                aria-label="Join selected server">
-                @if (joiningServer()) {
-                  <span class="spinner-border spinner-border-sm me-2"></span>
-                  Launching...
-                } @else {
-                  <i class="bi bi-play-fill"></i>
-                  Join Server
-                }
-              </button>
-            </div>
+            <app-server-details-content
+              [server]="selectedServer()"
+              [joiningServer]="joiningServer()"
+              [getGameTypeName]="getGameTypeNameFn"
+              [getPingClass]="getPingClassFn"
+              [getServerPWADs]="getServerPWADsFn"
+              (joinServerClick)="joinServer($event)">
+            </app-server-details-content>
           </div>
         </div>
-      } @else {
-        <div class="card bg-dark border-secondary mb-0">
+      </div>
+    }
+    
+    <!-- Server Details Panel (Right Panel) -->
+    @if (detailsPanelPosition() === 'right') {
+      <div class="server-details-panel right-panel" [class.collapsed]="detailsPanelCollapsed()">
+        <div class="card bg-dark border-secondary mb-0 h-100">
           <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">
+            <h5 class="mb-0" id="server-details-title-right">
               <i class="bi bi-hdd-network me-2"></i>
-              Server Details
+              {{ selectedServer()?.name || 'Server Details' }}
             </h5>
             <button 
               class="btn btn-sm btn-outline-secondary" 
               (click)="toggleDetailsPanel()"
               [attr.aria-label]="detailsPanelCollapsed() ? 'Expand details panel' : 'Collapse details panel'"
               title="Toggle details panel">
-              <i class="bi" [class.bi-chevron-down]="!detailsPanelCollapsed()" [class.bi-chevron-up]="detailsPanelCollapsed()"></i>
+              <i class="bi" [class.bi-chevron-left]="!detailsPanelCollapsed()" [class.bi-chevron-right]="detailsPanelCollapsed()"></i>
             </button>
           </div>
           <div class="card-body">
-            <div class="empty-details">
-              <i class="bi bi-arrow-up-circle"></i>
-              <p>Select a server to view details</p>
-            </div>
+            <app-server-details-content
+              [server]="selectedServer()"
+              [joiningServer]="joiningServer()"
+              [getGameTypeName]="getGameTypeNameFn"
+              [getPingClass]="getPingClassFn"
+              [getServerPWADs]="getServerPWADsFn"
+              (joinServerClick)="joinServer($event)">
+            </app-server-details-content>
           </div>
         </div>
-      }
-    </div>
-  
+      </div>
+    }
+    
+  </div>

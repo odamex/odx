@@ -6,11 +6,12 @@ import { ServersStore } from '@app/store';
 import { CustomServersStore } from '@app/store/custom-servers.store';
 import { OdalPapi, FileManagerService, IWADService, ServerRefreshService, NetworkStatusService, CustomServersService } from '@shared/services';
 import { CustomServersModalComponent } from './custom-servers-modal/custom-servers-modal.component';
+import { ServerDetailsContentComponent } from './server-details-content/server-details-content.component';
 
 @Component({
   selector: 'app-servers',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, NgbDropdownModule, CustomServersModalComponent],
+  imports: [CommonModule, FormsModule, NgbDropdownModule, CustomServersModalComponent, ServerDetailsContentComponent],
   templateUrl: './servers.component.html',
   styleUrl: './servers.component.scss',
 })
@@ -29,7 +30,8 @@ export class ServersComponent {
   selectedServer = signal<OdalPapi.ServerInfo | null>(null);
   joiningServer = signal(false);
   
-  // Panel resize and collapse
+  // Panel position and state
+  detailsPanelPosition = signal<'bottom' | 'right'>('bottom');
   detailsPanelCollapsed = signal(true);
   protected resizing = signal(false);
   private startY = 0;
@@ -736,4 +738,15 @@ export class ServersComponent {
     }
     this.detailsPanelCollapsed.update(val => !val);
   }
+  
+  toggleDetailsPanelPosition() {
+    this.detailsPanelPosition.update(pos => pos === 'bottom' ? 'right' : 'bottom');
+    // Reset collapse state when switching positions
+    this.detailsPanelCollapsed.set(false);
+  }
+  
+  // Helper methods for server details content component
+  readonly getGameTypeNameFn = (gameType: OdalPapi.GameType) => this.getGameTypeName(gameType);
+  readonly getPingClassFn = (ping: number) => this.getPingClass(ping);
+  readonly getServerPWADsFn = (server: OdalPapi.ServerInfo) => this.getServerPWADs(server);
 }
