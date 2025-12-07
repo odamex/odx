@@ -195,10 +195,10 @@
         "Comment": "Cross-platform Odamex launcher with single player, multiplayer, and server management",
         "Keywords": "odamex;odalaunch;doom;doom2;doom 2;doom ii;heretic;hexen;strife;freedoom;chex quest;chex;hacx;home;singleplayer;single player;multiplayer;multi player;servers;hosting;community;settings;game;launcher;server;fps;retro;id software;Amusement;Game;ActionGame;AdventureGame;ArcadeGame;",
         "StartupWMClass": "ODX"
-      },
-      "deb": {
-        "packageName": "odx-launcher"
       }
+    },
+    "deb": {
+      "packageName": "odx-launcher"
     },
     "nsis": {
       "oneClick": true,
