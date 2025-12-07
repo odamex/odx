@@ -1,3 +1,14 @@
+.details-flex-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.details-section {
+  flex: 1 1 320px;
+  min-width: 0;
+}
+
 h6 {
   font-weight: 600;
   color: #ddd;
@@ -16,6 +27,7 @@ h6 {
       font-weight: 500;
       color: #aaa;
       width: 30%;
+      white-space: nowrap;
     }
   }
 }

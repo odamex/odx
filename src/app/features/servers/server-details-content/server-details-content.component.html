@@ -1,6 +1,6 @@
 @if (server()) {
-  <div class="row">
-    <div class="col-md-6">
+  <div class="details-flex-container">
+    <div class="details-section">
       <h6><i class="bi bi-server me-2"></i>Server Info</h6>
       <table class="table table-sm table-dark" aria-label="Server information">
         <tbody>
@@ -51,7 +51,7 @@
         </tbody>
       </table>
     </div>
-    <div class="col-md-6">
+    <div class="details-section">
       <h6 id="player-list-title"><i class="bi bi-people me-2"></i>Players ({{ server()!.players.length }})</h6>
       @if (server()!.players.length > 0) {
         <ul class="list-group list-group-flush" aria-labelledby="player-list-title">

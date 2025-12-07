@@ -31,7 +31,7 @@ export class ServersComponent {
   joiningServer = signal(false);
   
   // Panel position and state
-  detailsPanelPosition = signal<'bottom' | 'right'>('bottom');
+  detailsPanelPosition = signal<'bottom' | 'right'>((localStorage.getItem('detailsPanelPosition') as 'bottom' | 'right') || 'bottom');
   detailsPanelCollapsed = signal(true);
   protected resizing = signal(false);
   private startY = 0;
@@ -326,6 +326,10 @@ export class ServersComponent {
     // Save filter settings to localStorage when they change
     effect(() => {
       localStorage.setItem('hideEmpty', String(this.hideEmpty()));
+    });
+    
+    effect(() => {
+      localStorage.setItem('detailsPanelPosition', this.detailsPanelPosition());
     });
     
     effect(() => {

@@ -188,6 +188,13 @@ function createTray(): void {
 
   tray.setToolTip('ODX');
 
+  tray.on('click', () => {
+    if (mainWindow && !mainWindow.isVisible()) {
+      mainWindow.show();
+      mainWindow.focus();
+    }
+  });
+
   tray.on('double-click', () => {
     mainWindow?.show();
     mainWindow?.focus();

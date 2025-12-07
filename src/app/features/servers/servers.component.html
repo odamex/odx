@@ -71,9 +71,9 @@
       @if (iwadService.detectedIWADs().length > 0 || getUniqueGames().length > 0) {
         <div class="card server-list-filters bg-dark border-secondary mb-3">
           <div class="card-body py-2">
-            <div class="d-flex align-items-center gap-3">
-                <i class="bi bi-funnel" aria-hidden="true"></i>
-              <div class="dropdown" ngbDropdown>
+            <div class="d-flex flex-wrap align-items-center gap-3">
+                <i class="bi bi-funnel flex-shrink-0" aria-hidden="true"></i>
+              <div class="dropdown flex-shrink-0" ngbDropdown>
                 <button 
                   class="btn btn-sm btn-outline-light" 
                   type="button" 
@@ -102,7 +102,7 @@
                 </div>
               </div>
               
-              <div class="dropdown" ngbDropdown>
+              <div class="dropdown flex-shrink-0" ngbDropdown>
                 <button 
                   class="btn btn-sm btn-outline-light" 
                   type="button" 
@@ -131,7 +131,7 @@
                 </div>
               </div>
               
-              <div class="d-flex align-items-center gap-2">
+              <div class="d-flex align-items-center gap-2 flex-shrink-0">
                 <label for="maxPingInput" class="mb-0 small text-nowrap text-muted">Max Ping:</label>
                 <input 
                   type="number" 
@@ -146,7 +146,7 @@
                 <span class="small text-muted">ms</span>
               </div>
               
-              <div class="form-check form-switch">
+              <div class="form-check form-switch flex-shrink-0">
                 <input 
                   class="form-check-input" 
                   type="checkbox" 
@@ -154,20 +154,12 @@
                   [(ngModel)]="hideEmpty"
                   role="switch"
                   aria-label="Hide empty servers">
-                <label class="form-check-label small text-muted" for="hideEmptyCheck">
+                <label class="form-check-label small text-muted text-nowrap" for="hideEmptyCheck">
                   Hide Empty
                 </label>
               </div>
               
-              <div class="ms-auto d-flex gap-2">
-                <button 
-                  class="btn btn-sm btn-outline-light"
-                  type="button"
-                  (click)="toggleDetailsPanelPosition()"
-                  [title]="detailsPanelPosition() === 'bottom' ? 'Switch to right panel' : 'Switch to bottom panel'"
-                  aria-label="Toggle details panel position">
-                  <i class="bi" [class.bi-layout-sidebar-inset-reverse]="detailsPanelPosition() === 'bottom'" [class.bi-layout-split]="detailsPanelPosition() === 'right'" aria-hidden="true"></i>
-                </button>
+              <div class="ms-auto d-flex gap-2 flex-shrink-0">
                 <button 
                   class="btn btn-sm btn-outline-light"
                   type="button"
@@ -175,6 +167,14 @@
                   aria-label="Manage custom servers">
                   <i class="bi bi-server" aria-hidden="true"></i>
                   <span>Custom Servers</span>
+                </button>
+                <button 
+                  class="btn btn-sm btn-outline-light"
+                  type="button"
+                  (click)="toggleDetailsPanelPosition()"
+                  [title]="detailsPanelPosition() === 'bottom' ? 'Switch to right panel' : 'Switch to bottom panel'"
+                  aria-label="Toggle details panel position">
+                  <i class="bi" [class.bi-layout-sidebar-inset-reverse]="detailsPanelPosition() === 'bottom'" [class.bi-layout-split]="detailsPanelPosition() === 'right'" aria-hidden="true"></i>
                 </button>
               </div>
             </div>
@@ -414,12 +414,12 @@
       <div class="server-details-panel right-panel" [class.collapsed]="detailsPanelCollapsed()">
         <div class="card bg-dark border-secondary mb-0 h-100">
           <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0" id="server-details-title-right">
+            <h5 class="mb-0 header-title" id="server-details-title-right">
               <i class="bi bi-hdd-network me-2"></i>
               {{ selectedServer()?.name || 'Server Details' }}
             </h5>
             <button 
-              class="btn btn-sm btn-outline-secondary" 
+              class="btn btn-sm btn-outline-secondary collapse-btn" 
               (click)="toggleDetailsPanel()"
               [attr.aria-label]="detailsPanelCollapsed() ? 'Expand details panel' : 'Collapse details panel'"
               title="Toggle details panel">
