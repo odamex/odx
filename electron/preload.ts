@@ -19,6 +19,8 @@ contextBridge.exposeInMainWorld('electron', {
   updateTrayTooltip: (tooltip: string) => ipcRenderer.send('update-tray-tooltip', tooltip),
   updateQueueState: (isMonitoring: boolean) => ipcRenderer.send('update-queue-state', isMonitoring),
   showNotification: (title: string, body: string) => ipcRenderer.send('show-notification', title, body),
+  updateNotificationSettings: (queueLimit: number, idleThresholdMinutes: number) => 
+    ipcRenderer.send('update-notification-settings', queueLimit, idleThresholdMinutes),
   showMessageBox: (options: any) => ipcRenderer.invoke('show-message-box', options),
 
   // Updates

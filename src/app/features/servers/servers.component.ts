@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, signal, computed, NgZone, ViewChild } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, computed, effect, NgZone, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
@@ -306,6 +306,44 @@ export class ServersComponent {
       this.filterByVersion.set(savedFilterByVersion === 'true');
     }
     
+    // Load hideEmpty filter setting
+    const savedHideEmpty = localStorage.getItem('hideEmpty');
+    if (savedHideEmpty !== null) {
+      this.hideEmpty.set(savedHideEmpty === 'true');
+    }
+    
+    // Load maxPing filter setting
+    const savedMaxPing = localStorage.getItem('maxPing');
+    if (savedMaxPing !== null) {
+      const pingValue = parseInt(savedMaxPing, 10);
+      if (!isNaN(pingValue)) {
+        this.maxPing.set(pingValue);
+      }
+    }
+    
+    // Save filter settings to localStorage when they change
+    effect(() => {
+      localStorage.setItem('hideEmpty', String(this.hideEmpty()));
+    });
+    
+    effect(() => {
+      const ping = this.maxPing();
+      if (ping !== null) {
+        localStorage.setItem('maxPing', String(ping));
+      } else {
+        localStorage.removeItem('maxPing');
+      }
+    });
+    
+    // Save current version to localStorage when detected
+    effect(() => {
+      const major = this.currentMajorVersion();
+      const minor = this.currentMinorVersion();
+      if (major !== null && minor !== null) {
+        localStorage.setItem('currentVersion', `${major}.${minor}`);
+      }
+    });
+    
     // Detect current Odamex version
     this.detectCurrentVersion();
   }
@@ -432,12 +470,24 @@ export class ServersComponent {
 
       // Add WAD directories so client knows where to find IWADs
       const wadDirs = this.iwadService.wadDirectories();
+      console.log('[JOIN SERVER] WAD directories config:', wadDirs);
+      
       if (wadDirs.directories && wadDirs.directories.length > 0) {
+        // Extract path strings from WADDirectory objects
+        const dirPaths = wadDirs.directories.map(dir => dir.path);
+        console.log('[JOIN SERVER] Directory paths:', dirPaths);
+        
         // Join directories with platform-specific separator (semicolon on Windows, colon elsewhere)
         const separator = window.electron.platform === 'win32' ? ';' : ':';
-        const wadDirPath = wadDirs.directories.join(separator);
+        const wadDirPath = dirPaths.join(separator);
+        console.log('[JOIN SERVER] Combined waddir path:', wadDirPath);
+        
         args.push('-waddir', wadDirPath);
+      } else {
+        console.warn('[JOIN SERVER] No WAD directories configured!');
       }
+      
+      console.log('[JOIN SERVER] Launch arguments:', args);
 
       // Launch Odamex
       await this.fileManager.launchOdamex(args);

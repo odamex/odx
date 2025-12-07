@@ -18,6 +18,12 @@ export interface NotificationSettings {
   serverActivity: boolean;
   /** Enable notifications for software updates */
   updates: boolean;
+  
+  // Advanced Settings
+  /** Maximum number of notifications to queue while away (0 = unlimited) */
+  queueLimit: number;
+  /** Minutes of inactivity before suppressing notifications (0 = only on lock/sleep) */
+  idleThresholdMinutes: number;
 }
 
 /**
@@ -37,7 +43,11 @@ export class NotificationService {
 
   constructor() {
     // Log initial settings
-    console.log('[NotificationService] Initialized with settings:', this._settings());
+    const settings = this._settings();
+    console.log('[NotificationService] Initialized with settings:', settings);
+    
+    // Send initial settings to main process
+    this.syncSettingsToMainProcess(settings);
   }
 
   /**
@@ -97,6 +107,23 @@ export class NotificationService {
     this.saveSettings(updated);
     
     console.log('[NotificationService] Settings updated:', updated);
+    
+    // Sync to main process
+    this.syncSettingsToMainProcess(updated);
+  }
+
+  /**
+   * Sync settings to the main Electron process
+   */
+  private syncSettingsToMainProcess(settings: NotificationSettings): void {
+    try {
+      window.electron.updateNotificationSettings(
+        settings.queueLimit,
+        settings.idleThresholdMinutes
+      );
+    } catch (err) {
+      console.warn('[NotificationService] Failed to sync settings to main process:', err);
+    }
   }
 
   /**
@@ -110,13 +137,17 @@ export class NotificationService {
       const serverActivity = localStorage.getItem('notificationsServerActivity');
       const updates = localStorage.getItem('notificationsUpdates');
       const taskbarFlash = localStorage.getItem('notificationsTaskbarFlash');
+      const queueLimit = localStorage.getItem('notificationsQueueLimit');
+      const idleThreshold = localStorage.getItem('notificationsIdleThreshold');
       
       return {
         enabled: enabled !== null ? enabled === 'true' : true,
         systemNotifications: systemNotifications !== null ? systemNotifications === 'true' : true,
         serverActivity: serverActivity !== null ? serverActivity === 'true' : true,
         updates: updates !== null ? updates === 'true' : true,
-        taskbarFlash: taskbarFlash !== null ? taskbarFlash === 'true' : true
+        taskbarFlash: taskbarFlash !== null ? taskbarFlash === 'true' : true,
+        queueLimit: queueLimit !== null ? parseInt(queueLimit, 10) : 50,
+        idleThresholdMinutes: idleThreshold !== null ? parseInt(idleThreshold, 10) : 0
       };
     } catch (err) {
       console.warn('[NotificationService] Failed to load settings from localStorage:', err);
@@ -126,7 +157,9 @@ export class NotificationService {
         systemNotifications: true,
         serverActivity: true,
         updates: true,
-        taskbarFlash: true
+        taskbarFlash: true,
+        queueLimit: 50,
+        idleThresholdMinutes: 0
       };
     }
   }
@@ -141,6 +174,8 @@ export class NotificationService {
       localStorage.setItem('notificationsServerActivity', String(settings.serverActivity));
       localStorage.setItem('notificationsUpdates', String(settings.updates));
       localStorage.setItem('notificationsTaskbarFlash', String(settings.taskbarFlash));
+      localStorage.setItem('notificationsQueueLimit', String(settings.queueLimit));
+      localStorage.setItem('notificationsIdleThreshold', String(settings.idleThresholdMinutes));
     } catch (err) {
       console.warn('[NotificationService] Failed to save settings to localStorage:', err);
     }

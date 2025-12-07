@@ -12,6 +12,7 @@ export interface ElectronAPI {
   updateTrayTooltip: (tooltip: string) => void;
   updateQueueState: (isMonitoring: boolean) => void;
   showNotification: (title: string, body: string) => void;
+  updateNotificationSettings: (queueLimit: number, idleThresholdMinutes: number) => void;
   showMessageBox: (options: {
     type?: 'none' | 'info' | 'error' | 'question' | 'warning';
     title?: string;

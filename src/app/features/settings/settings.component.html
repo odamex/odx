@@ -546,6 +546,48 @@
                             Get notified when updates are available for Odamex or ODX Launcher
                           </small>
                         </div>
+
+                        <h5 class="mt-3 mb-2 text-muted" style="font-size: 0.875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Advanced Settings</h5>
+                        
+                        <div class="setting-item">
+                          <label for="notificationsQueueLimit" class="form-label">
+                            Queue limit while away
+                          </label>
+                          <select 
+                            class="form-select" 
+                            id="notificationsQueueLimit"
+                            [value]="notificationsQueueLimit()"
+                            (change)="onQueueLimitChange($event)">
+                            <option value="10">10 notifications</option>
+                            <option value="25">25 notifications</option>
+                            <option value="50">50 notifications</option>
+                            <option value="100">100 notifications</option>
+                            <option value="0">Unlimited</option>
+                          </select>
+                          <small class="text-muted">
+                            Maximum notifications to queue when system is locked or idle
+                          </small>
+                        </div>
+
+                        <div class="setting-item mb-0">
+                          <label for="notificationsIdleThreshold" class="form-label">
+                            Suppress when idle for
+                          </label>
+                          <select 
+                            class="form-select" 
+                            id="notificationsIdleThreshold"
+                            [value]="notificationsIdleThreshold()"
+                            (change)="onIdleThresholdChange($event)">
+                            <option value="0">Only on lock/sleep</option>
+                            <option value="5">5 minutes</option>
+                            <option value="10">10 minutes</option>
+                            <option value="15">15 minutes</option>
+                            <option value="30">30 minutes</option>
+                          </select>
+                          <small class="text-muted">
+                            Queue notifications after this much inactivity (keyboard/mouse)
+                          </small>
+                        </div>
                       </div>
                     }
                   </div>

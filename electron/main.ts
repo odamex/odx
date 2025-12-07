@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { app, BrowserWindow, ipcMain, Menu, Tray, screen, nativeTheme, dialog, nativeImage } from 'electron';
+import { app, BrowserWindow, ipcMain, Menu, Tray, screen, nativeTheme, dialog, nativeImage, powerMonitor } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import * as path from 'path';
 import * as url from 'url';
@@ -40,6 +40,19 @@ if (isDevelopment) {
   };
   // electron-updater will use its own internal logger in production
 }
+
+// Notification queue for idle/locked periods
+interface QueuedNotification {
+  title: string;
+  body: string;
+  timestamp: number;
+}
+
+let isSystemLocked = false;
+let notificationQueue: QueuedNotification[] = [];
+let maxQueuedNotifications = 50;
+let idleThresholdMinutes = 0;
+let idleCheckInterval: NodeJS.Timeout | null = null;
 
 // Register IPC handlers early
 registerNetworkDiscoveryHandlers();
@@ -338,6 +351,47 @@ ipcMain.on('update-tray-tooltip', (_event, tooltip: string) => {
 
 // Show system notification
 ipcMain.on('show-notification', (_event, title: string, body: string) => {
+  // If system is locked or idle, queue the notification instead of showing it
+  if (isSystemLocked) {
+    // Add to queue with limit
+    const limit = maxQueuedNotifications === 0 ? Infinity : maxQueuedNotifications;
+    if (notificationQueue.length < limit) {
+      notificationQueue.push({
+        title,
+        body,
+        timestamp: Date.now()
+      });
+      console.log(`[Notifications] Queued notification while locked/idle (${notificationQueue.length} in queue)`);
+    } else {
+      console.log('[Notifications] Queue full, dropping notification');
+    }
+    return;
+  }
+
+  // Show notification immediately if not locked
+  showSystemNotification(title, body);
+});
+
+/**
+ * Update notification settings from renderer
+ */
+ipcMain.on('update-notification-settings', (_event, queueLimit: number, idleThreshold: number) => {
+  maxQueuedNotifications = queueLimit;
+  idleThresholdMinutes = idleThreshold;
+  
+  console.log('[Notifications] Settings updated:', {
+    queueLimit: queueLimit === 0 ? 'unlimited' : queueLimit,
+    idleThresholdMinutes: idleThreshold
+  });
+  
+  // Set up or clear idle checking based on threshold
+  setupIdleChecking();
+});
+
+/**
+ * Shows a system notification immediately
+ */
+function showSystemNotification(title: string, body: string) {
   const { Notification } = require('electron');
   if (Notification.isSupported()) {
     // Try multiple icon paths for dev and production
@@ -362,7 +416,85 @@ ipcMain.on('show-notification', (_event, title: string, body: string) => {
       }
     });
   }
-});
+}
+
+/**
+ * Shows a summary notification for queued notifications
+ */
+function showQueuedNotificationsSummary() {
+  if (notificationQueue.length === 0) {
+    return;
+  }
+
+  console.log(`[Notifications] Showing summary of ${notificationQueue.length} queued notifications`);
+
+  // Count notifications by type
+  const serverActivityCount = notificationQueue.filter(n => 
+    n.title.includes('Server Activity') || n.body.includes('joined') || n.body.includes('left')
+  ).length;
+
+  const otherCount = notificationQueue.length - serverActivityCount;
+
+  // Build summary message
+  let summaryBody = '';
+  if (serverActivityCount > 0) {
+    summaryBody += `${serverActivityCount} server activity notification${serverActivityCount > 1 ? 's' : ''}`;
+  }
+  if (otherCount > 0) {
+    if (summaryBody) summaryBody += '\n';
+    summaryBody += `${otherCount} other notification${otherCount > 1 ? 's' : ''}`;
+  }
+
+  // Show single summary notification
+  showSystemNotification(
+    `${notificationQueue.length} Notification${notificationQueue.length > 1 ? 's' : ''} While Away`,
+    summaryBody
+  );
+
+  // Clear the queue
+  notificationQueue = [];
+}
+
+/**
+ * Set up idle checking based on threshold setting
+ */
+function setupIdleChecking() {
+  // Clear existing interval if any
+  if (idleCheckInterval) {
+    clearInterval(idleCheckInterval);
+    idleCheckInterval = null;
+  }
+  
+  // If threshold is 0, only use lock/sleep detection (no idle checking)
+  if (idleThresholdMinutes === 0) {
+    console.log('[Notifications] Idle detection disabled, using only lock/sleep events');
+    return;
+  }
+  
+  console.log(`[Notifications] Idle detection enabled: ${idleThresholdMinutes} minutes`);
+  
+  // Check idle state every 30 seconds
+  idleCheckInterval = setInterval(() => {
+    const idleTimeSeconds = powerMonitor.getSystemIdleTime();
+    const idleTimeMinutes = Math.floor(idleTimeSeconds / 60);
+    const wasLocked = isSystemLocked;
+    
+    // Mark as locked if idle time exceeds threshold
+    if (idleTimeMinutes >= idleThresholdMinutes) {
+      if (!isSystemLocked) {
+        console.log(`[Notifications] System idle for ${idleTimeMinutes} minutes - queuing notifications`);
+        isSystemLocked = true;
+      }
+    } else {
+      if (isSystemLocked && wasLocked) {
+        // User became active again after being idle
+        console.log('[Notifications] System active again - showing queued notifications');
+        isSystemLocked = false;
+        showQueuedNotificationsSummary();
+      }
+    }
+  }, 30000); // Check every 30 seconds
+}
 
 // Show message box dialog
 ipcMain.handle('show-message-box', async (_event, options: any) => {
@@ -400,7 +532,8 @@ ipcMain.on('download-update', () => {
 ipcMain.handle('quit-and-install', async () => {
   if (!isDevelopment) {
     isQuitting = true;
-    setImmediate(() => autoUpdater.quitAndInstall(false, true));
+    // Force immediate restart and launch app after update
+    setImmediate(() => autoUpdater.quitAndInstall(true, true));
   }
 });
 
@@ -431,6 +564,11 @@ autoUpdater.on('update-downloaded', (info) => {
 
 // App lifecycle
 app.on('ready', () => {
+  // Set app name for Linux WM_CLASS
+  if (process.platform === 'linux') {
+    app.setName('ODX');
+  }
+  
   // Set app user model ID for Windows notifications
   if (process.platform === 'win32') {
     app.setAppUserModelId('net.odamex.odx-launcher');
@@ -438,6 +576,35 @@ app.on('ready', () => {
   
   createWindow();
   createTray();
+
+  // Set up power monitor to detect lock/unlock events
+  // Note: powerMonitor is only available after 'ready' event
+  powerMonitor.on('lock-screen', () => {
+    console.log('[PowerMonitor] Screen locked - notifications will be queued');
+    isSystemLocked = true;
+  });
+
+  powerMonitor.on('unlock-screen', () => {
+    console.log('[PowerMonitor] Screen unlocked - showing queued notifications');
+    isSystemLocked = false;
+    
+    // Show summary of queued notifications
+    showQueuedNotificationsSummary();
+  });
+
+  // Also detect system suspend/resume (sleep/wake)
+  powerMonitor.on('suspend', () => {
+    console.log('[PowerMonitor] System suspending - notifications will be queued');
+    isSystemLocked = true;
+  });
+
+  powerMonitor.on('resume', () => {
+    console.log('[PowerMonitor] System resumed - showing queued notifications');
+    isSystemLocked = false;
+    
+    // Show summary of queued notifications
+    showQueuedNotificationsSummary();
+  });
 
   // Check for updates after 3 seconds
   if (!isDevelopment) {

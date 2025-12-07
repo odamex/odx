@@ -58,6 +58,9 @@ export class SettingsComponent implements OnInit, AfterViewInit {
   detectedIWADs = this.iwadService.detectedIWADs;
   wadDirectories = this.iwadService.wadDirectories;
   
+  // Debounce timer for custom path updates
+  private customPathDebounceTimer?: number;
+  
   // Group IWADs by game type to avoid long lists - includes non-commercial games with 0 detected
   readonly groupedIWADs = computed(() => {
     const displayGames = this.iwadService.displayGames();
@@ -104,6 +107,10 @@ export class SettingsComponent implements OnInit, AfterViewInit {
   // Notification types
   notificationsServerActivity = computed(() => this.notificationService.settings().serverActivity);
   notificationsUpdates = computed(() => this.notificationService.settings().updates);
+  
+  // Notification advanced settings
+  notificationsQueueLimit = computed(() => this.notificationService.settings().queueLimit);
+  notificationsIdleThreshold = computed(() => this.notificationService.settings().idleThresholdMinutes);
   
   // Periodic update settings (computed from service)
   periodicUpdateEnabled = computed(() => this.periodicUpdateService.settings().enabled);
@@ -259,10 +266,19 @@ export class SettingsComponent implements OnInit, AfterViewInit {
   }
 
   updateCustomPath(path: string) {
+    // Update the path immediately so the input doesn't lose focus
     this.fileManager.setCustomPath(path);
-    if (this.useCustomPath()) {
-      this.loadData();
+    
+    // Debounce the data reload to avoid triggering on every keystroke
+    if (this.customPathDebounceTimer) {
+      clearTimeout(this.customPathDebounceTimer);
     }
+    
+    this.customPathDebounceTimer = window.setTimeout(() => {
+      if (this.useCustomPath()) {
+        this.loadData();
+      }
+    }, 500); // Wait 500ms after user stops typing
   }
 
   async downloadLatest() {
@@ -460,6 +476,18 @@ export class SettingsComponent implements OnInit, AfterViewInit {
   toggleTaskbarFlash(): void {
     const current = this.notificationService.settings();
     this.notificationService.updateSettings({ taskbarFlash: !current.taskbarFlash });
+  }
+
+  onQueueLimitChange(event: Event): void {
+    const select = event.target as HTMLSelectElement;
+    const queueLimit = parseInt(select.value, 10);
+    this.notificationService.updateSettings({ queueLimit });
+  }
+
+  onIdleThresholdChange(event: Event): void {
+    const select = event.target as HTMLSelectElement;
+    const idleThresholdMinutes = parseInt(select.value, 10);
+    this.notificationService.updateSettings({ idleThresholdMinutes });
   }
 
   // Local Network Discovery methods

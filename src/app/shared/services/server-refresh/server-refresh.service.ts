@@ -266,11 +266,52 @@ export class ServerRefreshService {
     });
   }
 
+  /**
+   * Checks if a server should be visible based on user filter settings
+   */
+  private shouldIncludeServer(server: OdalPapi.ServerInfo): boolean {
+    try {
+      // Check version filtering
+      const filterByVersion = localStorage.getItem('filterByVersion') === 'true';
+      if (filterByVersion) {
+        const clientVersion = localStorage.getItem('currentVersion');
+        if (clientVersion) {
+          const [clientMajor, clientMinor] = clientVersion.split('.').map(Number);
+          
+          // Major version must match
+          if (server.versionMajor !== clientMajor) return false;
+          
+          // Server minor version must be <= client minor version
+          if (server.versionMinor !== null && server.versionMinor > clientMinor) return false;
+        }
+      }
+
+      // Check hide empty filter
+      const hideEmpty = localStorage.getItem('hideEmpty') === 'true';
+      if (hideEmpty && server.players.length === 0) return false;
+
+      // Check max ping filter
+      const maxPing = localStorage.getItem('maxPing');
+      if (maxPing) {
+        const threshold = parseInt(maxPing, 10);
+        if (!isNaN(threshold) && threshold > 0 && server.ping > threshold) return false;
+      }
+
+      return true;
+    } catch (err) {
+      // If there's any error reading settings, include the server
+      return true;
+    }
+  }
+
   private checkForPlayerActivity(servers: OdalPapi.ServerInfo[]): void {
     let activityDetected = false;
     const notifications: string[] = [];
 
-    for (const server of servers) {
+    // Filter servers based on user's visibility settings
+    const visibleServers = servers.filter(server => this.shouldIncludeServer(server));
+
+    for (const server of visibleServers) {
       const serverKey = `${server.address.ip}:${server.address.port}`;
       const currentPlayers = server.players.length;
       const previousPlayers = this.previousServerSnapshot.get(serverKey);
