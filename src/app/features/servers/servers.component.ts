@@ -745,8 +745,7 @@ export class ServersComponent {
   
   toggleDetailsPanelPosition() {
     this.detailsPanelPosition.update(pos => pos === 'bottom' ? 'right' : 'bottom');
-    // Reset collapse state when switching positions
-    this.detailsPanelCollapsed.set(false);
+    // Preserve collapsed state when switching positions
   }
   
   // Helper methods for server details content component
