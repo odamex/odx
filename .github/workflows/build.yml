@@ -19,14 +19,9 @@ jobs:
           - os: windows-latest
             platform: win
             name: Windows
-          - os: macos-13
-            platform: mac
-            arch: x64
-            name: macOS Intel
           - os: macos-latest
             platform: mac
-            arch: arm64
-            name: macOS Apple Silicon
+            name: macOS (Universal)
           - os: ubuntu-latest
             platform: linux
             arch: x64
@@ -52,17 +47,32 @@ jobs:
       - name: Build application
         run: npm run build
 
-      - name: Package application
+      - name: Package application (Windows)
+        if: matrix.platform == 'win'
         env:
           GITHUB_TOKEN: ${{ secrets.ODX_GITHUB_TOKEN }}
-        run: |
-          if [ "${{ matrix.platform }}" = "mac" ]; then
-            npm run package:${{ matrix.platform }} -- --${{ matrix.arch }}
-          elif [ "${{ matrix.platform }}" = "linux" ] && [ "${{ matrix.arch }}" = "arm64" ]; then
-            npm run package:${{ matrix.platform }} -- --arm64
-          else
-            npm run package:${{ matrix.platform }}
-          fi
+        run: npm run package:win
+        shell: bash
+
+      - name: Package application (macOS)
+        if: matrix.platform == 'mac'
+        env:
+          GITHUB_TOKEN: ${{ secrets.ODX_GITHUB_TOKEN }}
+        run: npm run package:mac
+        shell: bash
+
+      - name: Package application (Linux x64)
+        if: matrix.platform == 'linux' && matrix.arch == 'x64'
+        env:
+          GITHUB_TOKEN: ${{ secrets.ODX_GITHUB_TOKEN }}
+        run: npm run package:linux -- --x64
+        shell: bash
+
+      - name: Package application (Linux ARM64)
+        if: matrix.platform == 'linux' && matrix.arch == 'arm64'
+        env:
+          GITHUB_TOKEN: ${{ secrets.ODX_GITHUB_TOKEN }}
+        run: npm run package:linux -- --arm64
         shell: bash
 
       - name: Upload artifacts
