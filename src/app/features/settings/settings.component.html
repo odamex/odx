@@ -1048,20 +1048,24 @@
                         <div class="games-grid">
                           @for (group of commercialGames(); track group.metadata?.type) {
                             <div class="game-card">
-                              <div class="game-icon">
-                                <img [src]="'assets/games/' + group.metadata?.imageFilename" 
-                                     [alt]="group.metadata?.displayName"
-                                     onerror="this.style.display='none'">
+                              <div class="game-visual">
+                                <div class="game-icon">
+                                  <img [src]="'assets/games/' + group.metadata?.imageFilename" 
+                                       [alt]="group.metadata?.displayName"
+                                       onerror="this.style.display='none'">
+                                </div>
+                                <div class="game-badges">
+                                  @if (group.hasID24) {
+                                    <span class="badge bg-success" title="DOOM + DOOM II release with ID24 features">ID24</span>
+                                  }
+                                  @if (group.count > 0 && !group.hasLatest) {
+                                    <span class="badge bg-warning text-dark" title="Newer version available">Outdated</span>
+                                  }
+                                </div>
                               </div>
                               <div class="game-info">
                                 <h5>
                                   {{ group.metadata?.displayName }}
-                                  @if (group.hasID24) {
-                                    <span class="badge bg-success ms-2" title="DOOM + DOOM II release with ID24 features">ID24</span>
-                                  }
-                                  @if (group.count > 0 && !group.hasLatest) {
-                                    <span class="badge bg-warning text-dark ms-2" title="Newer version available">Outdated</span>
-                                  }
                                 </h5>
                                 <p class="game-description">
                                   {{ group.metadata?.description }}
@@ -1105,20 +1109,24 @@
                         <div class="games-grid">
                           @for (group of freeGames(); track group.metadata?.type) {
                             <div class="game-card">
-                              <div class="game-icon">
-                                <img [src]="'assets/games/' + group.metadata?.imageFilename" 
-                                     [alt]="group.metadata?.displayName"
-                                     onerror="this.style.display='none'">
+                              <div class="game-visual">
+                                <div class="game-icon">
+                                  <img [src]="'assets/games/' + group.metadata?.imageFilename" 
+                                       [alt]="group.metadata?.displayName"
+                                       onerror="this.style.display='none'">
+                                </div>
+                                <div class="game-badges">
+                                  @if (group.hasID24) {
+                                    <span class="badge bg-success" title="DOOM + DOOM II release with ID24 features">ID24</span>
+                                  }
+                                  @if (group.count > 0 && !group.hasLatest) {
+                                    <span class="badge bg-warning text-dark" title="Newer version available">Outdated</span>
+                                  }
+                                </div>
                               </div>
                               <div class="game-info">
                                 <h5>
                                   {{ group.metadata?.displayName }}
-                                  @if (group.hasID24) {
-                                    <span class="badge bg-success ms-2" title="DOOM + DOOM II release with ID24 features">ID24</span>
-                                  }
-                                  @if (group.count > 0 && !group.hasLatest) {
-                                    <span class="badge bg-warning text-dark ms-2" title="Newer version available">Outdated</span>
-                                  }
                                 </h5>
                                 <p class="game-description">
                                   {{ group.metadata?.description }}
