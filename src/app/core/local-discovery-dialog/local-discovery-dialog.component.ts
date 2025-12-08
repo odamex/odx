@@ -12,8 +12,7 @@ import type { NetworkInterface } from '@shared/services/local-network-discovery/
  */
 @Component({
   selector: 'app-local-discovery-dialog',
-  templateUrl: './local-discovery-dialog.component.html',
-  styleUrl: './local-discovery-dialog.component.scss'
+  templateUrl: './local-discovery-dialog.component.html'
 })
 export class LocalDiscoveryDialogComponent implements OnInit {
   activeModal = inject(NgbActiveModal);

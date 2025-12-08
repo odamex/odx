@@ -203,8 +203,8 @@ function createWindow(): void {
 
 function createTray(): void {
   const trayIconPath = isDevelopment 
-    ? path.join(__dirname, '../public/tray-icon.png')
-    : path.join(process.resourcesPath, 'tray-icon.png');
+    ? path.join(__dirname, '../public/trayicon.png')
+    : path.join(process.resourcesPath, 'trayicon.png');
   tray = new Tray(trayIconPath);
 
   updateTrayMenu();

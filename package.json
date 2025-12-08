@@ -128,8 +128,8 @@
     ],
     "extraResources": [
       {
-        "from": "build/tray-icon.png",
-        "to": "tray-icon.png"
+        "from": "build/trayicon.png",
+        "to": "trayicon.png"
       },
       {
         "from": "build/overlay-icons",

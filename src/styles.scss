@@ -267,20 +267,195 @@ i.bi + span {
   }
 
   .modal-header {
+    padding: 2rem 2rem 1rem;
     border-bottom: 1px solid #444;
     background: transparent;
+    text-align: center;
+    position: relative;
+
+    .modal-title,
+    h2 {
+      color: #ffffff;
+      margin: 0 0 0.5rem;
+      font-size: 1.75rem;
+      width: 100%;
+      
+      i {
+        color: #0d6efd;
+      }
+    }
+
+    .modal-subtitle,
+    p {
+      color: #aaa;
+      margin: 0;
+      font-size: 1rem;
+    }
+  }
+
+  .modal-body {
+    padding: 2rem;
+    
+    // Common alert styling
+    .alert {
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+
+      i {
+        font-size: 1.25rem;
+        flex-shrink: 0;
+      }
+
+      strong {
+        color: #ffffff;
+      }
+
+      code {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 0.2rem 0.4rem;
+        border-radius: 4px;
+        font-size: 0.85rem;
+      }
+
+      ul {
+        padding-left: 1.5rem;
+        margin-top: 0.5rem;
+        margin-bottom: 0;
+
+        li {
+          margin-bottom: 0.25rem;
+        }
+      }
+
+      p {
+        margin: 0;
+        line-height: 1.5;
+      }
+
+      &.alert-success {
+        background: rgba(40, 167, 69, 0.15);
+        border: 1px solid rgba(40, 167, 69, 0.3);
+        color: #7cfc7c;
+
+        i {
+          color: #28a745;
+        }
+      }
+
+      &.alert-info {
+        background: rgba(74, 158, 255, 0.15);
+        border: 1px solid rgba(74, 158, 255, 0.3);
+        color: #87ceeb;
+
+        i {
+          color: #4a9eff;
+        }
+      }
+
+      &.alert-warning {
+        background: rgba(255, 193, 7, 0.1);
+        border: 1px solid rgba(255, 193, 7, 0.3);
+        color: #ffe69c;
+
+        i {
+          color: #ffc107;
+        }
+      }
+    }
+
+    // Common info banner styling
+    .info-banner {
+      background: rgba(74, 158, 255, 0.1);
+      border: 1px solid #4a9eff;
+      border-radius: 8px;
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      color: #aaa;
+      margin-bottom: 1.5rem;
+
+      i {
+        color: #4a9eff;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+        margin-top: 0.15rem;
+      }
+
+      strong {
+        display: block;
+        color: #fff;
+        margin-bottom: 0.25rem;
+      }
+
+      p {
+        margin: 0;
+        line-height: 1.5;
+      }
+    }
+
+    // Common form control styling
+    .form-control {
+      background: #1e1e1e;
+      border: 1px solid #555;
+      color: #ffffff;
+      padding: 0.5rem 0.75rem;
+      border-radius: 4px;
+
+      &:focus {
+        outline: none;
+        border-color: #4a9eff;
+        background: #252525;
+        box-shadow: 0 0 0 0.2rem rgba(74, 158, 255, 0.25);
+      }
+
+      &::placeholder {
+        color: #777;
+      }
+    }
+
+    // Common list group styling
+    .list-group-item {
+      background-color: #1a1a1a;
+      border: 1px solid #444;
+      color: #e0e0e0;
+      padding: 0.75rem 1rem;
+
+      .fw-medium {
+        font-weight: 500;
+        color: #ffffff;
+      }
+
+      .text-muted {
+        color: #aaa !important;
+        font-size: 0.875rem;
+      }
+
+      .badge {
+        font-family: 'Courier New', monospace;
+        font-size: 0.875rem;
+      }
+    }
   }
 
   .modal-footer {
-    border-top: 1px solid #444;
+    padding: 1rem 2rem 2rem;
+    border-top: none;
     background: transparent;
-  }
 
-  .modal-title {
-    color: #fff;
+    button i {
+      font-size: 1rem;
+    }
   }
 
   .btn-close {
+    position: absolute;
+    right: 1rem;
+    top: 1rem;
     filter: invert(1);
     opacity: 0.5;
     

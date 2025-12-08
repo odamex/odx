@@ -1,70 +1,5 @@
-// NgBootstrap modal styling for First Run Dialog
-::ng-deep .odx-modal {
-  .modal-content {
-    background: #2c2c2c;
-    border: 1px solid #444;
-    border-radius: 12px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-    color: #fff;
-  }
-}
-
-.modal-header {
-  padding: 2rem 2rem 1rem;
-  border-bottom: 1px solid #444;
-  text-align: center;
-
-  .modal-title {
-    color: #ffffff;
-    margin: 0 0 0.5rem;
-    font-size: 1.75rem;
-    width: 100%;
-  }
-
-  .modal-subtitle {
-    color: #aaa;
-    margin: 0;
-    font-size: 1rem;
-  }
-}
-
-.modal-body {
-  padding: 2rem;
-
-  .alert {
-    display: flex;
-    gap: 1rem;
-    padding: 1rem;
-    border-radius: 8px;
-    margin-bottom: 1.5rem;
-    align-items: flex-start;
-
-    i {
-      font-size: 1.5rem;
-      flex-shrink: 0;
-    }
-
-    &.alert-success {
-      background: rgba(40, 167, 69, 0.15);
-      border: 1px solid rgba(40, 167, 69, 0.3);
-      color: #7cfc7c;
-    }
-
-    &.alert-info {
-      background: rgba(74, 158, 255, 0.15);
-      border: 1px solid rgba(74, 158, 255, 0.3);
-      color: #87ceeb;
-    }
-
-    code {
-      background: rgba(0, 0, 0, 0.3);
-      padding: 0.2rem 0.4rem;
-      border-radius: 4px;
-      font-size: 0.85rem;
-      word-break: break-all;
-    }
-  }
-}
+// Component-specific styles for First Run Dialog
+// Common modal styles are in styles.scss under .odx-modal
 
 .options-container {
   display: flex;
@@ -99,16 +34,16 @@
       border-color: #34ce57;
       background: rgba(40, 167, 69, 0.2);
     }
+
+    i {
+      color: #28a745;
+    }
   }
 
   i {
     font-size: 2rem;
     flex-shrink: 0;
     color: #4a9eff;
-  }
-
-  &.primary i {
-    color: #28a745;
   }
 
   .option-content {
@@ -149,16 +84,9 @@
     .form-control {
       flex: 1;
       background: #2c2c2c;
-      border: 1px solid #555;
-      color: #ffffff;
-      padding: 0.5rem 0.75rem;
-      border-radius: 4px;
-
+      
       &:focus {
-        outline: none;
-        border-color: #4a9eff;
         background: #333;
-        box-shadow: 0 0 0 0.2rem rgba(74, 158, 255, 0.25);
       }
     }
 
@@ -174,8 +102,6 @@
 }
 
 .modal-footer {
-  padding: 1rem 2rem 2rem;
   text-align: center;
   color: #888;
-  border-top: none;
 }
