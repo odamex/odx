@@ -1,31 +1,28 @@
-import { Component, inject, output, input, signal, effect } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
+import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { IWADService, type WADDirectory } from '@shared/services';
 
+/**
+ * Dialog for configuring game directories (IWADs and PWADs).
+ * Uses NgbActiveModal to return configuration result.
+ */
 @Component({
   selector: 'app-game-selection-dialog',
   imports: [],
   templateUrl: './game-selection-dialog.component.html',
-  styleUrl: '../../shared/styles/_dialog.scss',
+  styleUrl: './game-selection-dialog.component.scss',
   standalone: true
 })
-export class GameSelectionDialogComponent {
+export class GameSelectionDialogComponent implements OnInit {
   iwadService = inject(IWADService);
-
-  visible = input.required<boolean>();
-  confirmed = output<void>();
-  cancelled = output<void>();
+  public activeModal = inject(NgbActiveModal);
 
   directories = signal<WADDirectory[]>([]);
   steamScan = signal(true);
   isLoading = signal(false);
 
-  constructor() {
-    // Load current config when dialog becomes visible
-    effect(() => {
-      if (this.visible()) {
-        this.loadCurrentConfig();
-      }
-    });
+  async ngOnInit() {
+    await this.loadCurrentConfig();
   }
 
   async loadCurrentConfig() {
@@ -73,16 +70,15 @@ export class GameSelectionDialogComponent {
         directories: this.directories(),
         scanSteam: this.steamScan()
       });
-      this.confirmed.emit();
+      this.activeModal.close('confirmed');
     } catch (err) {
       console.error('Failed to save WAD config:', err);
       alert('Failed to save configuration. Please try again.');
-    } finally {
       this.isLoading.set(false);
     }
   }
 
   cancel() {
-    this.cancelled.emit();
+    this.activeModal.dismiss('cancelled');
   }
 }

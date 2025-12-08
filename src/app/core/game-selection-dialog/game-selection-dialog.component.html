@@ -1,12 +1,10 @@
-@if (visible()) {
-  <div class="dialog-overlay">
-    <div class="dialog-container">
-      <div class="dialog-header">
-        <h2>Configure Game Directories</h2>
-        <p>Tell ODX where to find your DOOM game files (WADs)</p>
-      </div>
+<div class="modal-header">
+  <h2 class="modal-title">Configure Game Directories</h2>
+  <p class="modal-subtitle">Tell ODX where to find your DOOM game files (WADs)</p>
+  <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss('cancelled')"></button>
+</div>
 
-      <div class="dialog-body">
+<div class="modal-body">
         <div class="info-banner small">
           <i class="bi bi-info-circle"></i>
           <div>
@@ -71,19 +69,16 @@
             </label>
           </div>
         </div>
-      </div>
+</div>
 
-      <div class="dialog-footer">
-        <button class="btn btn-secondary" (click)="cancel()" [disabled]="isLoading()">
-          Skip for Now
-        </button>
-        <button class="btn btn-primary" (click)="confirm()" [disabled]="isLoading()">
-          @if (isLoading()) {
-            <span class="spinner-border spinner-border-sm me-2"></span>
-          }
-          Continue
-        </button>
-      </div>
-    </div>
-  </div>
-}
+<div class="modal-footer">
+  <button class="btn btn-secondary" (click)="cancel()" [disabled]="isLoading()">
+    Skip for Now
+  </button>
+  <button class="btn btn-primary" (click)="confirm()" [disabled]="isLoading()">
+    @if (isLoading()) {
+      <span class="spinner-border spinner-border-sm me-2"></span>
+    }
+    Continue
+  </button>
+</div>

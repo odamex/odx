@@ -1,11 +1,9 @@
-<div class="dialog-overlay" (click)="onOverlayClick($event)">
-  <div class="dialog-container" (click)="$event.stopPropagation()">
-    <div class="dialog-header">
-      <h2>Welcome to ODX!</h2>
-      <p>Let's set up your Odamex installation</p>
-    </div>
+<div class="modal-header">
+  <h2 class="modal-title">Welcome to ODX!</h2>
+  <p class="modal-subtitle">Let's set up your Odamex installation</p>
+</div>
 
-    <div class="dialog-body">
+<div class="modal-body">
       @if (detectedPath()) {
         <div class="alert alert-success">
           <i class="bi bi-check-circle-fill"></i>
@@ -80,12 +78,10 @@
           </small>
         </div>
       }
-    </div>
+</div>
 
-    <div class="dialog-footer">
-      <small class="text-muted">
-        You can change this later in Settings
-      </small>
-    </div>
-  </div>
+<div class="modal-footer">
+  <small class="text-muted">
+    You can change this later in Settings
+  </small>
 </div>

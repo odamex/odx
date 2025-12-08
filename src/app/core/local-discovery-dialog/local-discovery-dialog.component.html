@@ -1,0 +1,59 @@
+<div class="modal-header">
+  <h2 class="modal-title">
+    <i class="bi bi-hdd-network-fill me-2"></i>
+    Enable Local Network Discovery?
+  </h2>
+  <button type="button" class="btn-close" aria-label="Close" (click)="cancel()"></button>
+</div>
+
+<div class="modal-body">
+  <p class="text-muted mb-3">Automatically discover Odamex servers on your local network</p>
+
+  <div class="alert alert-info">
+    <i class="bi bi-info-circle-fill"></i>
+    <div>
+      <p><strong>What this does:</strong></p>
+      <ul class="mb-0">
+        <li>Scans your local network for Odamex servers</li>
+        <li>Finds servers not listed on the master server</li>
+        <li>Automatically refreshes at regular intervals</li>
+        <li>Works alongside the master server list</li>
+      </ul>
+    </div>
+  </div>
+
+  @if (networks.length > 0) {
+    <div class="mt-3">
+      <h6 class="text-muted mb-2">Detected Networks</h6>
+      <div class="list-group">
+        @for (network of networks; track network.name) {
+          <div class="list-group-item d-flex align-items-center gap-2 bg-dark border-secondary">
+            <i class="bi bi-ethernet text-primary"></i>
+            <div class="flex-grow-1">
+              <div class="fw-medium">{{ network.name }}</div>
+              <small class="text-muted">{{ network.address }}/{{ network.netmask }}</small>
+            </div>
+            <span class="badge bg-secondary">{{ network.cidr }}</span>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <div class="alert alert-warning mt-3">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    <div>
+      <p class="mb-0"><strong>Network Activity:</strong> This feature will scan your network using UDP packets. Most home networks handle this without issue, but corporate/managed networks may have restrictions.</p>
+    </div>
+  </div>
+</div>
+
+<div class="modal-footer">
+  <button type="button" class="btn btn-secondary" (click)="cancel()">
+    <span>Cancel</span>
+  </button>
+  <button type="button" class="btn btn-primary" (click)="confirm()">
+    <i class="bi bi-check-circle me-1"></i>
+    <span>Enable Discovery</span>
+  </button>
+</div>

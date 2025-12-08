@@ -1,21 +1,19 @@
-@if (visible()) {
-  <div class="dialog-overlay" (click)="onOverlayClick($event)">
-    <div class="dialog-container" (click)="$event.stopPropagation()">
-      <div class="dialog-header">
-        <h2>Custom Servers</h2>
-        <p>Manage your list of custom servers to query</p>
-      </div>
+<div class="modal-header">
+  <h2 class="modal-title">Custom Servers</h2>
+  <p class="modal-subtitle">Manage your list of custom servers to query</p>
+  <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
+</div>
 
-      <div class="dialog-body">
-        <div class="info-banner small">
-          <i class="bi bi-info-circle"></i>
-          <div>
-            <p>Add servers by IP:port (e.g., 192.168.1.100:10666) or domain:port (e.g., example.com:10666). These servers will be queried independently and appear at the top of your server list.</p>
-          </div>
-        </div>
+<div class="modal-body">
+  <div class="info-banner small">
+    <i class="bi bi-info-circle"></i>
+    <div>
+      <p>Add servers by IP:port (e.g., 192.168.1.100:10666) or domain:port (e.g., example.com:10666). These servers will be queried independently and appear at the top of your server list.</p>
+    </div>
+  </div>
 
-        <!-- Add New Server -->
-        <div class="add-server-section">
+  <!-- Add New Server -->
+  <div class="add-server-section">
           <h3>Add Server</h3>
           <div class="input-group">
             <input 
@@ -128,13 +126,10 @@
             </div>
           }
         </div>
-      </div>
+</div>
 
-      <div class="dialog-footer">
-        <button class="btn btn-primary" (click)="close()">
-          Done
-        </button>
-      </div>
-    </div>
-  </div>
-}
+<div class="modal-footer">
+  <button class="btn btn-primary" (click)="close()">
+    Done
+  </button>
+</div>

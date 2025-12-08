@@ -251,3 +251,41 @@ i.bi + span {
 
 // Shared settings component styles
 @import 'app/shared/styles/settings-common';
+
+/* NgBootstrap Modal Theming for ODX */
+.modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.85);
+}
+
+.odx-modal {
+  .modal-content {
+    background: #2c2c2c;
+    border: 1px solid #444;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    color: #fff;
+  }
+
+  .modal-header {
+    border-bottom: 1px solid #444;
+    background: transparent;
+  }
+
+  .modal-footer {
+    border-top: 1px solid #444;
+    background: transparent;
+  }
+
+  .modal-title {
+    color: #fff;
+  }
+
+  .btn-close {
+    filter: invert(1);
+    opacity: 0.5;
+    
+    &:hover {
+      opacity: 1;
+    }
+  }
+}

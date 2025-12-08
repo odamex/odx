@@ -1,5 +1,6 @@
-import { Component, OnInit, inject, signal, viewChild } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
+import { NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 import { TitleBarComponent } from '@core/title-bar/title-bar.component';
 import { NavigationComponent } from '@core/navigation/navigation';
 import { SplashComponent } from '@core/splash/splash.component';
@@ -18,7 +19,9 @@ import {
   PeriodicUpdateService,
   AutoUpdateService,
   LocalNetworkDiscoveryService,
-  CustomServersService
+  CustomServersService,
+  DialogService,
+  DialogPresets
 } from '@shared/services';
 import type { DetectedIWAD } from '@shared/services/iwad/iwad.service';
 import { ServersStore } from '@store/servers.store';
@@ -26,7 +29,7 @@ import versions from '../_versions';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, TitleBarComponent, NavigationComponent, SplashComponent, UpdateBannerComponent, FirstRunDialogComponent, GameSelectionDialogComponent],
+  imports: [RouterOutlet, TitleBarComponent, NavigationComponent, SplashComponent, UpdateBannerComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
@@ -42,6 +45,7 @@ export class App implements OnInit {
   private autoUpdateService = inject(AutoUpdateService); // Initialize ODX auto-updater
   private localNetworkDiscovery = inject(LocalNetworkDiscoveryService); // Initialize local network discovery
   private customServers = inject(CustomServersService); // Initialize custom servers
+  private dialogService = inject(DialogService);
   private router = inject(Router);
 
   readonly splashVisible = this.splashService.visible;
@@ -52,9 +56,8 @@ export class App implements OnInit {
   readonly version = versions.version;
   readonly platform = signal<string>(window.electron?.platform || 'unknown');
 
-  showFirstRunDialog = signal(false);
-  showGameSelectionDialog = signal(false);
-  firstRunDialog = viewChild<FirstRunDialogComponent>('firstRunDialog');
+  private firstRunModalRef: NgbModalRef | null = null;
+  private gameSelectionModalRef: NgbModalRef | null = null;
 
   async ngOnInit() {
     // Always start at home
@@ -94,19 +97,31 @@ export class App implements OnInit {
       if (isFirstRun) {
         console.log('Showing first run dialog');
         this.splashService.hide();
-        this.showFirstRunDialog.set(true);
         
-        // Set detected path in dialog if found
-        setTimeout(() => {
-          const dialog = this.firstRunDialog();
-          console.log('First run dialog component:', dialog);
-          if (dialog && installInfo.systemInstallPath) {
-            console.log('Setting detected path:', installInfo.systemInstallPath);
-            dialog.setDetectedPath(installInfo.systemInstallPath);
-          }
-        }, 100);
+        // Open first-run dialog as non-dismissible modal
+        this.firstRunModalRef = this.dialogService.open(FirstRunDialogComponent, {
+          ...DialogPresets.nonDismissible(),
+          modalDialogClass: 'odx-modal'
+        });
         
-        // Wait for user choice before continuing
+        // Set detected path if found
+        const componentInstance = this.firstRunModalRef.componentInstance as FirstRunDialogComponent;
+        if (installInfo.systemInstallPath) {
+          console.log('Setting detected path:', installInfo.systemInstallPath);
+          componentInstance.setDetectedPath(installInfo.systemInstallPath);
+        }
+        
+        // Wait for user choice
+        try {
+          const choice = await this.firstRunModalRef.result;
+          await this.handleFirstRunChoice(choice);
+        } catch (dismissReason) {
+          // Dialog was dismissed (shouldn't happen with nonDismissible, but handle it)
+          console.warn('First run dialog dismissed:', dismissReason);
+        }
+        
+        // Continue initialization after first run setup
+        await this.initializeApp();
         return;
       }
 
@@ -224,8 +239,22 @@ export class App implements OnInit {
       if (!hasDirectories) {
         // Show game selection dialog
         this.splashService.hide();
-        this.showGameSelectionDialog.set(true);
-        return; // Wait for game selection before continuing
+        
+        this.gameSelectionModalRef = this.dialogService.open(GameSelectionDialogComponent, {
+          ...DialogPresets.standard(),
+          size: 'lg',
+          modalDialogClass: 'odx-modal'
+        });
+        
+        // Wait for user to confirm or cancel
+        try {
+          await this.gameSelectionModalRef.result;
+          await this.handleGameSelection();
+        } catch (dismissReason) {
+          // User dismissed/cancelled
+          this.handleGameSelectionCancelled();
+        }
+        return; // Handled in modal callback
       }
 
       // Step 6: Detect IWADs
@@ -374,7 +403,6 @@ export class App implements OnInit {
   }
 
   async handleFirstRunChoice(choice: FirstRunChoice) {
-    this.showFirstRunDialog.set(false);
     this.splashService.show();
 
     switch (choice.action) {
@@ -500,8 +528,22 @@ export class App implements OnInit {
       if (!hasDirectories) {
         // Show game selection dialog
         this.splashService.hide();
-        this.showGameSelectionDialog.set(true);
-        return; // Wait for game selection before continuing
+        
+        this.gameSelectionModalRef = this.dialogService.open(GameSelectionDialogComponent, {
+          ...DialogPresets.standard(),
+          size: 'lg',
+          modalDialogClass: 'odx-modal'
+        });
+        
+        // Wait for user to confirm or cancel
+        try {
+          await this.gameSelectionModalRef.result;
+          await this.handleGameSelection();
+        } catch (dismissReason) {
+          // User dismissed/cancelled
+          this.handleGameSelectionCancelled();
+        }
+        return; // Handled in modal callback
       }
 
       // Query master server
@@ -527,7 +569,6 @@ export class App implements OnInit {
   }
 
   async handleGameSelection() {
-    this.showGameSelectionDialog.set(false);
     this.splashService.show();
 
     try {
@@ -551,7 +592,6 @@ export class App implements OnInit {
 
   handleGameSelectionCancelled() {
     // User cancelled game selection - just continue without games
-    this.showGameSelectionDialog.set(false);
     this.splashService.show();
     this.finishInitialization();
   }

@@ -1,6 +1,7 @@
 import { Component, signal, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { CustomServersStore, CustomServerAddress } from '@app/store/custom-servers.store';
 import { CustomServersService } from '@shared/services/custom-servers/custom-servers.service';
 import { validateCustomServerAddress } from '@shared/utils/custom-server-validation';
@@ -8,6 +9,8 @@ import { validateCustomServerAddress } from '@shared/utils/custom-server-validat
 /**
  * Modal component for managing custom server addresses.
  * Provides UI for adding, editing, removing, and reordering custom servers.
+ * 
+ * This component is opened via DialogService and uses NgbActiveModal for modal control.
  */
 @Component({
   selector: 'app-custom-servers-modal',
@@ -19,9 +22,8 @@ import { validateCustomServerAddress } from '@shared/utils/custom-server-validat
 export class CustomServersModalComponent {
   private store = inject(CustomServersStore);
   private customServersService = inject(CustomServersService);
+  public activeModal = inject(NgbActiveModal);
   
-  /** Whether the modal is visible */
-  visible = signal(false);
   /** New address input value */
   newAddress = signal('');
   /** Index of the address being edited, null if not editing */
@@ -46,32 +48,10 @@ export class CustomServersModalComponent {
   });
   
   /**
-   * Opens the modal and resets all input fields
-   */
-  open() {
-    this.visible.set(true);
-    this.newAddress.set('');
-    this.editingIndex.set(null);
-    this.editingAddress.set('');
-    this.validationError.set(null);
-  }
-  
-  /**
    * Closes the modal and resets all input fields
    */
   close() {
-    this.visible.set(false);
-    this.newAddress.set('');
-    this.editingIndex.set(null);
-    this.editingAddress.set('');
-    this.validationError.set(null);
-  }
-  
-  /**
-   * Handles clicks on the modal overlay to close the modal
-   */
-  onOverlayClick(event: MouseEvent) {
-    this.close();
+    this.activeModal.close();
   }
   
   /**

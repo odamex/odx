@@ -13,20 +13,23 @@ import {
   QuickMatchService,
   LocalNetworkDiscoveryService,
   OdalPapi,
+  DialogService,
+  DialogPresets,
   type DirectoryInfo,
   type GameMetadata,
   type QuickMatchCriteria
 } from '@shared/services';
-import { NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgbNavModule, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 import { GameSelectionDialogComponent } from '@core/game-selection-dialog/game-selection-dialog.component';
+import { LocalDiscoveryDialogComponent } from '@core/local-discovery-dialog/local-discovery-dialog.component';
 import { LoadingSpinnerComponent } from '@shared/components/loading-spinner/loading-spinner.component';
 import versions from '../../../_versions';
 
 @Component({
   selector: 'app-settings',
-  imports: [NgbNavModule, GameSelectionDialogComponent, LoadingSpinnerComponent, FormsModule, DatePipe],
+  imports: [NgbNavModule, LoadingSpinnerComponent, FormsModule, DatePipe],
   templateUrl: './settings.component.html',
-  styleUrls: ['./settings.component.scss', '../../shared/styles/_dialog.scss'],
+  styleUrls: ['./settings.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SettingsComponent implements OnInit, AfterViewInit {
@@ -40,6 +43,7 @@ export class SettingsComponent implements OnInit, AfterViewInit {
   protected autoUpdateService = inject(AutoUpdateService);
   private quickMatchService = inject(QuickMatchService);
   protected localNetworkDiscoveryService = inject(LocalNetworkDiscoveryService);
+  private dialogService = inject(DialogService);
 
   // Use store signals
   readonly installationInfo = this.fileManager.installationInfo;
@@ -169,7 +173,7 @@ export class SettingsComponent implements OnInit, AfterViewInit {
   
   // UI state for advanced settings
   showAdvancedDiscovery = signal(false);
-  showLocalDiscoveryDialog = signal(false);
+  private localDiscoveryModalRef: NgbModalRef | null = null;
   
   // Quick Match settings
   quickMatchCriteria: QuickMatchCriteria = {
@@ -537,7 +541,17 @@ export class SettingsComponent implements OnInit, AfterViewInit {
     
     if (newEnabled && !hasSeenDialog) {
       // Show confirmation dialog on first enable
-      this.showLocalDiscoveryDialog.set(true);
+      this.localDiscoveryModalRef = this.dialogService.open(LocalDiscoveryDialogComponent, {
+        ...DialogPresets.standard(),
+        size: 'lg',
+        modalDialogClass: 'odx-modal'
+      });
+      
+      // Wait for user to confirm or cancel
+      this.localDiscoveryModalRef.result.then(
+        () => this.confirmLocalDiscovery(),
+        () => this.cancelLocalDiscovery()
+      );
     } else {
       // Just toggle normally
       this.localNetworkDiscoveryService.updateSettings({ enabled: newEnabled });
@@ -557,14 +571,10 @@ export class SettingsComponent implements OnInit, AfterViewInit {
     // Enable and start scanning
     this.localNetworkDiscoveryService.updateSettings({ enabled: true });
     this.localNetworkDiscoveryService.start();
-    
-    // Close dialog
-    this.showLocalDiscoveryDialog.set(false);
   }
   
   cancelLocalDiscovery(): void {
-    // Just close the dialog without enabling
-    this.showLocalDiscoveryDialog.set(false);
+    // Dialog already closed via dismiss, nothing to do
   }
 
   toggleAdvancedDiscovery(): void {

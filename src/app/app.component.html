@@ -9,21 +9,6 @@
   />
 }
 
-<!-- First Run Dialog -->
-@if (showFirstRunDialog()) {
-  <app-first-run-dialog 
-    #firstRunDialog
-    (choice)="handleFirstRunChoice($event)" />
-}
-
-<!-- Game Selection Dialog -->
-@if (showGameSelectionDialog()) {
-  <app-game-selection-dialog
-    [visible]="showGameSelectionDialog()"
-    (confirmed)="handleGameSelection()"
-    (cancelled)="handleGameSelectionCancelled()" />
-}
-
 <div class="app-container" [class]="'platform-' + platform()">
   <app-title-bar />
   <app-update-banner />

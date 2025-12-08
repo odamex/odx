@@ -1,27 +1,26 @@
-import { Component, ChangeDetectionStrategy, inject, signal, computed, effect, NgZone, ViewChild } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, computed, effect, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import { ServersStore } from '@app/store';
 import { CustomServersStore } from '@app/store/custom-servers.store';
-import { OdalPapi, FileManagerService, IWADService, ServerRefreshService, NetworkStatusService, CustomServersService } from '@shared/services';
+import { OdalPapi, FileManagerService, IWADService, ServerRefreshService, NetworkStatusService, CustomServersService, DialogService, DialogPresets } from '@shared/services';
 import { CustomServersModalComponent } from './custom-servers-modal/custom-servers-modal.component';
 import { ServerDetailsContentComponent } from './server-details-content/server-details-content.component';
 
 @Component({
   selector: 'app-servers',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, NgbDropdownModule, CustomServersModalComponent, ServerDetailsContentComponent],
+  imports: [CommonModule, FormsModule, NgbDropdownModule, ServerDetailsContentComponent],
   templateUrl: './servers.component.html',
   styleUrl: './servers.component.scss',
 })
 export class ServersComponent {
-  @ViewChild(CustomServersModalComponent) customServersModal?: CustomServersModalComponent;
-  
   private fileManager = inject(FileManagerService);
   private refreshService = inject(ServerRefreshService);
   private customServersService = inject(CustomServersService);
   private networkStatus = inject(NetworkStatusService);
+  private dialogService = inject(DialogService);
   protected iwadService = inject(IWADService);
   private ngZone = inject(NgZone);
   readonly store = inject(ServersStore);
@@ -590,8 +589,15 @@ export class ServersComponent {
     return inCustom && !inLocal && !inMaster;
   }
   
+  /**
+   * Opens the custom servers management modal
+   */
   openCustomServers() {
-    this.customServersModal?.open();
+    this.dialogService.open(CustomServersModalComponent, {
+      ...DialogPresets.standard(),
+      size: 'lg',
+      modalDialogClass: 'odx-modal'
+    });
   }
   
   getServerGame(server: OdalPapi.ServerInfo): string {

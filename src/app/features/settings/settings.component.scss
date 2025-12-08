@@ -309,4 +309,58 @@
 .network-mask { color: #aaa; }
 .network-cidr .badge { background: #2c2c2c; border: 1px solid #555; color: #87ceeb; font-size: .8rem; padding: .35rem .75rem; border-radius: 6px; font-family: monospace; }
 
-  
+// Local Network Discovery Dialog styles
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+.dialog-container {
+  background: #2c2c2c;
+  border: 1px solid #444;
+  border-radius: 12px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0,0,0,.5);
+}
+
+.dialog-header {
+  padding: 2rem 2rem 1rem;
+  border-bottom: 1px solid #444;
+  text-align: center;
+  h2 { color: #fff; margin: 0 0 .5rem; font-size: 1.5rem; }
+  p { color: #aaa; margin: 0; font-size: .875rem; }
+}
+
+.dialog-body {
+  padding: 2rem;
+
+  .alert {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    align-items: flex-start;
+    i { font-size: 1.5rem; flex-shrink: 0; }
+
+    &.alert-info { background: rgba(74,158,255,.15); border: 1px solid rgba(74,158,255,.3); color: #87ceeb; }
+    &.alert-warning { background: rgba(255,193,7,.15); border: 1px solid rgba(255,193,7,.3); color: #ffc107; }
+    ul { margin: .5rem 0 0 1.5rem; }
+  }
+}
+
+.dialog-footer { 
+  padding: 1rem 2rem; 
+  border-top: 1px solid #444; 
+  display: flex; 
+  gap: 1rem; 
+  justify-content: flex-end; 
+}

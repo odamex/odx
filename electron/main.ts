@@ -72,6 +72,29 @@ const iwadManager = new IWADManager(
 const baseWidth = 1200;
 const baseHeight = 800;
 
+/**
+ * Get the appropriate app icon based on platform and environment
+ * In production, Windows uses the .ico file from build resources
+ * In development, all platforms use the PNG
+ */
+function getAppIcon(): string {
+  if (isDevelopment) {
+    return path.join(__dirname, '../public/favicon.256x256.png');
+  }
+  
+  // In production builds
+  if (process.platform === 'win32') {
+    // Windows: electron-builder packages icon.ico in resources
+    return path.join(process.resourcesPath, '../app.ico');
+  } else if (process.platform === 'darwin') {
+    // macOS: .icns is handled by electron-builder automatically
+    return path.join(__dirname, '../public/favicon.512x512.png');
+  } else {
+    // Linux: use high-res PNG
+    return path.join(__dirname, '../public/favicon.512x512.png');
+  }
+}
+
 function createWindow(): void {
   const electronScreen = screen;
   const primaryDisplay = electronScreen.getPrimaryDisplay();
@@ -91,7 +114,7 @@ function createWindow(): void {
     transparent: false,
     backgroundColor: '#2c2c2c',
     title: 'ODX',
-    icon: path.join(__dirname, '../public/favicon.256x256.png'),
+    icon: getAppIcon(),
     show: false, // Don't show until ready
     webPreferences: {
       nodeIntegration: false,

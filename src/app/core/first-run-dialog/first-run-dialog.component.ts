@@ -1,11 +1,16 @@
-import { Component, ChangeDetectionStrategy, signal, inject, output } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, ChangeDetectionStrategy, signal, inject } from '@angular/core';
+import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 
 export interface FirstRunChoice {
   action: 'detected' | 'download' | 'custom';
   customPath?: string;
 }
 
+/**
+ * First-run setup dialog for configuring Odamex installation.
+ * This is a non-dismissible modal that guides users through initial setup.
+ * Uses NgbActiveModal to return the user's choice via close().
+ */
 @Component({
   selector: 'app-first-run-dialog',
   imports: [],
@@ -14,13 +19,11 @@ export interface FirstRunChoice {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class FirstRunDialogComponent {
-  private router = inject(Router);
+  public activeModal = inject(NgbActiveModal);
 
   detectedPath = signal<string | null>(null);
   showCustomPath = signal(false);
   customPath = signal('');
-
-  choice = output<FirstRunChoice>();
 
   setDetectedPath(path: string | null) {
     this.detectedPath.set(path);
@@ -35,24 +38,19 @@ export class FirstRunDialogComponent {
   }
 
   selectDetected() {
-    this.choice.emit({ action: 'detected' });
+    this.activeModal.close({ action: 'detected' } as FirstRunChoice);
   }
 
   selectDownload() {
-    this.choice.emit({ action: 'download' });
+    this.activeModal.close({ action: 'download' } as FirstRunChoice);
   }
 
   selectCustom() {
     if (this.customPath()) {
-      this.choice.emit({ 
+      this.activeModal.close({ 
         action: 'custom',
         customPath: this.customPath()
-      });
+      } as FirstRunChoice);
     }
-  }
-
-  onOverlayClick(event: MouseEvent) {
-    // Prevent closing by clicking overlay on first run
-    event.stopPropagation();
   }
 }
