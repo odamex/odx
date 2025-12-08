@@ -30,9 +30,13 @@ export class ServersComponent {
   selectedServer = signal<OdalPapi.ServerInfo | null>(null);
   joiningServer = signal(false);
   
-  // Panel position and state
+  /** Position of the server details panel: 'bottom' or 'right'. Persisted to localStorage. */
   detailsPanelPosition = signal<'bottom' | 'right'>((localStorage.getItem('detailsPanelPosition') as 'bottom' | 'right') || 'bottom');
+  
+  /** Whether the details panel is collapsed */
   detailsPanelCollapsed = signal(true);
+  
+  /** Whether the panel is currently being resized */
   protected resizing = signal(false);
   private startY = 0;
   private startHeight = 0;
@@ -743,12 +747,15 @@ export class ServersComponent {
     this.detailsPanelCollapsed.update(val => !val);
   }
   
+  /**
+   * Toggles the details panel between bottom and right positions.
+   * Preserves the collapsed/expanded state when switching.
+   */
   toggleDetailsPanelPosition() {
     this.detailsPanelPosition.update(pos => pos === 'bottom' ? 'right' : 'bottom');
-    // Preserve collapsed state when switching positions
   }
   
-  // Helper methods for server details content component
+  /** Helper methods for server details content component - bound to maintain context */
   readonly getGameTypeNameFn = (gameType: OdalPapi.GameType) => this.getGameTypeName(gameType);
   readonly getPingClassFn = (ping: number) => this.getPingClass(ping);
   readonly getServerPWADsFn = (server: OdalPapi.ServerInfo) => this.getServerPWADs(server);
