@@ -213,12 +213,15 @@
     </div>
     
     <!-- Advanced Options -->
-    <div class="advanced-section">
-      <h3 class="section-title">
+  <div class="settings-card mb-4">
+    <div class="card-header p-3">
+      <div class="card-title">
         <i class="bi bi-gear"></i>
-        Advanced Options
-      </h3>
-      
+        <h3>Advanced Options</h3>
+      </div>
+    </div>
+    
+    <div class="card-body">      
       <div class="form-check form-switch">
         <input 
           class="form-check-input" 
@@ -238,7 +241,7 @@
             <input 
               type="text" 
               class="form-control" 
-              placeholder="C:\Path\To\Odamex"
+              [placeholder]="customPathPlaceholder"
               [value]="customPath()"
               (input)="updateCustomPath($any($event.target).value)">
             <button class="btn btn-outline-secondary" type="button" (click)="loadData()">
@@ -254,7 +257,7 @@
       
       <!-- Directories Section -->
       <div class="directories-section mt-4">
-        <h4>Application Directories</h4>
+        <h5 class="mb-3">Application Directories</h5>
         @if (directories()) {
           <div class="directory-list">
             <div class="directory-item">
@@ -315,6 +318,7 @@
           </div>
         }
       </div>
+    </div>
     </div>
   }
 </div>

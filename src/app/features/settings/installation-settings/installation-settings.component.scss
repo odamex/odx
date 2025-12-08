@@ -200,45 +200,6 @@
   }
 }
 
-// Advanced Section (reusing from parent)
-.advanced-section {
-  background: #1e1e1e;
-  border: 1px solid #3a3a3a;
-  border-radius: 12px;
-  padding: 1.5rem;
-  margin-top: 2rem;
-  
-  .section-title {
-    display: flex;
-    align-items: center;
-    gap: .5rem;
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #fff;
-    margin-bottom: 1rem;
-    
-    i {
-      color: #ffa300;
-    }
-  }
-  
-  .custom-path-input {
-    padding-left: 1.5rem;
-    
-    .form-label {
-      font-size: .9rem;
-      font-weight: 600;
-      color: #ddd;
-      margin-bottom: .5rem;
-    }
-    
-    small {
-      display: block;
-      margin-top: .5rem;
-      color: #999;
-    }
-  }
-  
   .directories-section {
     h4 {
       font-size: 1rem;
@@ -247,7 +208,6 @@
       margin-bottom: 1rem;
     }
   }
-}
 
 .directory-list {
   display: flex;

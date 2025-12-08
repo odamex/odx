@@ -41,6 +41,18 @@ export class InstallationSettingsComponent implements OnInit {
   
   // Make Math available in template
   protected readonly Math = Math;
+  
+  // Platform-specific placeholder
+  get customPathPlaceholder(): string {
+    const platform = navigator.platform.toLowerCase();
+    if (platform.includes('win')) {
+      return 'C:\\Path\\To\\Odamex';
+    } else if (platform.includes('mac')) {
+      return '/Applications/Odamex';
+    } else {
+      return '/usr/local/share/odamex';
+    }
+  }
 
   ngOnInit() {
     // Load data if not already loaded
@@ -214,8 +226,14 @@ export class InstallationSettingsComponent implements OnInit {
     this.fileManager.setCustomPath(newPath);
 
     // Debounce the data reload (wait for user to finish typing)
-    this.customPathDebounceTimer = window.setTimeout(() => {
-      this.loadData();
+    // Use a silent reload that doesn't cause scroll or flash
+    this.customPathDebounceTimer = window.setTimeout(async () => {
+      try {
+        const customPathValue = this.useCustomPath() ? this.customPath() : undefined;
+        await this.fileManager.getInstallationInfo(customPathValue);
+      } catch (err) {
+        console.error('Failed to update installation info:', err);
+      }
     }, 500);
   }
 
