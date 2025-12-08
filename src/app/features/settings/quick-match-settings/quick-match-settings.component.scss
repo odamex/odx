@@ -1,0 +1,44 @@
+.game-type-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.setting-item {
+  .form-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    
+    i {
+      font-size: 1.1rem;
+    }
+  }
+  
+  .setting-description {
+    color: var(--bs-secondary);
+    font-size: 0.875rem;
+    margin-bottom: 0.75rem;
+  }
+}
+
+.input-group {
+  .form-control {
+    text-align: center;
+  }
+}
+
+.form-check-label {
+  strong {
+    display: block;
+    margin-bottom: 0.25rem;
+  }
+}
+
+hr {
+  margin: 1.5rem 0;
+  opacity: 0.1;
+}

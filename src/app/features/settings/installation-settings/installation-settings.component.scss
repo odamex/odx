@@ -1,0 +1,323 @@
+// Software Version Cards
+.software-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.software-card {
+  background: #2a2a2a;
+  border: 1px solid #3a3a3a;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 .25rem .5rem rgba(0, 0, 0, .15);
+}
+
+.software-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #2c2c2c 0%, #252525 100%);
+  border-bottom: 1px solid #3a3a3a;
+}
+
+.software-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.75rem;
+  flex-shrink: 0;
+  
+  &.odx-icon {
+    background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+    color: #fff;
+  }
+  
+  &.odamex-icon {
+    background: linear-gradient(135deg, #ffa300 0%, #ff8c00 100%);
+    color: #fff;
+  }
+}
+
+.software-title {
+  flex: 1;
+  
+  h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #fff;
+    margin: 0 0 .25rem 0;
+  }
+  
+  p {
+    font-size: .85rem;
+    color: #999;
+  }
+}
+
+.software-body {
+  padding: 1.5rem;
+}
+
+.version-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #3a3a3a;
+}
+
+.current-version {
+  display: flex;
+  flex-direction: column;
+  gap: .25rem;
+  
+  .version-label {
+    font-size: .75rem;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: #999;
+  }
+  
+  .version-number {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #fff;
+    font-family: monospace;
+  }
+}
+
+.update-badge, .status-badge {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .5rem .75rem;
+  border-radius: 6px;
+  font-size: .85rem;
+  font-weight: 500;
+  
+  i {
+    font-size: 1.1rem;
+  }
+}
+
+.update-badge {
+  background: rgba(13, 110, 253, .1);
+  color: #4a9eff;
+  border: 1px solid rgba(13, 110, 253, .2);
+}
+
+.status-badge.up-to-date {
+  background: rgba(25, 135, 84, .1);
+  color: #5ac97e;
+  border: 1px solid rgba(25, 135, 84, .2);
+}
+
+.installation-source {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .75rem;
+  background: #1e1e1e;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  font-size: .9rem;
+  color: #ddd;
+  
+  i {
+    color: #ffa300;
+  }
+}
+
+.update-progress {
+  margin-bottom: 1rem;
+  
+  .progress {
+    height: 8px;
+    background: #1e1e1e;
+    border-radius: 4px;
+    margin-bottom: .5rem;
+    
+    .progress-bar {
+      background: linear-gradient(90deg, #0d6efd 0%, #4a9eff 100%);
+    }
+  }
+  
+  small {
+    display: block;
+    font-size: .8rem;
+  }
+}
+
+.software-actions {
+  display: flex;
+  gap: .5rem;
+  margin-bottom: 1rem;
+  
+}
+
+.software-meta {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  
+  small {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    font-size: .8rem;
+    color: #999;
+    
+    i {
+      color: #666;
+    }
+  }
+}
+
+.not-installed {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  text-align: center;
+  
+  i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+  }
+  
+  p {
+    font-size: 1.1rem;
+    color: #ddd;
+    margin-bottom: 1.5rem;
+  }
+}
+
+// Advanced Section (reusing from parent)
+.advanced-section {
+  background: #1e1e1e;
+  border: 1px solid #3a3a3a;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 2rem;
+  
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 1rem;
+    
+    i {
+      color: #ffa300;
+    }
+  }
+  
+  .custom-path-input {
+    padding-left: 1.5rem;
+    
+    .form-label {
+      font-size: .9rem;
+      font-weight: 600;
+      color: #ddd;
+      margin-bottom: .5rem;
+    }
+    
+    small {
+      display: block;
+      margin-top: .5rem;
+      color: #999;
+    }
+  }
+  
+  .directories-section {
+    h4 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 1rem;
+    }
+  }
+}
+
+.directory-list {
+  display: flex;
+  flex-direction: column;
+  gap: .75rem;
+}
+
+.directory-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: .75rem 1rem;
+  background: #252525;
+  border: 1px solid #3a3a3a;
+  border-radius: 8px;
+  transition: all .2s;
+  
+  &:hover {
+    background: #2a2a2a;
+    border-color: #444;
+  }
+  
+  .directory-info {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    flex: 1;
+    min-width: 0;
+    
+    > i {
+      font-size: 1.25rem;
+      color: #ffa300;
+      flex-shrink: 0;
+    }
+    
+    > div {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    
+    .directory-label {
+      font-size: .85rem;
+      font-weight: 600;
+      color: #fff;
+    }
+    
+    .directory-path {
+      font-size: .75rem;
+      color: #999;
+      font-family: monospace;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+  
+  .btn {
+    flex-shrink: 0;
+    font-size: .8rem;
+    padding: .4rem .75rem;
+  }
+}
+
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

@@ -1,0 +1,251 @@
+<div class="content-section">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h2>Quick Match Settings</h2>
+            <p class="text-muted">Customize your automatic matchmaking preferences</p>
+        </div>
+        <button class="btn btn-outline-warning" (click)="resetQuickMatchSettings()">
+            <i class="bi bi-arrow-counterclockwise"></i>
+            <span>Reset to Defaults</span>
+        </button>
+     </div>
+  
+  <!-- Server Criteria Card -->
+  <div class="settings-card mb-4">
+    <div class="card-header p-3">
+      <div class="card-title">
+        <i class="bi bi-funnel"></i>
+        <h3>Server Criteria</h3>
+      </div>
+    </div>
+    
+    <div class="card-body">
+      <!-- Max Ping -->
+      <div class="setting-item">
+        <label class="form-label">
+          <i class="bi bi-speedometer2"></i>
+          Maximum Ping (ms)
+        </label>
+        <p class="setting-description">Only match with servers below this ping threshold</p>
+        <div class="input-group" style="max-width: 200px;">
+          <input 
+            type="number" 
+            class="form-control" 
+            [(ngModel)]="quickMatchCriteria.maxPing"
+            (ngModelChange)="saveQuickMatchSettings()"
+            min="50"
+            max="500"
+            step="10">
+          <span class="input-group-text">ms</span>
+        </div>
+      </div>
+
+      <hr>
+
+      <!-- Player Count Range -->
+      <div class="setting-item">
+        <label class="form-label">
+          <i class="bi bi-people-fill"></i>
+          Player Count Range
+        </label>
+        <p class="setting-description">Preferred minimum and maximum number of players</p>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label small">Minimum Players</label>
+            <input 
+              type="number" 
+              class="form-control" 
+              [(ngModel)]="quickMatchCriteria.minPlayers"
+              (ngModelChange)="saveQuickMatchSettings()"
+              min="0"
+              max="32">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small">Maximum Players</label>
+            <input 
+              type="number" 
+              class="form-control" 
+              [(ngModel)]="quickMatchCriteria.maxPlayers"
+              (ngModelChange)="saveQuickMatchSettings()"
+              min="1"
+              max="64">
+          </div>
+        </div>
+      </div>
+
+      <hr>
+
+      <!-- Auto-Start Monitoring -->
+      <div class="setting-item">
+        <label class="form-label">
+          <i class="bi bi-lightning-charge"></i>
+          Auto-Start Monitoring
+        </label>
+        <p class="setting-description">Automatically start monitoring for matches when no server is found immediately</p>
+        <div class="form-check form-switch">
+          <input 
+            class="form-check-input" 
+            type="checkbox" 
+            role="switch"
+            [(ngModel)]="quickMatchCriteria.autoStartMonitoring"
+            (ngModelChange)="saveQuickMatchSettings()"
+            id="autoStartMonitoring">
+          <label class="form-check-label" for="autoStartMonitoring">
+            Enable automatic monitoring
+          </label>
+        </div>
+      </div>
+
+      <hr>
+
+      <!-- Monitoring Timeout -->
+      <div class="setting-item">
+        <label class="form-label">
+          <i class="bi bi-clock"></i>
+          Monitoring Timeout
+        </label>
+        <p class="setting-description">How long to monitor for matches (0 = infinite, prompts to continue at timeout)</p>
+        <div class="input-group" style="max-width: 200px;">
+          <input 
+            type="number" 
+            class="form-control" 
+            [(ngModel)]="quickMatchCriteria.monitoringTimeoutMinutes"
+            (ngModelChange)="saveQuickMatchSettings()"
+            min="0"
+            max="180"
+            step="1">
+          <span class="input-group-text">minutes</span>
+        </div>
+      </div>
+
+      <hr>
+
+      <!-- Server Filters -->
+      <div class="setting-item">
+        <label class="form-label">
+          <i class="bi bi-filter"></i>
+          Server Filters
+        </label>
+        
+        <div class="form-check form-switch mb-3">
+          <input 
+            class="form-check-input" 
+            type="checkbox" 
+            id="avoidEmpty"
+            [(ngModel)]="quickMatchCriteria.avoidEmpty"
+            (ngModelChange)="saveQuickMatchSettings()">
+          <label class="form-check-label" for="avoidEmpty">
+            <strong>Avoid Empty Servers</strong>
+            <p class="setting-description mb-0">Skip servers with no players</p>
+          </label>
+        </div>
+
+        <div class="form-check form-switch">
+          <input 
+            class="form-check-input" 
+            type="checkbox" 
+            id="avoidFull"
+            [(ngModel)]="quickMatchCriteria.avoidFull"
+            (ngModelChange)="saveQuickMatchSettings()">
+          <label class="form-check-label" for="avoidFull">
+            <strong>Avoid Full Servers</strong>
+            <p class="setting-description mb-0">Skip servers at maximum capacity</p>
+          </label>
+        </div>
+      </div>
+
+      <hr>
+
+    </div>
+  </div>
+
+  <!-- Game Types Card -->
+  <div class="settings-card mb-4">
+    <div class="card-header p-3">
+      <div class="card-title">
+        <i class="bi bi-joystick"></i>
+        <h3>Preferred Game Types</h3>
+      </div>
+    </div>
+    
+    <div class="card-body">
+      <div class="setting-item">
+        <p class="setting-description">Select which game modes to include in Quick Match</p>
+        
+        <div class="game-type-grid">
+          <div class="form-check">
+            <input 
+              class="form-check-input" 
+              type="checkbox" 
+              id="gtCooperative"
+              [checked]="isGameTypeSelected(0)"
+              (change)="toggleGameType(0)">
+            <label class="form-check-label" for="gtCooperative">
+              Cooperative
+            </label>
+          </div>
+
+          <div class="form-check">
+            <input 
+              class="form-check-input" 
+              type="checkbox" 
+              id="gtDeathmatch"
+              [checked]="isGameTypeSelected(1)"
+              (change)="toggleGameType(1)">
+            <label class="form-check-label" for="gtDeathmatch">
+              Deathmatch
+            </label>
+          </div>
+
+          <div class="form-check">
+            <input 
+              class="form-check-input" 
+              type="checkbox" 
+              id="gtTeamDeathmatch"
+              [checked]="isGameTypeSelected(2)"
+              (change)="toggleGameType(2)">
+            <label class="form-check-label" for="gtTeamDeathmatch">
+              Team Deathmatch
+            </label>
+          </div>
+
+          <div class="form-check">
+            <input 
+              class="form-check-input" 
+              type="checkbox" 
+              id="gtCTF"
+              [checked]="isGameTypeSelected(3)"
+              (change)="toggleGameType(3)">
+            <label class="form-check-label" for="gtCTF">
+              Capture the Flag
+            </label>
+          </div>
+
+          <div class="form-check">
+            <input 
+              class="form-check-input" 
+              type="checkbox" 
+              id="gtSurvival"
+              [checked]="isGameTypeSelected(4)"
+              (change)="toggleGameType(4)">
+            <label class="form-check-label" for="gtSurvival">
+              Survival
+            </label>
+          </div>
+
+          <div class="form-check">
+            <input 
+              class="form-check-input" 
+              type="checkbox" 
+              id="gtHorde"
+              [checked]="isGameTypeSelected(5)"
+              (change)="toggleGameType(5)">
+            <label class="form-check-label" for="gtHorde">
+              Horde
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

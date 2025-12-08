@@ -1,0 +1,335 @@
+<div class="content-section">
+  <h2>Application Settings</h2>
+  <p class="text-muted mb-4">Configure general application behavior and preferences</p>
+  
+  <!-- General Settings Card -->
+  <div class="settings-card mb-4">
+    <div class="card-header p-3">
+      <div class="card-title">
+        <i class="bi bi-sliders"></i>
+        <h3>General</h3>
+      </div>
+    </div>
+    
+    <div class="card-body">
+      <div class="setting-item">
+        <div class="form-check form-switch">
+          <input 
+            class="form-check-input" 
+            type="checkbox" 
+            id="autoUpdateCheck"
+            [checked]="updatesService.isCheckEnabled()"
+            (change)="toggleAutoUpdateCheck()">
+          <label class="form-check-label" for="autoUpdateCheck">
+            Check for updates on startup
+          </label>
+        </div>
+        <small class="text-muted">
+          Automatically check for Odamex engine updates when the launcher starts
+        </small>
+      </div>
+
+      <div class="setting-item">
+        <div class="form-check form-switch">
+          <input 
+            class="form-check-input" 
+            type="checkbox" 
+            id="filterByVersion"
+            [checked]="filterByVersion()"
+            (change)="toggleFilterByVersion()">
+          <label class="form-check-label" for="filterByVersion">
+            Filter servers by compatible version
+          </label>
+        </div>
+        <small class="text-muted">
+          Only show servers you can connect to (same major version, equal or older minor version). 
+        </small>
+        @if (!filterByVersion()) {
+          <div class="alert alert-warning mb-0 mt-2">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <strong>Warning:</strong> You may see incompatible servers. Connecting to servers with different versions may cause compatibility issues or connection failures.
+          </div>
+        }
+      </div>
+
+      <div class="setting-item">
+        <div class="form-check form-switch">
+          <input 
+            class="form-check-input" 
+            type="checkbox" 
+            id="autoRefresh"
+            [checked]="autoRefreshEnabled()"
+            (change)="toggleAutoRefresh()">
+          <label class="form-check-label" for="autoRefresh">
+            Auto-refresh server list
+          </label>
+        </div>
+        <small class="text-muted d-block mb-2">
+          Automatically refresh the multiplayer server list at regular intervals
+        </small>
+        @if (autoRefreshEnabled()) {
+          <div class="input-group" style="max-width: 250px;">
+            <input 
+              type="number" 
+              class="form-control form-control-sm" 
+              id="autoRefreshMinutes"
+              min="1"
+              max="60"
+              [value]="autoRefreshMinutes()"
+              (input)="updateAutoRefreshMinutes(+$any($event.target).value)">
+            <span class="input-group-text">minutes</span>
+          </div>
+        }
+      </div>
+
+      <div class="setting-item mb-0">
+        <div class="form-check form-switch">
+          <input 
+            class="form-check-input" 
+            type="checkbox" 
+            id="quitOnClose"
+            [checked]="quitOnClose()"
+            (change)="toggleQuitOnClose()">
+          <label class="form-check-label" for="quitOnClose">
+            Quit application when closing window
+          </label>
+        </div>
+        <small class="text-muted">
+          Exit the application completely when closing the main window. When disabled, the app minimizes to system tray instead.
+        </small>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notifications Card -->
+  <div class="settings-card mb-4">
+    <div class="card-header p-3">
+      <div class="card-title">
+        <i class="bi bi-bell"></i>
+        <h3>Notifications</h3>
+      </div>
+    </div>
+    
+    <div class="card-body">
+      <div class="setting-item">
+        <div class="form-check form-switch">
+          <input 
+            class="form-check-input" 
+            type="checkbox" 
+            id="notificationsEnabled"
+            [checked]="notificationsEnabled()"
+            (change)="toggleNotifications()">
+          <label class="form-check-label" for="notificationsEnabled">
+            <strong>Enable notifications</strong>
+          </label>
+        </div>
+        <small class="text-muted">
+          Master switch for all notifications
+        </small>
+      </div>
+
+      @if (notificationsEnabled()) {
+        <div class="notification-options">
+          <h5 class="mt-3 mb-2 text-muted" style="font-size: 0.875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Notification Methods</h5>
+          
+          <div class="setting-item">
+            <div class="form-check form-switch">
+              <input 
+                class="form-check-input" 
+                type="checkbox" 
+                id="notificationsSystem"
+                [checked]="notificationsSystem()"
+                (change)="toggleSystemNotifications()">
+              <label class="form-check-label" for="notificationsSystem">
+                System notifications
+              </label>
+            </div>
+            <small class="text-muted">
+              Show desktop notification popups
+            </small>
+          </div>
+
+          <div class="setting-item">
+            <div class="form-check form-switch">
+              <input 
+                class="form-check-input" 
+                type="checkbox" 
+                id="notificationsTaskbarFlash"
+                [checked]="notificationsTaskbarFlash()"
+                (change)="toggleTaskbarFlash()">
+              <label class="form-check-label" for="notificationsTaskbarFlash">
+                Taskbar flash and sound
+              </label>
+            </div>
+            <small class="text-muted">
+              Flash taskbar and play sound
+            </small>
+          </div>
+
+          <h5 class="mt-3 mb-2 text-muted" style="font-size: 0.875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Notification Types</h5>
+          
+          <div class="setting-item">
+            <div class="form-check form-switch">
+              <input 
+                class="form-check-input" 
+                type="checkbox" 
+                id="notificationsServerActivity"
+                [checked]="notificationsServerActivity()"
+                (change)="toggleServerActivityNotifications()">
+              <label class="form-check-label" for="notificationsServerActivity">
+                Server activity
+              </label>
+            </div>
+            <small class="text-muted">
+              Get notified when new servers appear or players join/leave
+            </small>
+          </div>
+
+          <div class="setting-item mb-0">
+            <div class="form-check form-switch">
+              <input 
+                class="form-check-input" 
+                type="checkbox" 
+                id="notificationsUpdates"
+                [checked]="notificationsUpdates()"
+                (change)="toggleUpdateNotifications()">
+              <label class="form-check-label" for="notificationsUpdates">
+                Updates
+              </label>
+            </div>
+            <small class="text-muted">
+              Get notified when updates are available for Odamex or ODX Launcher
+            </small>
+          </div>
+
+          <h5 class="mt-3 mb-2 text-muted" style="font-size: 0.875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Advanced Settings</h5>
+          
+          <div class="setting-item">
+            <label for="notificationsQueueLimit" class="form-label">
+              Queue limit while away
+            </label>
+            <select 
+              class="form-select" 
+              id="notificationsQueueLimit"
+              [value]="notificationsQueueLimit()"
+              (change)="onQueueLimitChange($event)">
+              <option value="10">10 notifications</option>
+              <option value="25">25 notifications</option>
+              <option value="50">50 notifications</option>
+              <option value="100">100 notifications</option>
+              <option value="0">Unlimited</option>
+            </select>
+            <small class="text-muted">
+              Maximum notifications to queue when system is locked or idle
+            </small>
+          </div>
+
+          <div class="setting-item mb-0">
+            <label for="notificationsIdleThreshold" class="form-label">
+              Suppress when idle for
+            </label>
+            <select 
+              class="form-select" 
+              id="notificationsIdleThreshold"
+              [value]="notificationsIdleThreshold()"
+              (change)="onIdleThresholdChange($event)">
+              <option value="0">Only on lock/sleep</option>
+              <option value="5">5 minutes</option>
+              <option value="10">10 minutes</option>
+              <option value="15">15 minutes</option>
+              <option value="30">30 minutes</option>
+            </select>
+            <small class="text-muted">
+              Queue notifications after this much inactivity (keyboard/mouse)
+            </small>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Update Checking Card -->
+  <div class="settings-card mb-4">
+    <div class="card-header p-3">
+      <div class="card-title">
+        <i class="bi bi-arrow-repeat"></i>
+        <h3>Update Checking</h3>
+      </div>
+    </div>
+    
+    <div class="card-body">
+      <div class="setting-item">
+        <div class="form-check form-switch">
+          <input 
+            class="form-check-input" 
+            type="checkbox" 
+            id="autoUpdateEnabled"
+            [checked]="autoUpdateEnabled()"
+            (change)="toggleAutoUpdate()">
+          <label class="form-check-label" for="autoUpdateEnabled">
+            <strong>Automatically install ODX Launcher updates</strong>
+          </label>
+        </div>
+        <small class="text-muted">
+          When enabled, ODX updates will download and install automatically on startup. Otherwise, you'll be prompted.
+        </small>
+      </div>
+
+      <div class="setting-item mb-0">
+        <div class="form-check form-switch">
+          <input 
+            class="form-check-input" 
+            type="checkbox" 
+            id="periodicUpdateCheck"
+            [checked]="periodicUpdateEnabled()"
+            (change)="togglePeriodicUpdateCheck()">
+          <label class="form-check-label" for="periodicUpdateCheck">
+            Check for updates periodically
+          </label>
+        </div>
+        <small class="text-muted d-block mb-2">
+          Automatically check for Odamex and ODX Launcher updates in the background
+        </small>
+        @if (periodicUpdateEnabled()) {
+          <div class="input-group" style="max-width: 250px;">
+            <input 
+              type="number" 
+              id="periodicUpdateInterval" 
+              class="form-control form-control-sm" 
+              min="15"
+              max="1440"
+              [value]="periodicUpdateInterval()"
+              (input)="updatePeriodicUpdateInterval(+$any($event.target).value)">
+            <span class="input-group-text">minutes</span>
+          </div>
+          <small class="text-muted d-block mt-1">
+            Recommended: 60 minutes. Range: 15 minutes to 24 hours
+          </small>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Advanced Card -->
+  <div class="settings-card">
+    <div class="card-header p-3">
+      <div class="card-title">
+        <i class="bi bi-tools"></i>
+        <h3>Advanced</h3>
+      </div>
+    </div>
+    
+    <div class="card-body">
+      <div class="setting-item mb-0">
+        <h5>Reset Configuration</h5>
+        <p class="text-muted mb-3">
+          Reset your installation preferences to reconfigure the Odamex installation path. This will show the first-run setup dialog again.
+        </p>
+        <button class="btn btn-warning" (click)="resetFirstRunConfig()">
+          <i class="bi bi-arrow-clockwise"></i>
+          <span>Reset to Defaults</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

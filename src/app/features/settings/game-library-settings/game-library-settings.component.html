@@ -1,0 +1,243 @@
+<div class="content-section">
+  <h2>Game Library</h2>
+  <p class="text-muted mb-4">Manage your DOOM game files and WAD directories</p>
+  
+  <!-- WAD Directories Card -->
+  <div class="settings-card mb-4">
+    <div class="card-header p-3">
+      <div class="card-title">
+        <i class="bi bi-folder2-open"></i>
+        <h3>WAD Directories</h3>
+      </div>
+      <button class="btn btn-primary btn-sm" (click)="addDirectory()">
+        <i class="bi bi-folder-plus"></i>
+        <span>Add Directory</span>
+      </button>
+    </div>
+    
+    <div class="card-body">
+      @if (iwadService.wadDirectories().directories.length === 0) {
+        <div class="empty-state">
+          <i class="bi bi-folder-x"></i>
+          <p>No WAD directories configured</p>
+          <small>Add directories where your DOOM WAD files are located</small>
+        </div>
+      } @else {
+        <div class="list-group directory-list mb-3">
+          @for (dir of iwadService.wadDirectories().directories; track dir.path) {
+            <div class="list-group-item">
+              <span><i class="bi bi-folder"></i>{{ dir.path }}</span>
+              <div class="directory-actions">
+                <button 
+                  class="btn btn-sm" 
+                  [class.btn-warning]="dir.recursive"
+                  [class.btn-outline-secondary]="!dir.recursive"
+                  (click)="toggleRecursiveScan(dir.path, !dir.recursive)"
+                  title="Toggle recursive subdirectory scanning">
+                  <i class="bi bi-folder-symlink"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger" 
+                        (click)="removeWADDirectory(dir.path)"
+                        title="Remove directory">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+      
+      <div class="form-check form-switch mt-3">
+        <input class="form-check-input" 
+               type="checkbox" 
+               id="scanSteam"
+               [checked]="iwadService.wadDirectories().scanSteam"
+               (change)="toggleSteamScan($event)">
+        <label class="form-check-label" for="scanSteam">
+          <i class="bi bi-steam me-2"></i>
+          Scan Steam installation directories
+        </label>
+      </div>
+      <small class="text-muted d-block mt-2">
+        Automatically detect DOOM games installed via Steam
+      </small>
+    </div>
+  </div>
+
+  <!-- Detected IWADs Card -->
+  <div class="settings-card">
+    <div class="card-header p-3">
+      <div class="card-title">
+        <i class="bi bi-joystick"></i>
+        <h3>Detected Games</h3>
+      </div>
+      <button class="btn btn-primary btn-sm" 
+              (click)="rescanIWADs()"
+              [disabled]="iwadService.loading()">
+        @if (iwadService.loading()) {
+          <span class="spinner-border spinner-border-sm me-2"></span>
+          <span>Scanning...</span>
+        } @else {
+          <i class="bi bi-arrow-clockwise"></i>
+          <span>Rescan</span>
+        }
+      </button>
+    </div>
+    
+    <div class="card-body"
+         [style.opacity]="iwadService.loading() ? 0.5 : 1" 
+         [style.pointer-events]="iwadService.loading() ? 'none' : 'auto'"
+         [style.transition]="'opacity 0.2s'">
+      @if (groupedIWADs().length === 0) {
+        <div class="empty-state">
+          <i class="bi bi-inbox"></i>
+          <p>No game files detected</p>
+          <small>Add WAD directories above to scan for DOOM, DOOM II, and other IWAD files</small>
+        </div>
+      } @else {
+        <!-- Commercial Games -->
+        @if (commercialGames().length > 0) {
+          <h6 class="section-header">Commercial Games</h6>
+          <div class="games-grid">
+            @for (group of commercialGames(); track group.metadata?.type) {
+              <div class="game-card">
+                <div class="game-visual">
+                  <div class="game-icon">
+                    <img [src]="'assets/games/' + group.metadata?.imageFilename" 
+                         [alt]="group.metadata?.displayName"
+                         onerror="this.style.display='none'">
+                  </div>
+                  <div class="game-badges">
+                    @if (group.hasID24) {
+                      <span class="badge bg-success" title="DOOM + DOOM II release with ID24 features">D+DII</span>
+                    }
+                    @if (group.count > 0 && !group.hasLatest) {
+                      <span class="badge bg-warning text-dark" title="Newer version available">Outdated</span>
+                    }
+                  </div>
+                </div>
+                <div class="game-info">
+                  <h5>
+                    {{ group.metadata?.displayName }}
+                  </h5>
+                  <p class="game-description">
+                    {{ group.metadata?.description }}
+                    @if (group.versionsArray && group.versionsArray.length > 0) {
+                      <span class="text-muted ms-1">({{ group.versionsArray.join(', ') }})</span>
+                    }
+                  </p>
+                  <div class="game-details">
+                    @if (group.count === 0) {
+                      <div class="detail-item text-muted">
+                        <i class="bi bi-inbox"></i>
+                        <span>0 versions found</span>
+                      </div>
+                    } @else if (group.iwads.length === 1) {
+                      <div class="detail-item" [title]="group.iwads[0].path">
+                        <i class="bi bi-hdd"></i>
+                        <span class="text-truncate">{{ group.iwads[0].path }}</span>
+                      </div>
+                    } @else {
+                      <div class="detail-item">
+                        <i class="bi bi-files"></i>
+                        <span>{{ group.iwads.length }} versions found</span>
+                      </div>
+                      @for (iwad of group.iwads; track iwad.path) {
+                        <div class="detail-item small" [title]="iwad.path">
+                          <i class="bi bi-dash"></i>
+                          <span class="text-truncate">{{ iwad.path }}</span>
+                        </div>
+                      }
+                    }
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+        
+        <!-- Free Games -->
+        @if (freeGames().length > 0) {
+          <h6 class="section-header" [class.mt-4]="commercialGames().length > 0">Free Games</h6>
+          <div class="games-grid">
+            @for (group of freeGames(); track group.metadata?.type) {
+              <div class="game-card">
+                <div class="game-visual">
+                  <div class="game-icon">
+                    <img [src]="'assets/games/' + group.metadata?.imageFilename" 
+                         [alt]="group.metadata?.displayName"
+                         onerror="this.style.display='none'">
+                  </div>
+                  <div class="game-badges">
+                    @if (group.hasID24) {
+                      <span class="badge bg-success" title="DOOM + DOOM II release with ID24 features">D+DII</span>
+                    }
+                    @if (group.count > 0 && !group.hasLatest) {
+                      <span class="badge bg-warning text-dark" title="Newer version available">Outdated</span>
+                    }
+                  </div>
+                </div>
+                <div class="game-info">
+                  <h5>
+                    {{ group.metadata?.displayName }}
+                  </h5>
+                  <p class="game-description">
+                    {{ group.metadata?.description }}
+                    @if (group.versionsArray && group.versionsArray.length > 0) {
+                      <span class="text-muted ms-1">({{ group.versionsArray.join(', ') }})</span>
+                    }
+                  </p>
+                  <div class="game-details">
+                    @if (group.count === 0) {
+                      <div class="detail-item text-muted">
+                        <i class="bi bi-inbox"></i>
+                        <span>0 versions found</span>
+                      </div>
+                    } @else if (group.iwads.length === 1) {
+                      <div class="detail-item" [title]="group.iwads[0].path">
+                        <i class="bi bi-hdd"></i>
+                        <span class="text-truncate">{{ group.iwads[0].path }}</span>
+                      </div>
+                    } @else {
+                      <div class="detail-item">
+                        <i class="bi bi-files"></i>
+                        <span>{{ group.iwads.length }} versions found</span>
+                      </div>
+                      @for (iwad of group.iwads; track iwad.path) {
+                        <div class="detail-item small" [title]="iwad.path">
+                          <i class="bi bi-dash"></i>
+                          <span class="text-truncate">{{ iwad.path }}</span>
+                        </div>
+                      }
+                    }
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+        
+        <div class="stats-footer">
+          <small class="text-muted">
+            <i class="bi bi-info-circle me-1"></i>
+            @if (commercialGames().length > 0 && freeGames().length > 0) {
+              {{ commercialGames().length }} commercial · {{ freeGames().length }} free · 
+            } @else if (commercialGames().length > 0) {
+              {{ commercialGames().length }} commercial game{{ commercialGames().length !== 1 ? 's' : '' }} · 
+            } @else if (freeGames().length > 0) {
+              {{ freeGames().length }} free game{{ freeGames().length !== 1 ? 's' : '' }} · 
+            }
+            {{ detectedIWADs().length }} total IWAD{{ detectedIWADs().length !== 1 ? 's' : '' }}
+          </small>
+        </div>
+      }
+    </div>
+  </div>
+</div>
+
+@if (showGameSelection()) {
+  <app-game-selection-dialog
+    (complete)="onGameSelectionComplete()"
+    (cancel)="onGameSelectionCancel()">
+  </app-game-selection-dialog>
+}

@@ -23,11 +23,16 @@ import { NgbNavModule, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 import { GameSelectionDialogComponent } from '@core/game-selection-dialog/game-selection-dialog.component';
 import { LocalDiscoveryDialogComponent } from '@core/local-discovery-dialog/local-discovery-dialog.component';
 import { LoadingSpinnerComponent } from '@shared/components/loading-spinner/loading-spinner.component';
+import { InstallationSettingsComponent } from './installation-settings/installation-settings.component';
+import { ApplicationSettingsComponent } from './application-settings/application-settings.component';
+import { QuickMatchSettingsComponent } from './quick-match-settings/quick-match-settings.component';
+import { GameLibrarySettingsComponent } from './game-library-settings/game-library-settings.component';
+import { NetworkSettingsComponent } from './network-settings/network-settings.component';
 import versions from '../../../_versions';
 
 @Component({
   selector: 'app-settings',
-  imports: [NgbNavModule, LoadingSpinnerComponent, FormsModule, DatePipe],
+  imports: [NgbNavModule, LoadingSpinnerComponent, FormsModule, DatePipe, InstallationSettingsComponent, ApplicationSettingsComponent, QuickMatchSettingsComponent, GameLibrarySettingsComponent, NetworkSettingsComponent],
   templateUrl: './settings.component.html',
   styleUrls: ['./settings.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush

@@ -1,0 +1,320 @@
+<div class="content-section">
+  <h2>Installation and Updates</h2>
+  <p class="text-muted mb-4">Manage ODX and Odamex software versions and installation paths</p>
+  
+  @if (storeLoading()) {
+    <div class="d-flex justify-content-center p-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+  } @else if (error() || storeError()) {
+    <div class="alert alert-danger">
+      <i class="bi bi-exclamation-triangle-fill me-2"></i>
+      {{ error() || storeError() }}
+    </div>
+  } @else {
+  
+    <!-- Software Version Cards -->
+    <div class="software-cards">
+      
+      <!-- ODX Launcher Card -->
+      <div class="software-card">
+        <div class="software-header">
+          <div class="software-icon odx-icon">
+            <i class="bi bi-rocket-takeoff"></i>
+          </div>
+          <div class="software-title">
+            <h3>ODX Launcher</h3>
+            <p class="text-muted mb-0">Application Version</p>
+          </div>
+        </div>
+        
+        <div class="software-body">
+          <div class="version-info">
+            <div class="current-version">
+              <span class="version-label">Current</span>
+              <span class="version-number">{{ appVersion }}</span>
+            </div>
+            
+            @if (autoUpdateService.state() === 'available' && autoUpdateService.updateInfo(); as odxUpdate) {
+              <div class="update-badge">
+                <i class="bi bi-arrow-up-circle-fill text-primary"></i>
+                <span>{{ odxUpdate.version }} available</span>
+              </div>
+            } @else if (autoUpdateService.state() === 'idle' || autoUpdateService.state() === 'checking') {
+              <div class="status-badge up-to-date">
+                <i class="bi bi-check-circle-fill"></i>
+                <span>Up to date</span>
+              </div>
+            }
+          </div>
+          
+          <div class="installation-source">
+            <i class="bi bi-folder2-open"></i>
+            <span>Application Bundle</span>
+          </div>
+          
+          @if (autoUpdateService.state() === 'downloading' && autoUpdateService.downloadProgress(); as progress) {
+            <div class="update-progress">
+              <div class="progress">
+                <div class="progress-bar progress-bar-striped progress-bar-animated"
+                     [style.width.%]="progress.percent">
+                </div>
+              </div>
+              <small class="text-muted">
+                Downloading {{ Math.round(progress.percent) }}% · {{ autoUpdateService.formatBytes(progress.bytesPerSecond) }}/s
+              </small>
+            </div>
+          }
+          
+          <div class="software-actions">
+            @if (autoUpdateService.state() === 'available') {
+              <button class="btn btn-primary btn-sm" (click)="autoUpdateService.downloadUpdate()">
+                <i class="bi bi-download"></i>
+                <span>Download Update</span>
+              </button>
+            } @else if (autoUpdateService.state() === 'downloaded') {
+              <button class="btn btn-success btn-sm" (click)="autoUpdateService.installAndRestart()">
+                <i class="bi bi-arrow-repeat"></i>
+                <span>Install & Restart</span>
+              </button>
+            } @else {
+              <button class="btn btn-primary btn-sm" (click)="checkForODXUpdate()" 
+                      [disabled]="autoUpdateService.state() === 'checking'">
+                <i class="bi bi-arrow-clockwise" [class.spinning]="autoUpdateService.state() === 'checking'"></i>
+                <span>Check for Updates</span>
+              </button>
+            }
+          </div>
+          
+          <div class="software-meta">
+            <small class="text-muted">
+              <i class="bi bi-calendar3"></i>
+              Released {{ appVersionDate }}
+            </small>
+            @if (appCommitHash) {
+              <small class="text-muted">
+                <i class="bi bi-git"></i>
+                {{ appCommitHash }}
+              </small>
+            }
+          </div>
+        </div>
+      </div>
+      
+      <!-- Odamex Engine Card -->
+      <div class="software-card">
+        <div class="software-header">
+          <div class="software-icon odamex-icon">
+            <i class="bi bi-box-seam"></i>
+          </div>
+          <div class="software-title">
+            <h3>Odamex Engine</h3>
+            <p class="text-muted mb-0">Game Client & Server</p>
+          </div>
+        </div>
+        
+        <div class="software-body">
+          @if (installationInfo()?.installed) {
+            <div class="version-info">
+              <div class="current-version">
+                <span class="version-label">Current</span>
+                <span class="version-number">{{ installationInfo()!.version || 'Unknown' }}</span>
+              </div>
+              
+              @if (installationInfo()!.needsUpdate && installationInfo()!.latestVersion) {
+                <div class="update-badge">
+                  <i class="bi bi-arrow-up-circle-fill text-warning"></i>
+                  <span>{{ installationInfo()!.latestVersion }} available</span>
+                </div>
+              } @else {
+                <div class="status-badge up-to-date">
+                  <i class="bi bi-check-circle-fill"></i>
+                  <span>Up to date</span>
+                </div>
+              }
+            </div>
+            
+            <div class="installation-source">
+              <i class="bi bi-folder2-open"></i>
+              @if (installationInfo()!.source === 'odx') {
+                <span>ODX Managed</span>
+              } @else if (installationInfo()!.source === 'system') {
+                <span>System Installation</span>
+              } @else if (installationInfo()!.source === 'custom') {
+                <span>Custom Path</span>
+              }
+            </div>
+            
+            @if (downloading()) {
+              <div class="update-progress">
+                @if (downloadProgress(); as progress) {
+                  <div class="progress">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated"
+                         [style.width.%]="progress.percent">
+                    </div>
+                  </div>
+                  <small class="text-muted">
+                    {{ formatBytes(progress.transferred) }} / {{ formatBytes(progress.total) }} · 
+                    {{ formatBytes(progress.bytesPerSecond) }}/s
+                  </small>
+                }
+              </div>
+            }
+            
+            <div class="software-actions">
+              @if (installationInfo()!.needsUpdate) {
+                <button class="btn btn-warning btn-sm" 
+                        [disabled]="downloading()"
+                        (click)="downloadLatest()">
+                  <i class="bi bi-download"></i>
+                  <span>Update to {{ installationInfo()!.latestVersion }}</span>
+                </button>
+              } @else {
+                <button class="btn btn-primary btn-sm" 
+                        [disabled]="downloading()"
+                        (click)="checkForOdamexUpdate()">
+                  <i class="bi bi-arrow-clockwise"></i>
+                  <span>Check for Updates</span>
+                </button>
+              }
+              <button class="btn btn-outline-secondary btn-sm" (click)="openDir(installationInfo()!.path!)">
+                <i class="bi bi-folder2-open"></i>
+                <span>Open Folder</span>
+              </button>
+            </div>
+            
+            <div class="software-meta">
+              <small class="text-muted d-block">
+                <i class="bi bi-hdd"></i>
+                {{ installationInfo()!.path }}
+              </small>
+            </div>
+          } @else {
+            <div class="not-installed">
+              <i class="bi bi-exclamation-circle text-warning"></i>
+              <p>Odamex is not installed</p>
+              <button class="btn btn-success" 
+                      [disabled]="downloading()"
+                      (click)="downloadLatest()">
+                @if (downloading()) {
+                  <span class="spinner-border spinner-border-sm me-2"></span>
+                  <span>Downloading...</span>
+                } @else {
+                  <i class="bi bi-download"></i>
+                  <span class="ms-2">Download & Install</span>
+                }
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+    
+    <!-- Advanced Options -->
+    <div class="advanced-section">
+      <h3 class="section-title">
+        <i class="bi bi-gear"></i>
+        Advanced Options
+      </h3>
+      
+      <div class="form-check form-switch">
+        <input 
+          class="form-check-input" 
+          type="checkbox" 
+          id="useCustomPath"
+          [checked]="useCustomPath()"
+          (change)="toggleCustomPath()">
+        <label class="form-check-label" for="useCustomPath">
+          Use custom Odamex installation path
+        </label>
+      </div>
+      
+      @if (useCustomPath()) {
+        <div class="custom-path-input mt-3">
+          <label class="form-label">Custom Installation Path</label>
+          <div class="input-group">
+            <input 
+              type="text" 
+              class="form-control" 
+              placeholder="C:\Path\To\Odamex"
+              [value]="customPath()"
+              (input)="updateCustomPath($any($event.target).value)">
+            <button class="btn btn-outline-secondary" type="button" (click)="loadData()">
+              <i class="bi bi-arrow-clockwise"></i>
+              <span>Refresh</span>
+            </button>
+          </div>
+          <small class="text-muted">
+            Enter the directory containing odamex.exe (Windows) or odamex binary (Mac/Linux)
+          </small>
+        </div>
+      }
+      
+      <!-- Directories Section -->
+      <div class="directories-section mt-4">
+        <h4>Application Directories</h4>
+        @if (directories()) {
+          <div class="directory-list">
+            <div class="directory-item">
+              <div class="directory-info">
+                <i class="bi bi-folder"></i>
+                <div>
+                  <span class="directory-label">ODX Directory</span>
+                  <span class="directory-path">{{ directories()!.odx }}</span>
+                </div>
+              </div>
+              <button class="btn btn-sm btn-outline-secondary" (click)="openDir(directories()!.odx)">
+                <i class="bi bi-box-arrow-up-right"></i>
+                <span>Open</span>
+              </button>
+            </div>
+            
+            <div class="directory-item">
+              <div class="directory-info">
+                <i class="bi bi-file-earmark-binary"></i>
+                <div>
+                  <span class="directory-label">Binaries</span>
+                  <span class="directory-path">{{ directories()!.bin }}</span>
+                </div>
+              </div>
+              <button class="btn btn-sm btn-outline-secondary" (click)="openDir(directories()!.bin)">
+                <i class="bi bi-box-arrow-up-right"></i>
+               <span>Open</span>
+              </button>
+            </div>
+            
+            <div class="directory-item">
+              <div class="directory-info">
+                <i class="bi bi-file-earmark-zip"></i>
+                <div>
+                  <span class="directory-label">WADs</span>
+                  <span class="directory-path">{{ directories()!.wads }}</span>
+                </div>
+              </div>
+              <button class="btn btn-sm btn-outline-secondary" (click)="openDir(directories()!.wads)">
+                <i class="bi bi-box-arrow-up-right"></i>
+                <span>Open</span>
+              </button>
+            </div>
+            
+            <div class="directory-item">
+              <div class="directory-info">
+                <i class="bi bi-gear"></i>
+                <div>
+                  <span class="directory-label">Config</span>
+                  <span class="directory-path">{{ directories()!.config }}</span>
+                </div>
+              </div>
+              <button class="btn btn-sm btn-outline-secondary" (click)="openDir(directories()!.config)">
+                <i class="bi bi-box-arrow-up-right"></i>
+                <span>Open</span>
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>

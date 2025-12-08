@@ -1,0 +1,80 @@
+// Settings Cards
+
+
+
+// Setting Items
+.setting-item {
+  padding-bottom: 1.25rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid #3a3a3a;
+  
+  &:last-child {
+    padding-bottom: 0;
+    margin-bottom: 0;
+    border-bottom: none;
+  }
+  
+  .form-check-label {
+    color: #e0e0e0;
+    font-size: .95rem;
+    
+    strong {
+      font-weight: 600;
+    }
+  }
+  
+  small {
+    display: block;
+    margin-top: .5rem;
+    color: #999;
+    font-size: .85rem;
+    line-height: 1.4;
+  }
+  
+  .form-label {
+    color: #e0e0e0;
+    font-size: .9rem;
+    font-weight: 500;
+    margin-bottom: .5rem;
+  }
+  
+  .form-select {
+    max-width: 300px;
+    background-color: #1e1e1e;
+    border-color: #444;
+    color: #e0e0e0;
+    
+    &:focus {
+      background-color: #252525;
+      border-color: #0d6efd;
+      color: #e0e0e0;
+    }
+  }
+  
+  .alert {
+    font-size: .875rem;
+    padding: .75rem 1rem;
+    
+    i {
+      margin-right: .5rem;
+    }
+  }
+  
+  h5 {
+    font-size: .95rem;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: .5rem;
+  }
+  
+  p {
+    margin-bottom: .75rem;
+  }
+}
+
+// Notification Options
+.notification-options {
+  padding-left: 1rem;
+  margin-top: 1rem;
+  border-left: 2px solid #3a3a3a;
+}
