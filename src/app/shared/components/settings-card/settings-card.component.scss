@@ -9,43 +9,22 @@ app-settings-card {
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.15);
-  display: flex;
-  flex-direction: column;
-  height: 100%;
 
   .card-header {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
     padding: 1rem 1.5rem;
     background: linear-gradient(135deg, #202020 0%, #2A2A2A 100%);
     border-bottom: 1px solid #3a3a3a;
-    flex-shrink: 0;
-
-    .card-title {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      flex: 1;
-    }
   }
 
   .card-body {
     padding: 1.5rem;
-    display: flex;
-    flex-direction: column;
-    flex: 1;
   }
 }
 
 // Icon container styling (projected content)
 [card-icon] {
   border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   font-size: 1.75rem;
-  flex-shrink: 0;
   
   i {
     font-size: 1.75rem;
@@ -69,8 +48,6 @@ app-settings-card {
 
 // Title content styling (projected content)
 [card-title] {
-  flex: 1;
-  
   h3 {
     font-size: 1.1rem;
     font-weight: 600;

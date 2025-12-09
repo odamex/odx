@@ -1,12 +1,12 @@
-<div class="settings-card">
-  <div class="card-header" *ngIf="hasHeader">
-    <div class="card-title">
+<div class="settings-card d-flex flex-column h-100">
+  <div class="card-header d-flex align-items-center gap-3 flex-shrink-0" *ngIf="hasHeader">
+    <div class="card-title d-flex align-items-center gap-3 flex-grow-1">
       <ng-content select="[card-icon]"></ng-content>
       <ng-content select="[card-title]"></ng-content>
     </div>
     <ng-content select="[card-actions]"></ng-content>
   </div>
-  <div class="card-body">
+  <div class="card-body d-flex flex-column flex-grow-1">
     <ng-content></ng-content>
   </div>
 </div>
