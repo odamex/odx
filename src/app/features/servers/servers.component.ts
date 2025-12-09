@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import { ServersStore } from '@app/store';
 import { CustomServersStore } from '@app/store/custom-servers.store';
-import { OdalPapi, FileManagerService, IWADService, ServerRefreshService, NetworkStatusService, CustomServersService, DialogService, DialogPresets } from '@shared/services';
+import { OdalPapi, FileManagerService, IWADService, ServerRefreshService, NetworkStatusService, CustomServersService, DialogService, DialogPresets, LocalNetworkDiscoveryService } from '@shared/services';
 import { CustomServersModalComponent } from './custom-servers-modal/custom-servers-modal.component';
 import { ServerDetailsContentComponent } from './server-details-content/server-details-content.component';
 
@@ -19,6 +19,7 @@ export class ServersComponent {
   private fileManager = inject(FileManagerService);
   private refreshService = inject(ServerRefreshService);
   private customServersService = inject(CustomServersService);
+  private localNetworkService = inject(LocalNetworkDiscoveryService);
   private networkStatus = inject(NetworkStatusService);
   private dialogService = inject(DialogService);
   protected iwadService = inject(IWADService);
@@ -395,10 +396,11 @@ export class ServersComponent {
   }
 
   async refreshServers() {
-    // Refresh both master servers and custom servers
+    // Refresh master servers, custom servers, and local network scan
     await Promise.all([
       this.refreshService.refreshServers(),
-      this.customServersService.queryCustomServers()
+      this.customServersService.queryCustomServers(),
+      this.localNetworkService.scan(true) // Force scan even if auto-discovery is disabled
     ]);
   }
   
@@ -706,6 +708,11 @@ export class ServersComponent {
       
       const delta = this.startY - e.clientY; // Reversed because panel is at bottom
       const newHeight = Math.max(minHeight, Math.min(maxHeight, this.startHeight + delta));
+      
+      // If dragging upward (expanding), uncollapse the panel
+      if (newHeight > minHeight + 10) {
+        this.detailsPanelCollapsed.set(false);
+      }
       
       // Use pixel height during drag for better performance
       detailsPanel.style.height = `${newHeight}px`;

@@ -19,12 +19,47 @@ export class HomeComponent implements OnInit {
   latestRelease = signal<any>(null);
   loading = signal(true);
 
-  // Server stats from store
-  serverCount = computed(() => this.serversStore.servers().length);
+  // Current version for compatibility checking
+  currentMajorVersion = signal<number | null>(null);
+  currentMinorVersion = signal<number | null>(null);
+
+  // Server stats from store - filtered by version compatibility
+  serverCount = computed(() => {
+    const servers = this.serversStore.servers();
+    const major = this.currentMajorVersion();
+    const minor = this.currentMinorVersion();
+    
+    // If no version info, show all servers
+    if (major === null || minor === null) return servers.length;
+    
+    // Filter to compatible servers only
+    return servers.filter(server => {
+      if (server.versionMajor === null || server.versionMinor === null) return true;
+      if (server.versionMajor !== major) return false;
+      return server.versionMinor <= minor;
+    }).length;
+  });
+
   playerCount = computed(() => {
-    return this.serversStore.servers().reduce((total, server) => 
-      total + (server.players?.length || 0), 0
-    );
+    const servers = this.serversStore.servers();
+    const major = this.currentMajorVersion();
+    const minor = this.currentMinorVersion();
+    
+    // If no version info, count all players
+    if (major === null || minor === null) {
+      return servers.reduce((total, server) => 
+        total + (server.players?.length || 0), 0
+      );
+    }
+    
+    // Count players only from compatible servers
+    return servers
+      .filter(server => {
+        if (server.versionMajor === null || server.versionMinor === null) return true;
+        if (server.versionMajor !== major) return false;
+        return server.versionMinor <= minor;
+      })
+      .reduce((total, server) => total + (server.players?.length || 0), 0);
   });
 
   async ngOnInit() {
@@ -44,6 +79,15 @@ export class HomeComponent implements OnInit {
 
       this.installInfo.set(info);
       this.latestRelease.set(release);
+
+      // Extract version for server filtering
+      if (info.installed && info.version) {
+        const parts = info.version.split('.');
+        if (parts.length >= 2) {
+          this.currentMajorVersion.set(parseInt(parts[0], 10));
+          this.currentMinorVersion.set(parseInt(parts[1], 10));
+        }
+      }
     } catch (err) {
       console.error('Failed to check installation status:', err);
     } finally {

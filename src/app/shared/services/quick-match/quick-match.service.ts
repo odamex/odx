@@ -387,16 +387,73 @@ export class QuickMatchService {
   /**
    * Connect to a server
    * 
-   * Navigates to the servers page and passes the server info for auto-connection.
-   * The servers component will handle the actual connection process.
+   * Launches Odamex and connects to the specified server directly.
+   * Handles installation checks, version compatibility, and WAD directories.
    * 
    * @param server - The server to connect to
    */
   async connectToServer(server: OdalPapi.ServerInfo) {
-    // Navigate to servers page with auto-connect
-    await this.router.navigate(['/servers'], {
-      state: { autoConnect: server }
-    });
+    try {
+      // Check if Odamex is installed
+      const installInfo = await this.fileManager.getInstallationInfo();
+      if (!installInfo.installed) {
+        throw new Error('Odamex is not installed. Please install it from Settings first.');
+      }
+
+      // Check version compatibility
+      if (!this.isServerVersionCompatible(server)) {
+        const serverVer = `${server.versionMajor}.${server.versionMinor}.${server.versionPatch}`;
+        const clientVer = `${this.currentMajorVersion}.${this.currentMinorVersion}.${this.currentPatchVersion}`;
+        
+        if (typeof window !== 'undefined' && window.electron) {
+          const response = await window.electron.showMessageBox({
+            type: 'warning',
+            title: 'Version Mismatch',
+            message: `Server version (${serverVer}) doesn't match your version (${clientVer})`,
+            detail: 'You may experience compatibility issues or connection failures. Continue anyway?',
+            buttons: ['Connect Anyway', 'Cancel'],
+            defaultId: 0,
+            cancelId: 1
+          });
+          
+          if (response.response !== 0) {
+            return;
+          }
+        }
+      }
+
+      // Build connection arguments
+      const args = [
+        '+connect',
+        `${server.address.ip}:${server.address.port}`
+      ];
+
+      // Add WAD directories so client knows where to find IWADs
+      const wadDirs = this.iwadService.wadDirectories();
+      
+      if (wadDirs.directories && wadDirs.directories.length > 0) {
+        const dirPaths = wadDirs.directories.map(dir => dir.path);
+        const separator = typeof window !== 'undefined' && window.electron?.platform === 'win32' ? ';' : ':';
+        const wadDirPath = dirPaths.join(separator);
+        args.push('-waddir', wadDirPath);
+      }
+
+      // Launch Odamex
+      await this.fileManager.launchOdamex(args);
+      
+    } catch (err: any) {
+      console.error('Failed to connect to server:', err);
+      
+      if (typeof window !== 'undefined' && window.electron) {
+        await window.electron.showMessageBox({
+          type: 'error',
+          title: 'Connection Failed',
+          message: 'Failed to connect to server',
+          detail: err.message || 'Unknown error',
+          buttons: ['OK']
+        });
+      }
+    }
   }
 
   /**

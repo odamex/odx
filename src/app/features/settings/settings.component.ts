@@ -1,7 +1,6 @@
 import { Component, ChangeDetectionStrategy, signal, computed, OnInit, AfterViewInit, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { DatePipe } from '@angular/common';
 import { 
   FileManagerService, 
   UpdatesService, 
@@ -15,12 +14,10 @@ import {
   OdalPapi,
   DialogService,
   DialogPresets,
-  type DirectoryInfo,
   type GameMetadata,
   type QuickMatchCriteria
 } from '@shared/services';
 import { NgbNavModule, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
-import { GameSelectionDialogComponent } from '@core/game-selection-dialog/game-selection-dialog.component';
 import { LocalDiscoveryDialogComponent } from '@core/local-discovery-dialog/local-discovery-dialog.component';
 import { LoadingSpinnerComponent } from '@shared/components';
 import { InstallationSettingsComponent } from './installation-settings/installation-settings.component';
@@ -32,7 +29,7 @@ import versions from '../../../_versions';
 
 @Component({
   selector: 'app-settings',
-  imports: [NgbNavModule, LoadingSpinnerComponent, FormsModule, DatePipe, InstallationSettingsComponent, ApplicationSettingsComponent, QuickMatchSettingsComponent, GameLibrarySettingsComponent, NetworkSettingsComponent],
+  imports: [NgbNavModule, LoadingSpinnerComponent, FormsModule, InstallationSettingsComponent, ApplicationSettingsComponent, QuickMatchSettingsComponent, GameLibrarySettingsComponent, NetworkSettingsComponent],
   templateUrl: './settings.component.html',
   styleUrls: ['./settings.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush

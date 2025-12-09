@@ -50,6 +50,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Generate version file
+        run: npm run pretest
+
       - name: Run tests
         run: npm test -- --watch=false --browsers=ChromeHeadless
         continue-on-error: true
