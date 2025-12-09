@@ -10,7 +10,7 @@
     </a>
 
     <!-- Main navigation items -->
-    @for (item of topNavItems; track item.path) {
+    @for (item of topNavItems(); track item.path) {
       <a 
         class="nav-item"
         [title]="item.label"

@@ -1,4 +1,5 @@
 // Services barrel file - centralized exports for all shared services
+export * from './app-settings/app-settings.service';
 export * from './auto-update/auto-update.service';
 export * from './custom-servers/custom-servers.service';
 export * from './dialog';

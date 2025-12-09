@@ -313,6 +313,25 @@
       <h3>Advanced</h3>
     </div>
     
+      <div class="setting-item">
+        <div class="form-check form-switch">
+          <input 
+            class="form-check-input" 
+            type="checkbox" 
+            role="switch" 
+            id="developerMode"
+            [checked]="developerMode()"
+            (change)="toggleDeveloperMode()"
+          >
+          <label class="form-check-label" for="developerMode">
+            <strong>Developer Mode</strong>
+          </label>
+        </div>
+        <p class="setting-description">
+          Enable experimental and debugging features. Shows single player, community, and server hosting sections (work in progress).
+        </p>
+      </div>
+
       <div class="setting-item mb-0">
         <h5>Reset Configuration</h5>
         <p class="text-muted mb-3">

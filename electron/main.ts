@@ -203,7 +203,7 @@ function createWindow(): void {
 
 function createTray(): void {
   const trayIconPath = isDevelopment 
-    ? path.join(__dirname, '../public/trayicon.png')
+    ? path.join(__dirname, '../build/trayicon.png')
     : path.join(process.resourcesPath, 'trayicon.png');
   tray = new Tray(trayIconPath);
 
@@ -353,9 +353,9 @@ ipcMain.on('update-tray-icon', (_event, status: 'online' | 'offline' | 'degraded
       // Load PNG file (try both PNG and ICO)
       const possibleNames = [`overlay-${status}.png`, `overlay-${status}.ico`];
       const basePaths = [
-        isDevelopment ? path.join(__dirname, '../public/overlay-icons') : path.join(process.resourcesPath, 'overlay-icons'),
-        path.join(process.cwd(), 'public', 'overlay-icons'),
-        path.join(__dirname, '..', 'public', 'overlay-icons')
+        isDevelopment ? path.join(__dirname, '../build/overlay-icons') : path.join(process.resourcesPath, 'overlay-icons'),
+        path.join(process.cwd(), 'build', 'overlay-icons'),
+        path.join(__dirname, '..', 'build', 'overlay-icons')
       ];
       
       let overlayPath = null;

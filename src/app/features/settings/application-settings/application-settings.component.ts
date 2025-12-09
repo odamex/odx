@@ -7,7 +7,8 @@ import {
   AutoUpdateService,
   UpdatesService,
   ServerRefreshService,
-  FileManagerService
+  FileManagerService,
+  AppSettingsService
 } from '@shared/services';
 
 @Component({
@@ -24,10 +25,14 @@ export class ApplicationSettingsComponent implements OnInit {
   protected updatesService = inject(UpdatesService);
   protected refreshService = inject(ServerRefreshService);
   private fileManager = inject(FileManagerService);
+  private appSettings = inject(AppSettingsService);
 
   // Application settings
   filterByVersion = signal(true);
   quitOnClose = signal(false);
+  
+  // Developer mode (computed from service)
+  developerMode = computed(() => this.appSettings.developerMode());
   
   // Notification settings (computed from services)
   notificationsEnabled = computed(() => this.notificationService.settings().enabled);
@@ -77,6 +82,10 @@ export class ApplicationSettingsComponent implements OnInit {
     if (window.electron) {
       await window.electron.setQuitOnClose(newValue);
     }
+  }
+
+  toggleDeveloperMode() {
+    this.appSettings.setDeveloperMode(!this.developerMode());
   }
 
   toggleAutoRefresh() {
