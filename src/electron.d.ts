@@ -8,6 +8,7 @@ export interface ElectronAPI {
   restoreWindow: () => void;
   quitApp: () => void;
   flashWindow: () => void;
+  openExternal: (url: string) => Promise<void>;
   updateTrayIcon: (status: 'online' | 'offline' | 'degraded') => void;
   updateTrayTooltip: (tooltip: string) => void;
   updateQueueState: (isMonitoring: boolean) => void;

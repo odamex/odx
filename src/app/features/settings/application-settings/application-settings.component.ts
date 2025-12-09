@@ -1,5 +1,6 @@
 import { Component, ChangeDetectionStrategy, signal, computed, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { SettingsCardComponent } from '@shared/components';
 import { 
   NotificationService,
   PeriodicUpdateService,
@@ -11,7 +12,7 @@ import {
 
 @Component({
   selector: 'app-application-settings',
-  imports: [FormsModule],
+  imports: [FormsModule, SettingsCardComponent],
   templateUrl: './application-settings.component.html',
   styleUrls: ['./application-settings.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush

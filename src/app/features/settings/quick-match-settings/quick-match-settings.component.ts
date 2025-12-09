@@ -1,10 +1,11 @@
 import { Component, ChangeDetectionStrategy, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { SettingsCardComponent } from '@shared/components';
 import { QuickMatchService, OdalPapi, type QuickMatchCriteria } from '@shared/services';
 
 @Component({
   selector: 'app-quick-match-settings',
-  imports: [FormsModule],
+  imports: [FormsModule, SettingsCardComponent],
   templateUrl: './quick-match-settings.component.html',
   styleUrls: ['./quick-match-settings.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush

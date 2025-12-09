@@ -56,16 +56,16 @@ export class HomeComponent implements OnInit {
   }
 
   getPlatformIcon(): string {
-    const platform = navigator.platform.toLowerCase();
-    if (platform.includes('win')) return 'windows';
-    if (platform.includes('mac')) return 'apple';
+    const platform = window.electron.platform;
+    if (platform === 'win32') return 'windows';
+    if (platform === 'darwin') return 'apple';
     return 'tux';
   }
 
   getPlatformText(): string {
-    const platform = navigator.platform.toLowerCase();
-    if (platform.includes('win')) return 'Download for Windows';
-    if (platform.includes('mac')) return 'Download for MacOS';
+    const platform = window.electron.platform;
+    if (platform === 'win32') return 'Download for Windows';
+    if (platform === 'darwin') return 'Download for MacOS';
     return 'Download for Linux';
   }
 }

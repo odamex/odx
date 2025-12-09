@@ -15,6 +15,7 @@ contextBridge.exposeInMainWorld('electron', {
   restoreWindow: () => ipcRenderer.send('window-restore'),
   quitApp: () => ipcRenderer.send('app-quit'),
   flashWindow: () => ipcRenderer.send('flash-window'),
+  openExternal: (url: string) => ipcRenderer.invoke('open-external', url),
   updateTrayIcon: (status: 'online' | 'offline' | 'degraded') => ipcRenderer.send('update-tray-icon', status),
   updateTrayTooltip: (tooltip: string) => ipcRenderer.send('update-tray-tooltip', tooltip),
   updateQueueState: (isMonitoring: boolean) => ipcRenderer.send('update-queue-state', isMonitoring),

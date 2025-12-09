@@ -19,104 +19,100 @@
     <div class="software-cards">
       
       <!-- ODX Launcher Card -->
-      <div class="software-card">
-        <div class="software-header">
-          <div class="software-icon odx-icon">
-            <i class="bi bi-rocket-takeoff"></i>
-          </div>
-          <div class="software-title">
-            <h3>ODX Launcher</h3>
-            <p class="text-muted mb-0">Application Version</p>
-          </div>
+      <app-settings-card>
+        <div card-icon class="odx-icon">
+          <i class="bi bi-rocket-takeoff"></i>
+        </div>
+        <div card-title>
+          <h3>ODX Launcher</h3>
+          <p class="text-muted mb-0">Application Version</p>
         </div>
         
-        <div class="software-body">
-          <div class="version-info">
-            <div class="current-version">
-              <span class="version-label">Current</span>
-              <span class="version-number">{{ appVersion }}</span>
+        <div class="version-info">
+          <div class="current-version">
+            <span class="version-label">Current</span>
+            <span class="version-number">{{ appVersion }}</span>
+          </div>
+          
+          @if (autoUpdateService.state() === 'available' && autoUpdateService.updateInfo(); as odxUpdate) {
+            <div class="update-badge">
+              <i class="bi bi-arrow-up-circle-fill text-primary"></i>
+              <span>{{ odxUpdate.version }} available</span>
             </div>
-            
-            @if (autoUpdateService.state() === 'available' && autoUpdateService.updateInfo(); as odxUpdate) {
-              <div class="update-badge">
-                <i class="bi bi-arrow-up-circle-fill text-primary"></i>
-                <span>{{ odxUpdate.version }} available</span>
-              </div>
-            } @else if (autoUpdateService.state() === 'idle' || autoUpdateService.state() === 'checking') {
-              <div class="status-badge up-to-date">
-                <i class="bi bi-check-circle-fill"></i>
-                <span>Up to date</span>
-              </div>
-            }
-          </div>
-          
-          <div class="installation-source">
-            <i class="bi bi-folder2-open"></i>
-            <span>Application Bundle</span>
-          </div>
-          
-          @if (autoUpdateService.state() === 'downloading' && autoUpdateService.downloadProgress(); as progress) {
-            <div class="update-progress">
-              <div class="progress">
-                <div class="progress-bar progress-bar-striped progress-bar-animated"
-                     [style.width.%]="progress.percent">
-                </div>
-              </div>
-              <small class="text-muted">
-                Downloading {{ Math.round(progress.percent) }}% · {{ autoUpdateService.formatBytes(progress.bytesPerSecond) }}/s
-              </small>
+          } @else if (autoUpdateService.state() === 'idle' || autoUpdateService.state() === 'checking') {
+            <div class="status-badge up-to-date">
+              <i class="bi bi-check-circle-fill"></i>
+              <span>Up to date</span>
             </div>
           }
-          
-          <div class="software-actions">
-            @if (autoUpdateService.state() === 'available') {
-              <button class="btn btn-primary btn-sm" (click)="autoUpdateService.downloadUpdate()">
-                <i class="bi bi-download"></i>
-                <span>Download Update</span>
-              </button>
-            } @else if (autoUpdateService.state() === 'downloaded') {
-              <button class="btn btn-success btn-sm" (click)="autoUpdateService.installAndRestart()">
-                <i class="bi bi-arrow-repeat"></i>
-                <span>Install & Restart</span>
-              </button>
-            } @else {
-              <button class="btn btn-primary btn-sm" (click)="checkForODXUpdate()" 
-                      [disabled]="autoUpdateService.state() === 'checking'">
-                <i class="bi bi-arrow-clockwise" [class.spinning]="autoUpdateService.state() === 'checking'"></i>
-                <span>Check for Updates</span>
-              </button>
-            }
-          </div>
-          
-          <div class="software-meta">
-            <small class="text-muted">
-              <i class="bi bi-calendar3"></i>
-              Released {{ appVersionDate }}
-            </small>
-            @if (appCommitHash) {
-              <small class="text-muted">
-                <i class="bi bi-git"></i>
-                {{ appCommitHash }}
-              </small>
-            }
-          </div>
-        </div>
-      </div>
-      
-      <!-- Odamex Engine Card -->
-      <div class="software-card">
-        <div class="software-header">
-          <div class="software-icon odamex-icon">
-            <i class="bi bi-box-seam"></i>
-          </div>
-          <div class="software-title">
-            <h3>Odamex Engine</h3>
-            <p class="text-muted mb-0">Game Client & Server</p>
-          </div>
         </div>
         
-        <div class="software-body">
-          @if (installationInfo()?.installed) {
+        <div class="installation-source">
+          <i class="bi bi-folder2-open"></i>
+          <span>Application Bundle</span>
+        </div>
+        
+        @if (autoUpdateService.state() === 'downloading' && autoUpdateService.downloadProgress(); as progress) {
+          <div class="update-progress">
+            <div class="progress">
+              <div class="progress-bar progress-bar-striped progress-bar-animated"
+                   [style.width.%]="progress.percent">
+              </div>
+            </div>
+            <small class="text-muted">
+              Downloading {{ Math.round(progress.percent) }}% · {{ autoUpdateService.formatBytes(progress.bytesPerSecond) }}/s
+            </small>
+          </div>
+        }
+        
+        <div class="software-actions">
+          @if (autoUpdateService.state() === 'available') {
+            <button class="btn btn-primary btn-sm" (click)="autoUpdateService.downloadUpdate()">
+              <i class="bi bi-download"></i>
+              <span>Download Update</span>
+            </button>
+          } @else if (autoUpdateService.state() === 'downloaded') {
+            <button class="btn btn-success btn-sm" (click)="autoUpdateService.installAndRestart()">
+              <i class="bi bi-arrow-repeat"></i>
+              <span>Install & Restart</span>
+            </button>
+          } @else {
+            <button class="btn btn-primary btn-sm" (click)="checkForODXUpdate()" 
+                    [disabled]="autoUpdateService.state() === 'checking'">
+              <i class="bi bi-arrow-clockwise" [class.spinning]="autoUpdateService.state() === 'checking'"></i>
+              <span>Check for Updates</span>
+            </button>
+          }
+        </div>
+        
+        <div class="software-meta">
+          <small class="text-muted">
+            <i class="bi bi-calendar3"></i>
+            Released {{ appVersionDate }}
+          </small>
+          @if (appCommitHash) {
+            <small class="text-muted">
+              <i class="bi bi-git"></i>
+              <a href="javascript:void(0)" 
+                 (click)="openExternalLink(commitUrl)" 
+                 class="commit-link"
+                 title="View commit on GitHub">{{ appCommitHash }}</a>
+            </small>
+          }
+        </div>
+      </app-settings-card>
+      
+      <!-- Odamex Engine Card -->
+      <app-settings-card>
+        <div card-icon class="odamex-icon">
+          <i class="bi bi-box-seam"></i>
+        </div>
+        <div card-title>
+          <h3>Odamex Engine</h3>
+          <p class="text-muted mb-0">Game Client & Server</p>
+        </div>
+        
+        @if (installationInfo()?.installed) {
             <div class="version-info">
               <div class="current-version">
                 <span class="version-label">Current</span>
@@ -208,20 +204,18 @@
               </button>
             </div>
           }
-        </div>
-      </div>
+      </app-settings-card>
     </div>
     
     <!-- Advanced Options -->
-  <div class="settings-card mb-4">
-    <div class="card-header p-3">
-      <div class="card-title">
-        <i class="bi bi-gear"></i>
-        <h3>Advanced Options</h3>
-      </div>
+  <app-settings-card>
+    <div card-icon>
+      <i class="bi bi-gear"></i>
+    </div>
+    <div card-title>
+      <h3>Advanced Options</h3>
     </div>
     
-    <div class="card-body">      
       <div class="form-check form-switch">
         <input 
           class="form-check-input" 
@@ -237,18 +231,12 @@
       @if (useCustomPath()) {
         <div class="custom-path-input mt-3">
           <label class="form-label">Custom Installation Path</label>
-          <div class="input-group">
-            <input 
-              type="text" 
-              class="form-control" 
-              [placeholder]="customPathPlaceholder"
-              [value]="customPath()"
-              (input)="updateCustomPath($any($event.target).value)">
-            <button class="btn btn-outline-secondary" type="button" (click)="loadData()">
-              <i class="bi bi-arrow-clockwise"></i>
-              <span>Refresh</span>
-            </button>
-          </div>
+          <input 
+            type="text" 
+            class="form-control" 
+            [placeholder]="customPathPlaceholder"
+            [value]="customPath()"
+            (input)="updateCustomPath($any($event.target).value)">
           <small class="text-muted">
             Enter the directory containing odamex.exe (Windows) or odamex binary (Mac/Linux)
           </small>
@@ -318,7 +306,6 @@
           </div>
         }
       </div>
-    </div>
-    </div>
+  </app-settings-card>
   }
 </div>

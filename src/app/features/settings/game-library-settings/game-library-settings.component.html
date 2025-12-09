@@ -3,19 +3,20 @@
   <p class="text-muted mb-4">Manage your DOOM game files and WAD directories</p>
   
   <!-- WAD Directories Card -->
-  <div class="settings-card mb-4">
-    <div class="card-header p-3">
-      <div class="card-title">
-        <i class="bi bi-folder2-open"></i>
-        <h3>WAD Directories</h3>
-      </div>
+  <app-settings-card>
+    <div card-icon>
+      <i class="bi bi-folder2-open"></i>
+    </div>
+    <div card-title>
+      <h3>WAD Directories</h3>
+    </div>
+    <div card-actions>
       <button class="btn btn-primary btn-sm" (click)="addDirectory()">
         <i class="bi bi-folder-plus"></i>
         <span>Add Directory</span>
       </button>
     </div>
     
-    <div class="card-body">
       @if (iwadService.wadDirectories().directories.length === 0) {
         <div class="empty-state">
           <i class="bi bi-folder-x"></i>
@@ -61,16 +62,17 @@
       <small class="text-muted d-block mt-2">
         Automatically detect DOOM games installed via Steam
       </small>
-    </div>
-  </div>
+  </app-settings-card>
 
   <!-- Detected IWADs Card -->
-  <div class="settings-card">
-    <div class="card-header p-3">
-      <div class="card-title">
-        <i class="bi bi-joystick"></i>
-        <h3>Detected Games</h3>
-      </div>
+  <app-settings-card>
+    <div card-icon>
+      <i class="bi bi-joystick"></i>
+    </div>
+    <div card-title>
+      <h3>Detected Games</h3>
+    </div>
+    <div card-actions>
       <button class="btn btn-primary btn-sm" 
               (click)="rescanIWADs()"
               [disabled]="iwadService.loading()">
@@ -84,11 +86,7 @@
       </button>
     </div>
     
-    <div class="card-body"
-         [style.opacity]="iwadService.loading() ? 0.5 : 1" 
-         [style.pointer-events]="iwadService.loading() ? 'none' : 'auto'"
-         [style.transition]="'opacity 0.2s'">
-      @if (groupedIWADs().length === 0) {
+      @if (iwadService.loading() || groupedIWADs().length === 0) {
         <div class="empty-state">
           <i class="bi bi-inbox"></i>
           <p>No game files detected</p>
@@ -231,8 +229,7 @@
           </small>
         </div>
       }
-    </div>
-  </div>
+  </app-settings-card>
 </div>
 
 @if (showGameSelection()) {

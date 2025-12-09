@@ -11,15 +11,13 @@
      </div>
   
   <!-- Server Criteria Card -->
-  <div class="settings-card mb-4">
-    <div class="card-header p-3">
-      <div class="card-title">
-        <i class="bi bi-funnel"></i>
-        <h3>Server Criteria</h3>
-      </div>
+  <app-settings-card>
+    <div card-icon>
+      <i class="bi bi-funnel"></i>
     </div>
-    
-    <div class="card-body">
+    <div card-title>
+      <h3>Server Criteria</h3>
+    </div>
       <!-- Max Ping -->
       <div class="setting-item">
         <label class="form-label">
@@ -156,19 +154,17 @@
 
       <hr>
 
-    </div>
-  </div>
+  </app-settings-card>
 
   <!-- Game Types Card -->
-  <div class="settings-card mb-4">
-    <div class="card-header p-3">
-      <div class="card-title">
-        <i class="bi bi-joystick"></i>
-        <h3>Preferred Game Types</h3>
-      </div>
+  <app-settings-card>
+    <div card-icon>
+      <i class="bi bi-joystick"></i>
+    </div>
+    <div card-title>
+      <h3>Preferred Game Types</h3>
     </div>
     
-    <div class="card-body">
       <div class="setting-item">
         <p class="setting-description">Select which game modes to include in Quick Match</p>
         
@@ -246,6 +242,5 @@
           </div>
         </div>
       </div>
-    </div>
-  </div>
+  </app-settings-card>
 </div>

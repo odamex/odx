@@ -1,14 +1,16 @@
 import { Component, ChangeDetectionStrategy, signal, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { SettingsCardComponent, ExternalLinkConfirmComponent } from '@shared/components';
 import { 
   FileManagerService, 
   AutoUpdateService
 } from '@shared/services';
+import { DialogService, DialogPresets } from '@shared/services/dialog/dialog.service';
 import versions from '../../../../_versions';
 
 @Component({
   selector: 'app-installation-settings',
-  imports: [FormsModule],
+  imports: [FormsModule, SettingsCardComponent],
   templateUrl: './installation-settings.component.html',
   styleUrls: ['./installation-settings.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -16,6 +18,7 @@ import versions from '../../../../_versions';
 export class InstallationSettingsComponent implements OnInit {
   protected fileManager = inject(FileManagerService);
   protected autoUpdateService = inject(AutoUpdateService);
+  private dialogService = inject(DialogService);
 
   // Use store signals
   readonly installationInfo = this.fileManager.installationInfo;
@@ -42,12 +45,17 @@ export class InstallationSettingsComponent implements OnInit {
   // Make Math available in template
   protected readonly Math = Math;
   
+  // Get GitHub commit URL
+  get commitUrl(): string {
+    return `https://github.com/odamex/odx/commit/${this.appCommitHash}`;
+  }
+  
   // Platform-specific placeholder
   get customPathPlaceholder(): string {
-    const platform = navigator.platform.toLowerCase();
-    if (platform.includes('win')) {
+    const platform = window.electron.platform;
+    if (platform === 'win32') {
       return 'C:\\Path\\To\\Odamex';
-    } else if (platform.includes('mac')) {
+    } else if (platform === 'darwin') {
       return '/Applications/Odamex';
     } else {
       return '/usr/local/share/odamex';
@@ -122,8 +130,9 @@ export class InstallationSettingsComponent implements OnInit {
       let assetName: string;
       let assetObj: any;
 
-      const isWindows = navigator.platform.toLowerCase().includes('win');
-      const isLinux = navigator.platform.toLowerCase().includes('linux');
+      const platform = window.electron.platform;
+      const isWindows = platform === 'win32';
+      const isLinux = platform === 'linux';
 
       if (isWindows) {
         // Find the installer EXE
@@ -226,11 +235,11 @@ export class InstallationSettingsComponent implements OnInit {
     this.fileManager.setCustomPath(newPath);
 
     // Debounce the data reload (wait for user to finish typing)
-    // Use a silent reload that doesn't cause scroll or flash
+    // Use silent mode to prevent loading spinner flash
     this.customPathDebounceTimer = window.setTimeout(async () => {
       try {
         const customPathValue = this.useCustomPath() ? this.customPath() : undefined;
-        await this.fileManager.getInstallationInfo(customPathValue);
+        await this.fileManager.getInstallationInfo(customPathValue, true, true);
       } catch (err) {
         console.error('Failed to update installation info:', err);
       }
@@ -242,6 +251,35 @@ export class InstallationSettingsComponent implements OnInit {
       await this.fileManager.openDirectory(path);
     } catch (err) {
       console.error('Failed to open directory:', err);
+    }
+  }
+
+  async openExternalLink(url: string) {
+    const STORAGE_KEY = 'odx.skipExternalLinkWarning';
+    const skipWarning = localStorage.getItem(STORAGE_KEY) === 'true';
+    
+    if (skipWarning) {
+      window.electron.openExternal(url);
+      return;
+    }
+    
+    const modalRef = this.dialogService.open(ExternalLinkConfirmComponent, { 
+      size: 'lg', 
+      centered: true,
+      modalDialogClass: 'odx-modal'
+    });
+    modalRef.componentInstance.url = url;
+    
+    try {
+      const result = await modalRef.result;
+      if (result?.confirmed) {
+        if (result.dontShowAgain) {
+          localStorage.setItem(STORAGE_KEY, 'true');
+        }
+        window.electron.openExternal(url);
+      }
+    } catch (err) {
+      // Modal was dismissed
     }
   }
 }

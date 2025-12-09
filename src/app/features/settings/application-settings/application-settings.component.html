@@ -3,15 +3,14 @@
   <p class="text-muted mb-4">Configure general application behavior and preferences</p>
   
   <!-- General Settings Card -->
-  <div class="settings-card mb-4">
-    <div class="card-header p-3">
-      <div class="card-title">
-        <i class="bi bi-sliders"></i>
-        <h3>General</h3>
-      </div>
+  <app-settings-card>
+    <div card-icon>
+      <i class="bi bi-sliders"></i>
+    </div>
+    <div card-title>
+      <h3>General</h3>
     </div>
     
-    <div class="card-body">
       <div class="setting-item">
         <div class="form-check form-switch">
           <input 
@@ -98,19 +97,17 @@
           Exit the application completely when closing the main window. When disabled, the app minimizes to system tray instead.
         </small>
       </div>
-    </div>
-  </div>
+  </app-settings-card>
 
   <!-- Notifications Card -->
-  <div class="settings-card mb-4">
-    <div class="card-header p-3">
-      <div class="card-title">
-        <i class="bi bi-bell"></i>
-        <h3>Notifications</h3>
-      </div>
+  <app-settings-card>
+    <div card-icon>
+      <i class="bi bi-bell"></i>
+    </div>
+    <div card-title>
+      <h3>Notifications</h3>
     </div>
     
-    <div class="card-body">
       <div class="setting-item">
         <div class="form-check form-switch">
           <input 
@@ -245,19 +242,17 @@
           </div>
         </div>
       }
-    </div>
-  </div>
+  </app-settings-card>
 
   <!-- Update Checking Card -->
-  <div class="settings-card mb-4">
-    <div class="card-header p-3">
-      <div class="card-title">
-        <i class="bi bi-arrow-repeat"></i>
-        <h3>Update Checking</h3>
-      </div>
+  <app-settings-card>
+    <div card-icon>
+      <i class="bi bi-arrow-repeat"></i>
+    </div>
+    <div card-title>
+      <h3>Update Checking</h3>
     </div>
     
-    <div class="card-body">
       <div class="setting-item">
         <div class="form-check form-switch">
           <input 
@@ -307,19 +302,17 @@
           </small>
         }
       </div>
-    </div>
-  </div>
+  </app-settings-card>
 
   <!-- Advanced Card -->
-  <div class="settings-card">
-    <div class="card-header p-3">
-      <div class="card-title">
-        <i class="bi bi-tools"></i>
-        <h3>Advanced</h3>
-      </div>
+  <app-settings-card>
+    <div card-icon>
+      <i class="bi bi-tools"></i>
+    </div>
+    <div card-title>
+      <h3>Advanced</h3>
     </div>
     
-    <div class="card-body">
       <div class="setting-item mb-0">
         <h5>Reset Configuration</h5>
         <p class="text-muted mb-3">
@@ -330,6 +323,5 @@
           <span>Reset to Defaults</span>
         </button>
       </div>
-    </div>
-  </div>
+  </app-settings-card>
 </div>

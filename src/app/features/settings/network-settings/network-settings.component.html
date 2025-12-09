@@ -3,15 +3,13 @@
   <p class="text-muted mb-4">Configure local network server discovery and scanning</p>
   
   <!-- Local Network Discovery Card -->
-  <div class="settings-card mb-4">
-    <div class="card-header p-3">
-      <div class="card-title">
-        <i class="bi bi-hdd-network"></i>
-        <h3>Local Network Discovery</h3>
-      </div>
+  <app-settings-card>
+    <div card-icon>
+      <i class="bi bi-hdd-network"></i>
     </div>
-    
-    <div class="card-body">
+    <div card-title>
+      <h3>Local Network Discovery</h3>
+    </div>
       <div class="setting-item">
         <div class="form-check form-switch">
           <input 
@@ -194,6 +192,5 @@
           </button>
         </div>
       }
-    </div>
-  </div>
+  </app-settings-card>
 </div>

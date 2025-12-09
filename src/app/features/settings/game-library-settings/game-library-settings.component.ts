@@ -1,10 +1,11 @@
 import { Component, ChangeDetectionStrategy, inject, computed, signal } from '@angular/core';
+import { SettingsCardComponent } from '@shared/components';
 import { IWADService, type GameMetadata } from '@shared/services';
 import { GameSelectionDialogComponent } from '@core/game-selection-dialog/game-selection-dialog.component';
 
 @Component({
   selector: 'app-game-library-settings',
-  imports: [GameSelectionDialogComponent],
+  imports: [GameSelectionDialogComponent, SettingsCardComponent],
   templateUrl: './game-library-settings.component.html',
   styleUrls: ['./game-library-settings.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush

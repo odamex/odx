@@ -425,7 +425,7 @@ export class App implements OnInit {
           }
 
           // Find the appropriate installer/package
-          const isWindows = navigator.platform.toLowerCase().includes('win');
+          const isWindows = window.electron.platform === 'win32';
           let assetName: string;
           let assetObj: any;
 

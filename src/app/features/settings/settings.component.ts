@@ -22,7 +22,7 @@ import {
 import { NgbNavModule, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 import { GameSelectionDialogComponent } from '@core/game-selection-dialog/game-selection-dialog.component';
 import { LocalDiscoveryDialogComponent } from '@core/local-discovery-dialog/local-discovery-dialog.component';
-import { LoadingSpinnerComponent } from '@shared/components/loading-spinner/loading-spinner.component';
+import { LoadingSpinnerComponent } from '@shared/components';
 import { InstallationSettingsComponent } from './installation-settings/installation-settings.component';
 import { ApplicationSettingsComponent } from './application-settings/application-settings.component';
 import { QuickMatchSettingsComponent } from './quick-match-settings/quick-match-settings.component';
@@ -339,8 +339,9 @@ export class SettingsComponent implements OnInit, AfterViewInit {
       let assetName: string;
       let assetObj: any;
 
-      const isWindows = navigator.platform.toLowerCase().includes('win');
-      const isLinux = navigator.platform.toLowerCase().includes('linux');
+      const platform = window.electron.platform;
+      const isWindows = platform === 'win32';
+      const isLinux = platform === 'linux';
 
       if (isWindows) {
         // Find the installer EXE
@@ -443,17 +444,17 @@ export class SettingsComponent implements OnInit, AfterViewInit {
   }
 
   getPlatformIcon(): string {
-    const platform = navigator.platform.toLowerCase();
-    if (platform.includes('win')) return 'windows';
-    if (platform.includes('mac')) return 'apple';
+    const platform = window.electron.platform;
+    if (platform === 'win32') return 'windows';
+    if (platform === 'darwin') return 'apple';
     return 'tux';
   }
 
   getPlatformDownloadText(): string {
     const version = this.latestRelease()?.tag_name || 'Latest';
-    const platform = navigator.platform.toLowerCase();
-    if (platform.includes('win')) return `${version} Windows Installer`;
-    if (platform.includes('mac')) return `${version} MacOS Installer`;
+    const platform = window.electron.platform;
+    if (platform === 'win32') return `${version} Windows Installer`;
+    if (platform === 'darwin') return `${version} MacOS Installer`;
     return `${version} Linux Package`;
   }
 

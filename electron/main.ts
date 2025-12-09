@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { app, BrowserWindow, ipcMain, Menu, Tray, screen, nativeTheme, dialog, nativeImage, powerMonitor } from 'electron';
+import { app, BrowserWindow, ipcMain, Menu, Tray, screen, nativeTheme, dialog, nativeImage, powerMonitor, shell } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import * as path from 'path';
 import * as url from 'url';
@@ -313,6 +313,16 @@ ipcMain.on('app-quit', () => {
 ipcMain.on('flash-window', () => {
   if (!mainWindow?.isFocused()) {
     mainWindow?.flashFrame(true);
+  }
+});
+
+// Open external URL in default browser
+ipcMain.handle('open-external', async (_event, url: string) => {
+  try {
+    await shell.openExternal(url);
+  } catch (err) {
+    console.error('[Main] Failed to open external URL:', err);
+    throw err;
   }
 });
 

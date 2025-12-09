@@ -1,13 +1,14 @@
 import { Component, ChangeDetectionStrategy, inject, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
+import { SettingsCardComponent } from '@shared/components';
 import { LocalNetworkDiscoveryService, DialogService, DialogPresets } from '@shared/services';
 import { LocalDiscoveryDialogComponent } from '@core/local-discovery-dialog/local-discovery-dialog.component';
 import { NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
   selector: 'app-network-settings',
-  imports: [FormsModule, DatePipe],
+  imports: [FormsModule, DatePipe, SettingsCardComponent],
   templateUrl: './network-settings.component.html',
   styleUrls: ['./network-settings.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush

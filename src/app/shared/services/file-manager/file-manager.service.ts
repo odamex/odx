@@ -91,14 +91,17 @@ export class FileManagerService {
    * Get information about the current Odamex installation
    * @param customPath - Optional custom installation path
    * @param forceRefresh - Force refresh even if cached
+   * @param silent - If true, don't show loading spinner (for background updates)
    */
-  async getInstallationInfo(customPath?: string, forceRefresh = false): Promise<InstallationInfo> {
+  async getInstallationInfo(customPath?: string, forceRefresh = false, silent = false): Promise<InstallationInfo> {
     // Return cached data if available and no custom path (custom paths should always refresh)
     if (!forceRefresh && !customPath && this.installationInfoCache) {
       return this.installationInfoCache;
     }
     
-    this.store.setLoading(true);
+    if (!silent) {
+      this.store.setLoading(true);
+    }
     try {
       const info = await window.electron.fileManager.getInstallationInfo(customPath);
       this.store.setInstallationInfo(info);
@@ -110,7 +113,9 @@ export class FileManagerService {
       
       return info;
     } catch (err) {
-      this.store.setError('Failed to get installation info');
+      if (!silent) {
+        this.store.setError('Failed to get installation info');
+      }
       throw err;
     }
   }
