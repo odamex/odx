@@ -1,6 +1,6 @@
 {
   "name": "odx-launcher",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "ODX - Cross-platform Odamex launcher with single player, multiplayer, and server management",
   "main": "dist-electron/main.js",
   "author": {
