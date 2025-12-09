@@ -2,7 +2,7 @@
 
 Cross-platform Electron + Angular 20 launcher for Odamex with single player, multiplayer, and server management capabilities.
 
-[![Build and Release](https://github.com/odamex/odx/actions/workflows/build.yml/badge.svg)](https://github.com/odamex/odx/actions/workflows/build.yml)
+[![Tests](https://github.com/odamex/odx/actions/workflows/test.yml/badge.svg)](https://github.com/odamex/odx/actions/workflows/test.yml) [![Build and Release](https://github.com/odamex/odx/actions/workflows/build.yml/badge.svg)](https://github.com/odamex/odx/actions/workflows/build.yml)
 
 ## Features
 
