@@ -54,6 +54,15 @@
               <app-network-settings />
             </ng-template>
           </li>
+          <li [ngbNavItem]="6">
+            <button ngbNavLink class="d-flex align-items-center gap-2">
+              <i class="bi bi-info-circle"></i>
+              <span>About</span>
+            </button>
+            <ng-template ngbNavContent>
+              <app-about-settings />
+            </ng-template>
+          </li>
         </ul>
 
         <!-- Content Display Area -->

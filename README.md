@@ -4,6 +4,8 @@ Cross-platform Electron + Angular 20 launcher for Odamex with single player, mul
 
 [![Tests](https://github.com/odamex/odx/actions/workflows/test.yml/badge.svg)](https://github.com/odamex/odx/actions/workflows/test.yml) [![Build and Release](https://github.com/odamex/odx/actions/workflows/build.yml/badge.svg)](https://github.com/odamex/odx/actions/workflows/build.yml)
 
+**Built with:** [![GitHub Copilot](https://img.shields.io/badge/GitHub%20Copilot-000000?logo=githubcopilot&logoColor=fff)](#) [![Anthropic Claude](https://img.shields.io/badge/Anthropic%20Claude-191919?logo=anthropic&logoColor=fff)](#)
+
 ## Features
 
 - 🎮 **Single Player** - Launch Odamex with custom WADs, difficulty, and map selection

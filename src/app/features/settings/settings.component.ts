@@ -25,11 +25,12 @@ import { ApplicationSettingsComponent } from './application-settings/application
 import { QuickMatchSettingsComponent } from './quick-match-settings/quick-match-settings.component';
 import { GameLibrarySettingsComponent } from './game-library-settings/game-library-settings.component';
 import { NetworkSettingsComponent } from './network-settings/network-settings.component';
+import { AboutSettingsComponent } from './about-settings/about-settings.component';
 import versions from '../../../_versions';
 
 @Component({
   selector: 'app-settings',
-  imports: [NgbNavModule, LoadingSpinnerComponent, FormsModule, InstallationSettingsComponent, ApplicationSettingsComponent, QuickMatchSettingsComponent, GameLibrarySettingsComponent, NetworkSettingsComponent],
+  imports: [NgbNavModule, LoadingSpinnerComponent, FormsModule, InstallationSettingsComponent, ApplicationSettingsComponent, QuickMatchSettingsComponent, GameLibrarySettingsComponent, NetworkSettingsComponent, AboutSettingsComponent],
   templateUrl: './settings.component.html',
   styleUrls: ['./settings.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
