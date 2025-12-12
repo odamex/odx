@@ -87,6 +87,7 @@ jobs:
             release/*.deb
             release/*.rpm
             release/*.blockmap
+            release/*.yml
           retention-days: 30
 
   release:
@@ -107,7 +108,7 @@ jobs:
       - name: Flatten artifacts
         run: |
           mkdir -p release-files
-          find artifacts -type f \( -name "*.exe" -o -name "*.zip" -o -name "*.dmg" -o -name "*.AppImage" -o -name "*.deb" -o -name "*.rpm" -o -name "*.blockmap" \) -exec cp {} release-files/ \;
+          find artifacts -type f \( -name "*.exe" -o -name "*.zip" -o -name "*.dmg" -o -name "*.AppImage" -o -name "*.deb" -o -name "*.rpm" -o -name "*.blockmap" -o -name "*.yml" \) -exec cp {} release-files/ \;
           ls -lah release-files/
 
       - name: Create Release
