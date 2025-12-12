@@ -1,6 +1,6 @@
 import { Injectable, inject, signal, effect, DestroyRef } from '@angular/core';
 import { UpdatesService, FileManagerService, NotificationService, NetworkStatusService, AutoUpdateService } from '@shared/services';
-import versions from '../../../../_versions';
+import versions from '../../../_versions';
 
 /**
  * Settings for periodic update checking
