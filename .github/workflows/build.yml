@@ -82,6 +82,7 @@ jobs:
           path: |
             release/*.exe
             release/*.zip
+            release/*.dmg
             release/*.AppImage
             release/*.deb
             release/*.rpm
@@ -106,7 +107,7 @@ jobs:
       - name: Flatten artifacts
         run: |
           mkdir -p release-files
-          find artifacts -type f \( -name "*.exe" -o -name "*.zip" -o -name "*.AppImage" -o -name "*.deb" -o -name "*.rpm" -o -name "*.blockmap" \) -exec cp {} release-files/ \;
+          find artifacts -type f \( -name "*.exe" -o -name "*.zip" -o -name "*.dmg" -o -name "*.AppImage" -o -name "*.deb" -o -name "*.rpm" -o -name "*.blockmap" \) -exec cp {} release-files/ \;
           ls -lah release-files/
 
       - name: Create Release
