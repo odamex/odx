@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { CustomServersStore, CustomServerAddress } from '@app/store/custom-servers.store';
-import { CustomServersService } from '@shared/services/custom-servers/custom-servers.service';
+import { CustomServersService } from '@shared/services';
 import { validateCustomServerAddress } from '@shared/utils/custom-server-validation';
 
 /**

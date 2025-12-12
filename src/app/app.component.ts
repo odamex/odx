@@ -13,17 +13,14 @@ import {
   OdalPapiService,
   UpdatesService,
   IWADService,
-  ServerRefreshService,
   NetworkStatusService,
   OdamexServiceStatusService,
-  PeriodicUpdateService,
   AutoUpdateService,
   LocalNetworkDiscoveryService,
   CustomServersService,
   DialogService,
   DialogPresets
 } from '@shared/services';
-import type { DetectedIWAD } from '@shared/services/iwad/iwad.service';
 import { ServersStore } from '@store/servers.store';
 import versions from '../_versions';
 

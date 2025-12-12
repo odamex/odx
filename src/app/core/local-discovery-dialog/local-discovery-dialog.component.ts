@@ -1,7 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
-import { LocalNetworkDiscoveryService } from '@shared/services/local-network-discovery/local-network-discovery.service';
-import type { NetworkInterface } from '@shared/services/local-network-discovery/local-network-discovery.service';
+import { LocalNetworkDiscoveryService, type NetworkInterface } from '@shared/services';
 
 /**
  * LocalDiscoveryDialogComponent

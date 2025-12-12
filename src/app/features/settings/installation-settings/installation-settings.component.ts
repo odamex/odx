@@ -3,9 +3,10 @@ import { FormsModule } from '@angular/forms';
 import { SettingsCardComponent, ExternalLinkConfirmComponent } from '@shared/components';
 import { 
   FileManagerService, 
-  AutoUpdateService
+  AutoUpdateService,
+  DialogService,
+  DialogPresets
 } from '@shared/services';
-import { DialogService, DialogPresets } from '@shared/services/dialog/dialog.service';
 import versions from '../../../../_versions';
 
 @Component({
