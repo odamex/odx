@@ -1,5 +1,5 @@
 import { Component, ChangeDetectionStrategy, ViewEncapsulation } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 
 /**
  * Reusable card component for settings sections
@@ -8,7 +8,7 @@ import { CommonModule } from '@angular/common';
 @Component({
   selector: 'app-settings-card',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './settings-card.component.html',
   styleUrls: ['./settings-card.component.scss'],
   encapsulation: ViewEncapsulation.None,

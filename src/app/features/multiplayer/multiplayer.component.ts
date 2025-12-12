@@ -1,5 +1,5 @@
 import { Component, ChangeDetectionStrategy, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { RouterLink } from '@angular/router';
 import { QuickMatchService, OdalPapi } from '@shared/services';
 import { ServersStore } from '@app/store';
@@ -29,7 +29,7 @@ type QuickMatchState = 'idle' | 'searching' | 'found' | 'no-match' | 'monitoring
  */
 @Component({
   selector: 'app-multiplayer',
-  imports: [CommonModule, RouterLink],
+  imports: [RouterLink],
   templateUrl: './multiplayer.component.html',
   styleUrl: './multiplayer.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

@@ -1,5 +1,5 @@
 import { Component, ChangeDetectionStrategy, input, output } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { OdalPapi } from '@shared/services';
 
 /**
@@ -10,7 +10,7 @@ import { OdalPapi } from '@shared/services';
 @Component({
   selector: 'app-server-details-content',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './server-details-content.component.html',
   styleUrl: './server-details-content.component.scss',
 })

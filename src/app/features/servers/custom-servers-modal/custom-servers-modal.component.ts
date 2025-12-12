@@ -1,5 +1,5 @@
 import { Component, signal, inject, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { CustomServersStore, CustomServerAddress } from '@app/store/custom-servers.store';
@@ -15,7 +15,7 @@ import { validateCustomServerAddress } from '@shared/utils/custom-server-validat
 @Component({
   selector: 'app-custom-servers-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   templateUrl: './custom-servers-modal.component.html',
   styleUrl: './custom-servers-modal.component.scss'
 })
