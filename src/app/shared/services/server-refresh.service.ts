@@ -326,9 +326,17 @@ export class ServerRefreshService {
       else if (previousPlayers !== currentPlayers) {
         activityDetected = true;
         const change = currentPlayers - previousPlayers;
-        const action = change > 0 ? 'joined' : 'left';
-        const count = Math.abs(change);
-        notifications.push(`${server.name}: ${count} player(s) ${action}`);
+        
+        // Only notify for players joining, not leaving
+        if (change > 0) {
+          const action = 'joined';
+          const count = Math.abs(change);
+          notifications.push(`${server.name}: ${count} player(s) ${action}`);
+        }
+        // Commented out notifications for players leaving
+        // const action = change > 0 ? 'joined' : 'left';
+        // const count = Math.abs(change);
+        // notifications.push(`${server.name}: ${count} player(s) ${action}`);
       }
 
       // Update snapshot
