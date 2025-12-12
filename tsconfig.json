@@ -21,7 +21,7 @@
       "ES2022",
       "dom"
     ],
-    "types": ["node"],
+    "types": ["node", "jasmine"],
     "typeRoots": [
       "node_modules/@types"
     ],
