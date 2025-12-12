@@ -89,12 +89,25 @@ function getIPRange(cidr: string): string[] {
   const parts = baseIP.split('.').map(Number);
   const ips: string[] = [];
   
-  // Support /24 (most common) and /16 networks
+  // Support /24 (most common), /20, and /16 networks
   if (prefix === 24) {
     const networkBase = `${parts[0]}.${parts[1]}.${parts[2]}`;
     // Skip .0 (network address) and .255 (broadcast address)
     for (let i = 1; i < 255; i++) {
       ips.push(`${networkBase}.${i}`);
+    }
+  } else if (prefix === 20) {
+    // /20 = 4096 addresses (16 /24 subnets)
+    // Scan all hosts in the /20 block
+    const networkBase = `${parts[0]}.${parts[1]}`;
+    const thirdOctetBase = parts[2] & 0xF0; // Mask to get base of /20
+    
+    for (let j = 0; j < 16; j++) {
+      const thirdOctet = thirdOctetBase + j;
+      for (let i = 1; i < 255; i++) {
+        // Skip .0 and .255 for each /24 subnet
+        ips.push(`${networkBase}.${thirdOctet}.${i}`);
+      }
     }
   } else if (prefix === 16) {
     const networkBase = `${parts[0]}.${parts[1]}`;
@@ -106,7 +119,7 @@ function getIPRange(cidr: string): string[] {
       }
     }
   } else {
-    console.warn(`[Network Discovery] Unsupported prefix /${prefix}, only /24 and /16 are supported`);
+    console.warn(`[Network Discovery] Unsupported prefix /${prefix}, only /24, /20, and /16 are supported`);
     return [];
   }
   
@@ -206,14 +219,15 @@ async function queryServer(ip: string, port: number, timeout: number): Promise<S
 /**
  * Scan local network for Odamex servers
  */
-export async function discoverLocalServers(options: ScanOptions): Promise<ServerInfo[]> {
-  const networks = getLocalNetworks();
-  if (networks.length === 0) {
+export async function discoverLocalServers(options: ScanOptions, networks?: NetworkInterface[]): Promise<ServerInfo[]> {
+  // Use provided networks or discover them
+  const localNetworks = networks && networks.length > 0 ? networks : getLocalNetworks();
+  if (localNetworks.length === 0) {
     return [];
   }
   
   const allIPs: string[] = [];
-  for (const network of networks) {
+  for (const network of localNetworks) {
     const ips = getIPRange(network.cidr);
     allIPs.push(...ips);
   }
@@ -274,9 +288,9 @@ export function registerNetworkDiscoveryHandlers(): void {
   });
   
   // Discover local servers
-  ipcMain.handle('network-discovery:scan', async (_event, options: ScanOptions) => {
+  ipcMain.handle('network-discovery:scan', async (_event, options: ScanOptions, networks?: NetworkInterface[]) => {
     try {
-      return await discoverLocalServers(options);
+      return await discoverLocalServers(options, networks);
     } catch (err) {
       console.error('[Network Discovery] Error during scan:', err);
       throw err;

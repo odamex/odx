@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { FileManagerStore } from '@app/store';
-import { NetworkStatusService } from '@shared/services';
+import { NetworkStatusService, GitHubService } from '@shared/services';
 
 export interface InstallationInfo {
   installed: boolean;
@@ -34,6 +34,7 @@ export interface DirectoryInfo {
 export class FileManagerService {
   private store = inject(FileManagerStore);
   private networkStatus = inject(NetworkStatusService);
+  private github = inject(GitHubService);
 
   // Expose store signals
   readonly installationInfo = this.store.installationInfo;
@@ -132,7 +133,24 @@ export class FileManagerService {
     }
     
     return this.networkStatus.withOfflineHandling(
-      () => window.electron.fileManager.checkForUpdates(currentVersion),
+      async () => {
+        const release = await this.github.getOdamexLatestRelease();
+        if (!release) {
+          return { needsUpdate: false, latestVersion: currentVersion };
+        }
+        
+        const latestVersion = release.tagName;
+
+        if (!currentVersion) {
+          return { needsUpdate: true, latestVersion };
+        }
+
+        const comparison = await this.compareVersions(currentVersion, latestVersion);
+        return {
+          needsUpdate: comparison < 0,
+          latestVersion
+        };
+      },
       { needsUpdate: false, latestVersion: currentVersion }
     );
   }
@@ -147,7 +165,7 @@ export class FileManagerService {
 
   /**
    * Get the latest release from GitHub
-   * Uses store-level cache to avoid redundant API calls
+   * Uses GitHubService with store-level cache
    */
   async getLatestRelease() {
     // Return cached data if available
@@ -163,7 +181,7 @@ export class FileManagerService {
     
     try {
       const release = await this.networkStatus.withOfflineHandling(
-        () => window.electron.fileManager.getLatestRelease(),
+        () => this.github.getOdamexLatestRelease(),
         null
       );
       
@@ -197,7 +215,7 @@ export class FileManagerService {
     }
     
     return this.networkStatus.withOfflineHandling(
-      () => window.electron.fileManager.getAllReleases(),
+      () => this.github.getOdamexAllReleases(),
       []
     );
   }

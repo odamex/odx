@@ -1,6 +1,6 @@
 import { Component, ChangeDetectionStrategy, inject, signal, OnInit, computed } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { FileManagerService, type InstallationInfo } from '@shared/services';
+import { FileManagerService, GitHubService, type InstallationInfo, type GitHubDiscussion } from '@shared/services';
 import { ServersStore } from '@app/store';
 
 @Component({
@@ -14,10 +14,13 @@ export class HomeComponent implements OnInit {
   private router = inject(Router);
   private fileManager = inject(FileManagerService);
   private serversStore = inject(ServersStore);
+  protected githubService = inject(GitHubService);
 
   installInfo = signal<InstallationInfo | null>(null);
   latestRelease = signal<any>(null);
   loading = signal(true);
+  latestNews = signal<GitHubDiscussion | null>(null);
+  loadingNews = signal(true);
 
   // Current version for compatibility checking
   currentMajorVersion = signal<number | null>(null);
@@ -92,6 +95,28 @@ export class HomeComponent implements OnInit {
       console.error('Failed to check installation status:', err);
     } finally {
       this.loading.set(false);
+    }
+
+    // Load latest news (non-blocking)
+    this.loadLatestNews();
+  }
+
+  async loadLatestNews() {
+    try {
+      const discussions = await this.githubService.getLatestNews(1);
+      if (discussions.length > 0) {
+        this.latestNews.set(discussions[0]);
+      }
+    } catch (err) {
+      console.error('Failed to load latest news:', err);
+    } finally {
+      this.loadingNews.set(false);
+    }
+  }
+
+  openNewsLink(url: string) {
+    if (window.electron) {
+      window.electron.openExternal(url);
     }
   }
 

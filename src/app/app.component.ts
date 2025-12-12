@@ -457,7 +457,7 @@ export class App implements OnInit {
           }, 100);
 
           const downloadPath = await this.fileManager.downloadFile(
-            assetObj.browser_download_url,
+            assetObj.browserDownloadUrl,
             assetName
           );
 
@@ -475,7 +475,7 @@ export class App implements OnInit {
           }
 
           // Save version info
-          await this.fileManager.saveVersion(release.tag_name);
+          await this.fileManager.saveVersion(release.tagName);
 
           this.splashService.setMessages('Installation complete!', 'Odamex has been installed successfully');
           this.splashService.setProgress(null);

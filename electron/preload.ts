@@ -51,10 +51,7 @@ contextBridge.exposeInMainWorld('electron', {
   // File Manager methods
   fileManager: {
     getInstallationInfo: (customPath?: string) => ipcRenderer.invoke('file:get-installation-info', customPath),
-    checkForUpdates: (currentVersion: string | null) => ipcRenderer.invoke('file:check-updates', currentVersion),
     compareVersions: (v1: string, v2: string) => ipcRenderer.invoke('file:compare-versions', v1, v2),
-    getLatestRelease: () => ipcRenderer.invoke('file:get-latest-release'),
-    getAllReleases: () => ipcRenderer.invoke('file:get-all-releases'),
     download: (url: string, filename: string) => ipcRenderer.invoke('file:download', url, filename),
     extractZip: (zipPath: string) => ipcRenderer.invoke('file:extract-zip', zipPath),
     runInstaller: (installerPath: string, installDir?: string) => ipcRenderer.invoke('file:run-installer', installerPath, installDir),
@@ -98,5 +95,5 @@ contextBridge.exposeInMainWorld('electron', {
     portRangeEnd: number;
     scanTimeout: number;
     maxConcurrent: number;
-  }) => ipcRenderer.invoke('network-discovery:scan', options)
+  }, networks?: any[]) => ipcRenderer.invoke('network-discovery:scan', options, networks)
 });

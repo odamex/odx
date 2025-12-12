@@ -33,7 +33,20 @@
               <div class="fw-medium">{{ network.name }}</div>
               <small class="text-muted">{{ network.address }}/{{ network.netmask }}</small>
             </div>
-            <span class="badge bg-secondary">{{ network.cidr }}</span>
+            <span class="badge bg-secondary me-2">{{ network.cidr }}</span>
+            <div class="form-check form-switch">
+              <input 
+                class="form-check-input" 
+                type="checkbox" 
+                role="switch" 
+                [id]="'network-' + network.cidr"
+                [checked]="network.enabled"
+                (change)="toggleNetwork(network.cidr)"
+              >
+              <label class="form-check-label" [for]="'network-' + network.cidr">
+                {{ network.enabled ? 'Enabled' : 'Disabled' }}
+              </label>
+            </div>
           </div>
         }
       </div>

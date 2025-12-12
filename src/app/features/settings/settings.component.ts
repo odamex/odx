@@ -369,9 +369,9 @@ export class SettingsComponent implements OnInit, AfterViewInit {
         throw new Error(`Could not find asset ${assetName} in release`);
       }
 
-      console.log('Downloading:', assetObj.browser_download_url);
+      console.log('Downloading:', assetObj.browserDownloadUrl);
       const downloadPath = await this.fileManager.downloadFile(
-        assetObj.browser_download_url,
+        assetObj.browserDownloadUrl,
         assetName
       );
 
@@ -399,7 +399,7 @@ export class SettingsComponent implements OnInit, AfterViewInit {
       }
 
       // Save version info
-      await this.fileManager.saveVersion(release.tag_name);
+      await this.fileManager.saveVersion(release.tagName);
 
       // Clear cache to force fresh data on next load
       this.fileManager.clearReleaseCache();
@@ -449,7 +449,7 @@ export class SettingsComponent implements OnInit, AfterViewInit {
   }
 
   getPlatformDownloadText(): string {
-    const version = this.latestRelease()?.tag_name || 'Latest';
+    const version = this.latestRelease()?.tagName || 'Latest';
     const platform = window.electron.platform;
     if (platform === 'win32') return `${version} Windows Installer`;
     if (platform === 'darwin') return `${version} MacOS Installer`;

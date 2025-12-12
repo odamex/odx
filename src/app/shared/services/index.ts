@@ -4,6 +4,7 @@ export * from './auto-update/auto-update.service';
 export * from './custom-servers/custom-servers.service';
 export * from './dialog';
 export * from './file-manager/file-manager.service';
+export * from './github/github.service';
 export * from './iwad/iwad.service';
 export * from './local-network-discovery/local-network-discovery.service';
 export * from './network-status/network-status.service';

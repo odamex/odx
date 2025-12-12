@@ -719,42 +719,12 @@ ipcMain.handle('file:get-installation-info', async (_event, customPath?: string)
   }
 });
 
-ipcMain.handle('file:check-updates', async (_event, currentVersion: string | null) => {
-  try {
-    const result = await fileManager.checkForUpdates(currentVersion);
-    return result;
-  } catch (err: any) {
-    console.error('[IPC] Failed to check for updates:', err.message);
-    throw new Error(err.message || 'Failed to check for updates');
-  }
-});
-
 ipcMain.handle('file:compare-versions', (_event, v1: string, v2: string) => {
   try {
     return fileManager.compareVersions(v1, v2);
   } catch (err: any) {
     console.error('[IPC] Failed to compare versions:', err.message);
     throw new Error(err.message || 'Failed to compare versions');
-  }
-});
-
-ipcMain.handle('file:get-latest-release', async () => {
-  try {
-    const result = await fileManager.getLatestRelease();
-    return result;
-  } catch (err: any) {
-    console.error('[IPC] Failed to fetch latest release:', err.message);
-    throw new Error(err.message || 'Failed to fetch latest release');
-  }
-});
-
-ipcMain.handle('file:get-all-releases', async () => {
-  try {
-    const result = await fileManager.getAllReleases();
-    return result;
-  } catch (err: any) {
-    console.error('[IPC] Failed to fetch releases:', err.message);
-    throw new Error(err.message || 'Failed to fetch releases');
   }
 });
 

@@ -24,6 +24,11 @@ export class LocalDiscoveryDialogComponent implements OnInit {
     this.networks = this.localNetworkDiscoveryService.detectedNetworks();
   }
 
+  toggleNetwork(cidr: string): void {
+    this.localNetworkDiscoveryService.toggleNetwork(cidr);
+    this.networks = this.localNetworkDiscoveryService.detectedNetworks();
+  }
+
   confirm(): void {
     this.activeModal.close('confirmed');
   }

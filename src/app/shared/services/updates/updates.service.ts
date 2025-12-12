@@ -55,7 +55,7 @@ export class UpdatesService {
         available: updateCheck.needsUpdate,
         currentVersion: installInfo.version,
         latestVersion: updateCheck.latestVersion || null,
-        releaseUrl: release?.html_url || null,
+        releaseUrl: release?.htmlUrl || null,
         releaseName: release?.name || null
       };
 

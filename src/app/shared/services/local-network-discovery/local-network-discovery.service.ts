@@ -35,6 +35,8 @@ export interface NetworkInterface {
   netmask: string;
   /** CIDR notation (e.g., "10.0.0.50/24") */
   cidr: string;
+  /** Whether scanning is enabled for this network */
+  enabled: boolean;
 }
 
 /**
@@ -76,6 +78,18 @@ export class LocalNetworkDiscoveryService {
     if (settings.enabled) {
       this.start();
     }
+  }
+
+  /**
+   * Toggle whether a specific network is enabled for scanning
+   */
+  toggleNetwork(cidr: string): void {
+    const networks = this._detectedNetworks();
+    const updated = networks.map(n => 
+      n.cidr === cidr ? { ...n, enabled: !n.enabled } : n
+    );
+    this._detectedNetworks.set(updated);
+    this.saveDisabledNetworks(updated.filter(n => !n.enabled).map(n => n.cidr));
   }
 
   /**
@@ -164,12 +178,25 @@ export class LocalNetworkDiscoveryService {
     this._scanning.set(true);
     
     try {
+      // Detect networks if not done yet
+      if (this._detectedNetworks().length === 0) {
+        await this.detectNetworks();
+      }
+      
+      // Only scan enabled networks
+      const enabledNetworks = this._detectedNetworks().filter(n => n.enabled);
+      if (enabledNetworks.length === 0) {
+        console.log('[LocalNetworkDiscoveryService] No enabled networks to scan');
+        this._scanning.set(false);
+        return;
+      }
+      
       const servers = await window.electron.discoverLocalServers({
         portRangeStart: settings.portRangeStart,
         portRangeEnd: settings.portRangeEnd,
         scanTimeout: settings.scanTimeout,
         maxConcurrent: settings.maxConcurrent
-      });
+      }, enabledNetworks);
       
       // Query each discovered server for full information
       const fullServerInfo: OdalPapi.ServerInfo[] = [];
@@ -207,7 +234,15 @@ export class LocalNetworkDiscoveryService {
   async detectNetworks(): Promise<void> {
     try {
       const networks = await window.electron.getLocalNetworks();
-      this._detectedNetworks.set(networks);
+      const disabledCidrs = this.loadDisabledNetworks();
+      
+      // Mark networks as enabled/disabled based on saved preferences
+      const networksWithState = networks.map(n => ({
+        ...n,
+        enabled: !disabledCidrs.includes(n.cidr)
+      }));
+      
+      this._detectedNetworks.set(networksWithState);
     } catch (err) {
       console.error('[LocalNetworkDiscoveryService] Failed to detect networks:', err);
       this._detectedNetworks.set([]);
@@ -280,6 +315,30 @@ export class LocalNetworkDiscoveryService {
       localStorage.setItem('localDiscoveryMaxConcurrent', String(settings.maxConcurrent));
     } catch (err) {
       console.warn('[LocalNetworkDiscoveryService] Failed to save settings to localStorage:', err);
+    }
+  }
+
+  /**
+   * Load disabled networks from localStorage
+   */
+  private loadDisabledNetworks(): string[] {
+    try {
+      const stored = localStorage.getItem('localDiscoveryDisabledNetworks');
+      return stored ? JSON.parse(stored) : [];
+    } catch (err) {
+      console.warn('[LocalNetworkDiscoveryService] Failed to load disabled networks:', err);
+      return [];
+    }
+  }
+
+  /**
+   * Save disabled networks to localStorage
+   */
+  private saveDisabledNetworks(cidrs: string[]): void {
+    try {
+      localStorage.setItem('localDiscoveryDisabledNetworks', JSON.stringify(cidrs));
+    } catch (err) {
+      console.warn('[LocalNetworkDiscoveryService] Failed to save disabled networks:', err);
     }
   }
 }

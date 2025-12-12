@@ -109,7 +109,7 @@
             <div class="release-info">
               <div class="version-row">
                 <span class="version-label">Latest:</span>
-                <span class="version-badge">{{ latestRelease()!.tag_name }}</span>
+                <span class="version-badge">{{ latestRelease()!.tagName }}</span>
               </div>
               @if (installInfo()?.installed) {
                 <div class="version-row">
@@ -148,11 +148,23 @@
           <h3>Latest News</h3>
         </div>
         <div class="info-body">
-          <p class="news-title">Odamex 11.2.0 Released!</p>
-          <p class="news-excerpt">Major update with improved netcode and new features</p>
-          <a href="https://odamex.net" target="_blank" class="info-link">
-            Read more <i class="bi bi-arrow-right"></i>
-          </a>
+          @if (loadingNews()) {
+            <p class="text-muted">Loading news...</p>
+          } @else if (latestNews()) {
+            <p class="news-title">{{ latestNews()!.title }}</p>
+            <p class="news-excerpt">{{ githubService.getExcerpt(latestNews()!.body, 120) }}</p>
+            <p class="news-date text-muted small">
+              <i class="bi bi-clock"></i> {{ githubService.getRelativeTime(latestNews()!.createdAt) }}
+            </p>
+            <button class="info-link" (click)="openNewsLink(latestNews()!.url)">
+              Read more <i class="bi bi-box-arrow-up-right"></i>
+            </button>
+          } @else {
+            <p class="text-muted">No recent announcements</p>
+            <button class="info-link" (click)="openNewsLink('https://github.com/odamex/odamex/discussions/categories/news-announcements')">
+              View all news <i class="bi bi-box-arrow-up-right"></i>
+            </button>
+          }
         </div>
       </div>
 

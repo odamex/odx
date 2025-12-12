@@ -4,9 +4,10 @@
  * 
  * Handles:
  * - Odamex installation detection and management
- * - GitHub release checking and downloading
  * - File extraction and installation
  * - Version management
+ * 
+ * Note: GitHub API calls are handled by GitHubService in the browser process
  * 
  * @module file-manager-main
  */
@@ -105,8 +106,10 @@ export interface InstallationInfo {
  * Manages:
  * - ODX directory structure
  * - Odamex installation detection
- * - GitHub release downloads with retry logic
+ * - File downloads with retry logic
  * - Version comparison and update checking
+ * 
+ * Note: GitHub API calls are handled by GitHubService in the browser process
  * 
  * @example
  * const fileManager = new FileManagerService();
@@ -120,15 +123,6 @@ export class FileManagerService {
   private readonly binDir: string;
   private readonly wadsDir: string;
   private readonly configDir: string;
-  private lastGitHubRequest: number = 0;
-  private readonly GITHUB_MIN_INTERVAL = 1000; // Minimum 1 second between requests
-  private readonly GITHUB_RETRY_DELAY = 2000; // Initial retry delay
-  private readonly GITHUB_MAX_RETRIES = 3;
-  
-  // Cache for GitHub release data (session-based)
-  private releaseCache: { data: Release | null; timestamp: number } = { data: null, timestamp: 0 };
-  private allReleasesCache: { data: Release[] | null; timestamp: number } = { data: null, timestamp: 0 };
-  private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache lifetime
 
   constructor() {
     // Determine platform-specific paths based on installation type
@@ -284,29 +278,6 @@ export class FileManagerService {
   }
 
   /**
-   * Check if installation needs update by comparing with latest release
-   */
-  async checkForUpdates(currentVersion: string | null): Promise<{ needsUpdate: boolean; latestVersion: string | null }> {
-    try {
-      const release = await this.getLatestRelease();
-      const latestVersion = release.tag_name;
-
-      if (!currentVersion) {
-        return { needsUpdate: true, latestVersion };
-      }
-
-      const comparison = this.compareVersions(currentVersion, latestVersion);
-      return {
-        needsUpdate: comparison < 0,
-        latestVersion
-      };
-    } catch (err) {
-      console.error('Failed to check for updates:', err);
-      return { needsUpdate: false, latestVersion: null };
-    }
-  }
-
-  /**
    * Get installation info from ODX directory, system install, or custom path
    * Priority: Custom > ODX directory > System install
    */
@@ -413,119 +384,6 @@ export class FileManagerService {
       needsUpdate: false,
       latestVersion: null
     };
-  }
-
-  async getLatestRelease(): Promise<Release> {
-    // Return cached data if still valid
-    const now = Date.now();
-    if (this.releaseCache.data && (now - this.releaseCache.timestamp) < this.CACHE_TTL) {
-      return this.releaseCache.data;
-    }
-    
-    // Fetch fresh data
-    const release = await this.makeGitHubRequest('/repos/odamex/odamex/releases/latest');
-    this.releaseCache = { data: release, timestamp: now };
-    return release;
-  }
-
-  /**
-   * Make GitHub API request with rate limiting and retry logic
-   */
-  private async makeGitHubRequest(path: string, retryCount = 0): Promise<any> {
-    // Rate limiting: ensure minimum interval between requests
-    const now = Date.now();
-    const timeSinceLastRequest = now - this.lastGitHubRequest;
-    if (timeSinceLastRequest < this.GITHUB_MIN_INTERVAL) {
-      await new Promise(resolve => setTimeout(resolve, this.GITHUB_MIN_INTERVAL - timeSinceLastRequest));
-    }
-    this.lastGitHubRequest = Date.now();
-
-    return new Promise((resolve, reject) => {
-      const headers: Record<string, string> = {
-        'User-Agent': 'ODX-Launcher',
-        'Accept': 'application/vnd.github.v3+json'
-      };
-
-      // Add GitHub token if available (increases rate limit from 60 to 5000 requests/hour)
-      // Token comes from:
-      // - Development: ODX_GITHUB_TOKEN in .env file
-      // - Production: ODX_GITHUB_TOKEN set during build (electron-builder beforeBuild hook or CI/CD)
-      const githubToken = process.env['ODX_GITHUB_TOKEN'] || process.env['GITHUB_TOKEN'];
-      if (githubToken) {
-        headers['Authorization'] = `Bearer ${githubToken}`;
-      } else if (retryCount === 0) {
-        console.warn('No GitHub token available. API rate limit will be 60 requests/hour instead of 5000.');
-      }
-
-      const options = {
-        hostname: 'api.github.com',
-        path,
-        method: 'GET',
-        headers
-      };
-
-      const req = https.request(options, (res) => {
-        let data = '';
-
-        res.on('data', (chunk) => {
-          data += chunk;
-        });
-
-        res.on('end', async () => {
-          if (res.statusCode === 200) {
-            try {
-              const result = JSON.parse(data);
-              resolve(result);
-            } catch (err) {
-              reject(new Error('Failed to parse GitHub API response'));
-            }
-          } else if (res.statusCode === 403 || res.statusCode === 429) {
-            // Rate limit exceeded - implement exponential backoff
-            if (retryCount < this.GITHUB_MAX_RETRIES) {
-              const delay = this.GITHUB_RETRY_DELAY * Math.pow(2, retryCount);
-              console.warn(`GitHub API rate limit hit. Retrying in ${delay}ms... (attempt ${retryCount + 1}/${this.GITHUB_MAX_RETRIES})`);
-              
-              setTimeout(async () => {
-                try {
-                  const result = await this.makeGitHubRequest(path, retryCount + 1);
-                  resolve(result);
-                } catch (err) {
-                  reject(err);
-                }
-              }, delay);
-            } else {
-              reject(new Error(`GitHub API rate limit exceeded. Status: ${res.statusCode}`));
-            }
-          } else {
-            reject(new Error(`GitHub API returned status ${res.statusCode}`));
-          }
-        });
-      });
-
-      req.on('error', (err) => {
-        reject(new Error(`Failed to fetch from GitHub: ${err.message}`));
-      });
-
-      req.setTimeout(10000, () => {
-        req.destroy();
-        reject(new Error('GitHub API request timed out'));
-      });
-
-      req.end();
-    });
-  }
-
-  async getAllReleases(): Promise<Release[]> {
-    // Return cached data if still valid
-    const now = Date.now();
-    if (this.allReleasesCache.data && (now - this.allReleasesCache.timestamp) < this.CACHE_TTL) {
-      return this.allReleasesCache.data;
-    }
-    
-    // Fetch fresh data
-    const releases = await this.makeGitHubRequest('/repos/odamex/odamex/releases');
-    this.allReleasesCache = { data: releases, timestamp: now };
-    return releases;
   }
 
   async downloadFile(

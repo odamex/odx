@@ -346,10 +346,20 @@
   font-weight: 600;
   color: #fff;
   font-size: 1.05rem;
+  margin-bottom: 0.5rem;
 }
 
 .news-excerpt {
   font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.news-date {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+  opacity: 0.7;
 }
 
 .info-link {
@@ -358,6 +368,11 @@
   gap: 0.5rem;
   color: #4a9eff;
   text-decoration: none;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-size: 0.95rem;
   font-size: 0.95rem;
   transition: all 0.2s ease;
   

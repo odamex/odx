@@ -53,10 +53,7 @@ export interface ElectronAPI {
       needsUpdate: boolean;
       latestVersion: string | null;
     }>;
-    checkForUpdates: (currentVersion: string | null) => Promise<{ needsUpdate: boolean; latestVersion: string | null }>;
     compareVersions: (v1: string, v2: string) => Promise<number>;
-    getLatestRelease: () => Promise<any>;
-    getAllReleases: () => Promise<any[]>;
     download: (url: string, filename: string) => Promise<string>;
     extractZip: (zipPath: string) => Promise<void>;
     runInstaller: (installerPath: string, installDir?: string) => Promise<void>;
@@ -109,7 +106,7 @@ export interface ElectronAPI {
     portRangeEnd: number;
     scanTimeout: number;
     maxConcurrent: number;
-  }) => Promise<Array<{
+  }, networks?: any[]) => Promise<Array<{
     address: { ip: string; port: number };
     ping?: number;
     [key: string]: any;
