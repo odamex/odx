@@ -84,8 +84,8 @@ function getAppIcon(): string {
   
   // In production builds
   if (process.platform === 'win32') {
-    // Windows: electron-builder packages icon.ico in resources
-    return path.join(process.resourcesPath, '../app.ico');
+    // Windows: Use PNG from dist folder, .ico is embedded in the exe
+    return path.join(__dirname, '../public/favicon.256x256.png');
   } else if (process.platform === 'darwin') {
     // macOS: .icns is handled by electron-builder automatically
     return path.join(__dirname, '../public/favicon.512x512.png');
