@@ -21,6 +21,7 @@
       "ES2022",
       "dom"
     ],
+    "types": ["node"],
     "typeRoots": [
       "node_modules/@types"
     ],

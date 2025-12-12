@@ -111,7 +111,8 @@
     "karma-jasmine-html-reporter": "~2.1.0",
     "tsx": "^4.21.0",
     "typescript": "~5.9.2",
-    "wait-on": "^8.0.1"
+    "wait-on": "^8.0.1",
+    "zone.js": "^0.15.1"
   },
   "build": {
     "appId": "net.odamex.launcher",

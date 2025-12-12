@@ -1,4 +1,3 @@
-import { Injectable } from '@angular/core';
 import { signalStore, withState, withMethods, patchState } from '@ngrx/signals';
 import { OdalPapi } from '@shared/services';
 

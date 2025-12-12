@@ -1,5 +1,5 @@
 import { signalStore, withState, withMethods, withComputed } from '@ngrx/signals';
-import { patchState, type } from '@ngrx/signals';
+import { patchState } from '@ngrx/signals';
 import { computed } from '@angular/core';
 
 export interface DetectedIWAD {

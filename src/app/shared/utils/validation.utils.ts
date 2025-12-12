@@ -143,7 +143,7 @@ export function sanitizeFilePath(filePath: string): ValidationResult {
   }
   
   // On Windows, check for invalid characters
-  if (process.platform === 'win32') {
+  if (window.electron.platform === 'win32') {
     const invalidChars = /[<>"|?*]/;
     if (invalidChars.test(sanitized)) {
       return { valid: false, error: 'Invalid file path (contains illegal characters)' };
