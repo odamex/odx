@@ -30,6 +30,53 @@
     &.disabled { 
       pointer-events: none; 
     }
+    
+    li {
+      width: 100%;
+      margin-bottom: 0.5rem;
+    }
+    
+    button {
+      width: 100%;
+      background: #2c2c2c;
+      border: 1px solid #444;
+      color: #aaa;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.95rem;
+      text-align: left;
+      white-space: nowrap;
+      
+      i {
+        font-size: 1.1rem;
+        flex-shrink: 0;
+      }
+      
+      span {
+        flex: 1;
+        min-width: 0;
+      }
+      
+      &:hover:not(:disabled) {
+        background: #333;
+        border-color: #555;
+        color: #fff;
+      }
+      
+      &[aria-selected="true"] {
+        background: #ffa300;
+        border-color: #ffa300;
+        color: #000;
+        font-weight: 600;
+      }
+      
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
   }
   
   .settings-content { 

@@ -250,8 +250,45 @@ i.bi + span {
   }
 }
 
-// Shared settings component styles
-@import 'app/shared/styles/settings-common';
+/* Form Controls - Switches */
+.form-check-input {
+  cursor: pointer;
+  
+  &[type="checkbox"] {
+    &:focus {
+      border-color: #ffa300;
+      box-shadow: 0 0 0 0.2rem rgba(255, 163, 0, 0.25);
+    }
+    
+    &:checked {
+      background-color: #ffa300;
+      border-color: #ffa300;
+    }
+  }
+}
+
+.form-switch {
+  .form-check-input {
+    width: 2.5rem;
+    height: 1.25rem;
+    background-color: #3a3a3a;
+    border-color: #555555;
+    
+    &:checked {
+      background-color: #ffa300;
+      border-color: #ffa300;
+    }
+    
+    &:focus {
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e");
+    }
+  }
+  
+  .form-check-label {
+    cursor: pointer;
+    margin-left: 0.5rem;
+  }
+}
 
 /* NgBootstrap Modal Theming for ODX */
 .modal-backdrop {
