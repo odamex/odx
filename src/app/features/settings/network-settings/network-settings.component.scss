@@ -74,6 +74,17 @@
       font-family: 'Courier New', monospace;
     }
   }
+  
+  .network-toggle {
+    flex-shrink: 0;
+    margin-left: auto;
+    
+    .form-check-label {
+      font-size: 0.875rem;
+      margin-left: 0.5rem;
+      cursor: pointer;
+    }
+  }
 }
 
 .form-label {

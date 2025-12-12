@@ -144,6 +144,13 @@ export class NetworkSettingsComponent {
   }
 
   /**
+   * Toggle whether a specific network is enabled for scanning
+   */
+  toggleNetwork(cidr: string): void {
+    this.localNetworkDiscoveryService.toggleNetwork(cidr);
+  }
+
+  /**
    * Trigger a manual local network scan
    */
   triggerLocalScan(): void {

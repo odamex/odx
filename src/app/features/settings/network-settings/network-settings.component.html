@@ -66,6 +66,21 @@
                   <div class="network-cidr">
                     <span class="badge">{{ network.cidr }}</span>
                   </div>
+                  <div class="network-toggle">
+                    <div class="form-check form-switch">
+                      <input 
+                        class="form-check-input" 
+                        type="checkbox" 
+                        role="switch" 
+                        [id]="'network-settings-' + network.cidr"
+                        [checked]="network.enabled"
+                        (change)="toggleNetwork(network.cidr)"
+                      >
+                      <label class="form-check-label" [for]="'network-settings-' + network.cidr">
+                        {{ network.enabled ? 'Enabled' : 'Disabled' }}
+                      </label>
+                    </div>
+                  </div>
                 </div>
               }
             </div>
