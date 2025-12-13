@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { IWADStore, DetectedIWAD, WADDirectoryConfig, GameMetadata } from './iwad.store';
+import { IWADStore, DetectedIWAD, WADDirectoryConfig, GameMetadata } from '../iwad.store';
 
 describe('IWADStore', () => {
   let store: InstanceType<typeof IWADStore>;

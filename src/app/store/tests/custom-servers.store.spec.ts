@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { CustomServersStore, CustomServerAddress } from './custom-servers.store';
+import { CustomServersStore, CustomServerAddress } from '../custom-servers.store';
 import { OdalPapi } from '@shared/services';
 
 describe('CustomServersStore', () => {

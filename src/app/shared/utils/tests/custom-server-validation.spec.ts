@@ -4,7 +4,7 @@ import {
   isValidPort,
   validateCustomServerAddress,
   parseCustomServerAddress
-} from './custom-server-validation';
+} from '../custom-server-validation';
 
 describe('custom-server-validation', () => {
   describe('isValidIPv4', () => {

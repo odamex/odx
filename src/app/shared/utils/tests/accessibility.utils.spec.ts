@@ -5,7 +5,7 @@ import {
   isAccessible,
   FocusManager,
   addSkipLink
-} from './accessibility.utils';
+} from '../accessibility.utils';
 
 describe('accessibility.utils', () => {
   let container: HTMLElement;

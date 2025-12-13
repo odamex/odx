@@ -6,7 +6,7 @@ import {
   sanitizeText,
   validateURL,
   ValidationResult
-} from './validation.utils';
+} from '../validation.utils';
 
 describe('validation.utils', () => {
   describe('validateIPAddress', () => {

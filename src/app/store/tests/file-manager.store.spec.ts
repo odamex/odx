@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { FileManagerStore } from './file-manager.store';
+import { FileManagerStore } from '../file-manager.store';
 import { InstallationInfo, DownloadProgress, DirectoryInfo } from '@shared/services';
 
 describe('FileManagerStore', () => {
