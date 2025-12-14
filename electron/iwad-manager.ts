@@ -13,7 +13,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
 import * as os from 'os';
-import { IWAD_DATABASE, GameType, GAME_METADATA, type IWADEntry } from './iwad-database';
+import { IWAD_DATABASE, GAME_METADATA, type IWADEntry } from './iwad-database';
 
 /**
  * Detected IWAD information

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * File management service for Electron main process
  * 
@@ -15,7 +14,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as https from 'https';
 import * as os from 'os';
-import { app } from 'electron';
+const {app} = require('electron')
 
 /**
  * Odamex Client File Locations:
@@ -51,11 +50,11 @@ export interface ReleaseAsset {
   /** Asset filename */
   name: string;
   /** Direct download URL */
-  browser_download_url: string;
+  browserDownloadUrl: string;
   /** File size in bytes */
   size: number;
   /** MIME content type */
-  content_type: string;
+  contentType: string;
 }
 
 /**
@@ -63,13 +62,13 @@ export interface ReleaseAsset {
  */
 export interface Release {
   /** Version tag (e.g., "v11.0.0") */
-  tag_name: string;
+  tagName: string;
   /** Release name/title */
   name: string;
   /** Release description/notes */
   body: string;
   /** Publication timestamp */
-  published_at: string;
+  publishedAt: string;
   /** Available download assets */
   assets: ReleaseAsset[];
   /** Whether this is a pre-release version */
@@ -213,7 +212,7 @@ export class FileManagerService {
 
       // Check common Windows installation paths
       const commonPaths = [
-        path.join(process.env.ProgramFiles || 'C:\\Program Files', 'Odamex'),
+        path.join(process.env['ProgramFiles'] || 'C:\\Program Files', 'Odamex'),
         path.join(process.env['ProgramFiles(x86)'] || 'C:\\Program Files (x86)', 'Odamex'),
         'C:\\Odamex'
       ];
@@ -512,7 +511,7 @@ export class FileManagerService {
       return 'odamex-macos.dmg';
     } else if (platform === 'linux') {
       // Use Flatpak for Linux - architecture determined by system
-      if (arch === 'arm64' || arch === 'aarch64') {
+      if (arch === 'arm64') {
         return 'odamex-linux-arm64-*.flatpak';
       } else {
         return 'odamex-linux-x86_64-*.flatpak';
