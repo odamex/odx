@@ -65,6 +65,34 @@ export class App implements OnInit {
       const savedQuitOnClose = localStorage.getItem('quitOnClose');
       const quitOnClose = savedQuitOnClose === 'true';
       await window.electron.setQuitOnClose(quitOnClose);
+      
+      // Set up notification event handlers
+      window.electron.onNotificationClick((serverId?: string) => {
+        console.log('[App] Notification clicked, navigating to servers', serverId);
+        this.router.navigate(['/servers']);
+      });
+      
+      window.electron.onNotificationAction((action: string, serverId?: string) => {
+        console.log('[App] Notification action:', action, serverId);
+        if (action === 'join-server' && serverId) {
+          // Navigate to servers page and trigger join
+          this.router.navigate(['/servers']).then(() => {
+            // Find the server and join it
+            const [ip, port] = serverId.split(':');
+            const server = this.serversStore.servers().find(s => 
+              s.address.ip === ip && s.address.port === parseInt(port, 10)
+            );
+            
+            if (server) {
+              console.log('[App] Joining server from notification:', server.name);
+              // Use the servers component's join method by emitting a custom event
+              window.dispatchEvent(new CustomEvent('join-server-from-notification', { 
+                detail: { server } 
+              }));
+            }
+          });
+        }
+      });
     }
     
     // Expose service status for debugging

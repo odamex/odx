@@ -56,8 +56,9 @@ export class NotificationService {
    * @param title Notification title
    * @param body Notification body text
    * @param type Type of notification (affects filtering by user settings)
+   * @param serverId Optional server identifier for server-related notifications
    */
-  show(title: string, body: string, type: 'server-activity' | 'update' = 'server-activity'): void {
+  show(title: string, body: string, type: 'server-activity' | 'update' = 'server-activity', serverId?: string): void {
     const settings = this._settings();
     
     // Check if notifications are enabled globally
@@ -80,8 +81,8 @@ export class NotificationService {
     try {
       // Show system notification if enabled
       if (settings.systemNotifications) {
-        window.electron.showNotification(title, body);
-        console.log(`[NotificationService] Showed ${type} notification:`, title);
+        window.electron.showNotification(title, body, serverId);
+        console.log(`[NotificationService] Showed ${type} notification:`, title, serverId ? `(server: ${serverId})` : '');
       }
       
       // Flash taskbar and play sound if enabled

@@ -46,6 +46,7 @@ interface QueuedNotification {
   title: string;
   body: string;
   timestamp: number;
+  serverId?: string;
 }
 
 let isSystemLocked = false;
@@ -390,7 +391,7 @@ ipcMain.on('update-tray-tooltip', (_event, tooltip: string) => {
 });
 
 // Show system notification
-ipcMain.on('show-notification', (_event, title: string, body: string) => {
+ipcMain.on('show-notification', (_event, title: string, body: string, serverId?: string) => {
   // If system is locked or idle, queue the notification instead of showing it
   if (isSystemLocked) {
     // Add to queue with limit
@@ -399,7 +400,8 @@ ipcMain.on('show-notification', (_event, title: string, body: string) => {
       notificationQueue.push({
         title,
         body,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        serverId
       });
       console.log(`[Notifications] Queued notification while locked/idle (${notificationQueue.length} in queue)`);
     } else {
@@ -409,7 +411,7 @@ ipcMain.on('show-notification', (_event, title: string, body: string) => {
   }
 
   // Show notification immediately if not locked
-  showSystemNotification(title, body);
+  showSystemNotification(title, body, serverId);
 });
 
 /**
@@ -431,7 +433,7 @@ ipcMain.on('update-notification-settings', (_event, queueLimit: number, idleThre
 /**
  * Shows a system notification immediately
  */
-function showSystemNotification(title: string, body: string) {
+function showSystemNotification(title: string, body: string, serverId?: string) {
   const { Notification } = require('electron');
   if (Notification.isSupported()) {
     // Try multiple icon paths for dev and production
@@ -439,20 +441,45 @@ function showSystemNotification(title: string, body: string) {
       ? path.join(process.resourcesPath, 'app.asar.unpacked', 'build', 'icon.png')
       : path.join(__dirname, '..', 'build', 'icon.png');
     
-    const notification = new Notification({
+    const notificationOptions: any = {
       title,
       body,
       icon: iconPath
-    });
+    };
+    
+    // Add action button for server notifications
+    if (serverId) {
+      notificationOptions.actions = [{
+        type: 'button',
+        text: 'Join Server'
+      }];
+    }
+    
+    const notification = new Notification(notificationOptions);
     
     notification.show();
     
-    // Focus window when notification is clicked
+    // Handle notification click - open server browser
     notification.on('click', () => {
       if (mainWindow) {
         if (mainWindow.isMinimized()) mainWindow.restore();
         mainWindow.show();
         mainWindow.focus();
+        // Send event to renderer to navigate to servers page
+        mainWindow.webContents.send('notification-click', serverId);
+      }
+    });
+    
+    // Handle action button click - join specific server
+    notification.on('action', (event, index) => {
+      if (index === 0 && serverId) {
+        if (mainWindow) {
+          if (mainWindow.isMinimized()) mainWindow.restore();
+          mainWindow.show();
+          mainWindow.focus();
+          // Send event to renderer to join the server
+          mainWindow.webContents.send('notification-action', 'join-server', serverId);
+        }
       }
     });
   }

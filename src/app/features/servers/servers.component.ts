@@ -356,6 +356,17 @@ export class ServersComponent {
     
     // Detect current Odamex version
     this.detectCurrentVersion();
+    
+    // Listen for notification events to join servers
+    window.addEventListener('join-server-from-notification', ((event: CustomEvent) => {
+      const { server } = event.detail;
+      if (server) {
+        this.ngZone.run(() => {
+          console.log('[ServersComponent] Joining server from notification:', server.name);
+          this.joinServer(server);
+        });
+      }
+    }) as EventListener);
   }
 
   private async detectCurrentVersion() {

@@ -306,7 +306,8 @@ export class ServerRefreshService {
 
   private checkForPlayerActivity(servers: OdalPapi.ServerInfo[]): void {
     let activityDetected = false;
-    const notifications: string[] = [];
+    const notifications: Array<{text: string; serverId?: string}> = [];
+    let primaryServerId: string | undefined;
 
     // Filter servers based on user's visibility settings
     const visibleServers = servers.filter(server => this.shouldIncludeServer(server));
@@ -319,7 +320,11 @@ export class ServerRefreshService {
       // Check if this is a new server
       if (previousPlayers === undefined) {
         if (currentPlayers > 0) {
-          notifications.push(`New server: ${server.name} (${currentPlayers} players)`);
+          notifications.push({
+            text: `New server: ${server.name} (${currentPlayers} players)`,
+            serverId: serverKey
+          });
+          if (!primaryServerId) primaryServerId = serverKey;
         }
       }
       // If we have a previous snapshot and player count changed
@@ -331,7 +336,11 @@ export class ServerRefreshService {
         if (change > 0) {
           const action = 'joined';
           const count = Math.abs(change);
-          notifications.push(`${server.name}: ${count} player(s) ${action}`);
+          notifications.push({
+            text: `${server.name}: ${count} player(s) ${action}`,
+            serverId: serverKey
+          });
+          if (!primaryServerId) primaryServerId = serverKey;
         }
         // Commented out notifications for players leaving
         // const action = change > 0 ? 'joined' : 'left';
@@ -351,12 +360,13 @@ export class ServerRefreshService {
         // Show a single notification with all activity
         if (notifications.length > 0) {
           const title = notifications.length === 1 ? 'Server Activity' : `Server Activity (${notifications.length})`;
-          let body = notifications.slice(0, 3).join('\n'); // Show first 3 notifications
+          let body = notifications.slice(0, 3).map(n => n.text).join('\n'); // Show first 3 notifications
           if (notifications.length > 3) {
             body += `\n... and ${notifications.length - 3} more`;
           }
           
-          this.notificationService.show(title, body, 'server-activity');
+          // Use the first server's ID for the notification action
+          this.notificationService.show(title, body, 'server-activity', primaryServerId);
         }
       } catch (err) {
         console.warn('Failed to show notification:', err);

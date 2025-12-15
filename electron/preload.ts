@@ -19,10 +19,12 @@ contextBridge.exposeInMainWorld('electron', {
   updateTrayIcon: (status: 'online' | 'offline' | 'degraded') => ipcRenderer.send('update-tray-icon', status),
   updateTrayTooltip: (tooltip: string) => ipcRenderer.send('update-tray-tooltip', tooltip),
   updateQueueState: (isMonitoring: boolean) => ipcRenderer.send('update-queue-state', isMonitoring),
-  showNotification: (title: string, body: string) => ipcRenderer.send('show-notification', title, body),
+  showNotification: (title: string, body: string, serverId?: string) => ipcRenderer.send('show-notification', title, body, serverId),
   updateNotificationSettings: (queueLimit: number, idleThresholdMinutes: number) => 
     ipcRenderer.send('update-notification-settings', queueLimit, idleThresholdMinutes),
   showMessageBox: (options: any) => ipcRenderer.invoke('show-message-box', options),
+  onNotificationClick: (callback: (serverId?: string) => void) => ipcRenderer.on('notification-click', (_event, serverId) => callback(serverId)),
+  onNotificationAction: (callback: (action: string, serverId?: string) => void) => ipcRenderer.on('notification-action', (_event, action, serverId) => callback(action, serverId)),
 
   // Updates
   checkForUpdates: () => ipcRenderer.send('check-for-updates'),

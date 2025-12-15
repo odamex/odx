@@ -12,8 +12,10 @@ export interface ElectronAPI {
   updateTrayIcon: (status: 'online' | 'offline' | 'degraded') => void;
   updateTrayTooltip: (tooltip: string) => void;
   updateQueueState: (isMonitoring: boolean) => void;
-  showNotification: (title: string, body: string) => void;
+  showNotification: (title: string, body: string, serverId?: string) => void;
   updateNotificationSettings: (queueLimit: number, idleThresholdMinutes: number) => void;
+  onNotificationClick: (callback: (serverId?: string) => void) => void;
+  onNotificationAction: (callback: (action: string, serverId?: string) => void) => void;
   showMessageBox: (options: {
     type?: 'none' | 'info' | 'error' | 'question' | 'warning';
     title?: string;
