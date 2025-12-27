@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, computed, HostListener, ElementRef, ViewChildren, QueryList, AfterViewInit } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import { AppSettingsService } from '@shared/services';
@@ -39,9 +39,14 @@ interface NavItem {
   styleUrl: './navigation.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class NavigationComponent {
+export class NavigationComponent implements AfterViewInit {
   private appSettings = inject(AppSettingsService);
+  private elementRef = inject(ElementRef);
   protected developerMode = computed(() => this.appSettings.developerMode());
+  
+  @ViewChildren('navLink') navLinks!: QueryList<ElementRef<HTMLAnchorElement>>;
+  private currentFocusIndex = 0; // Start with first item
+  private isNavigatingWithKeyboard = false;
 
   protected readonly allNavItems: NavItem[] = [
     { path: '/home', icon: 'bootstrapHouseFill', label: 'Home' },
@@ -68,4 +73,60 @@ export class NavigationComponent {
   protected readonly bottomNavItems: NavItem[] = [
     { path: '/settings', icon: 'bootstrapGearFill', label: 'Settings', position: 'bottom' }
   ];
+
+  ngAfterViewInit() {
+    // Initialize focus management
+    this.setupFocusTracking();
+    this.updateTabIndices();
+  }
+
+  private setupFocusTracking() {
+    // Track which item has focus
+    const navItems = this.navLinks.toArray();
+    navItems.forEach((link, index) => {
+      link.nativeElement.addEventListener('focus', () => {
+        if (!this.isNavigatingWithKeyboard) {
+          this.currentFocusIndex = index;
+          this.updateTabIndices();
+        }
+      });
+    });
+  }
+
+  private updateTabIndices() {
+    // Roving tabindex: only the current item is tabbable
+    const navItems = this.navLinks.toArray();
+    navItems.forEach((link, index) => {
+      link.nativeElement.tabIndex = index === this.currentFocusIndex ? 0 : -1;
+    });
+  }
+
+  @HostListener('keydown', ['$event'])
+  handleKeyDown(event: KeyboardEvent) {
+    const navItems = this.navLinks.toArray();
+    
+    // Only handle arrow keys if a nav item has focus
+    if (!navItems.some(link => link.nativeElement === document.activeElement)) {
+      return;
+    }
+
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      this.isNavigatingWithKeyboard = true;
+      
+      if (event.key === 'ArrowDown') {
+        this.currentFocusIndex = (this.currentFocusIndex + 1) % navItems.length;
+      } else {
+        this.currentFocusIndex = (this.currentFocusIndex - 1 + navItems.length) % navItems.length;
+      }
+      
+      this.updateTabIndices();
+      navItems[this.currentFocusIndex].nativeElement.focus();
+      
+      // Reset flag after a short delay
+      setTimeout(() => {
+        this.isNavigatingWithKeyboard = false;
+      }, 100);
+    }
+  }
 }

@@ -68,7 +68,7 @@
 .server-details-panel {
   flex-shrink: 0; // Don't shrink when space is tight
   height: 30%;
-  min-height: 72px; // Minimum collapsed height
+  min-height: 68px; // Minimum collapsed height
   overflow: hidden;
   background: #1e1e1e;
   display: flex;
@@ -78,7 +78,7 @@
   transition: height 0.3s ease, width 0.3s ease;
   
   &.collapsed {
-    height: 72px;
+    height: 68px;
   }
   
   // Right panel variant
@@ -91,8 +91,8 @@
     box-shadow: -4px 0 8px rgba(0, 0, 0, 0.3);
     
     &.collapsed {
-      width: 72px;
-      min-width: 72px;
+      width: 68px;
+      min-width: 68px;
       
       // Hide header text when collapsed
       .card-header {
@@ -152,7 +152,7 @@
         .card-header {
           background: linear-gradient(135deg, #2a2a2a 0%, #1e1e1e 100%);
           border-bottom: 1px solid #3a3a3a;
-          padding: 0.75rem 1rem;
+          padding: 0.85rem 1rem;
           display: flex;
           align-items: center;
           flex-shrink: 0;
@@ -330,6 +330,8 @@
     .table-responsive {
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
+      padding: 0.25rem; // Small gutter to avoid content touching edges
+      margin: -0.25rem;
     }
 
     .ping-excellent { color: #28a745; }

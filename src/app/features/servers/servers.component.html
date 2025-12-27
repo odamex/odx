@@ -379,7 +379,7 @@
            aria-orientation="horizontal"></div>
       
         <div class="card bg-dark border-secondary mb-0">
-          <div class="card-header d-flex justify-content-between align-items-center">
+          <div class="card-header d-flex justify-content-between align-items-center" tabindex="-1">
             <h5 class="mb-0" id="server-details-title">
               <i class="bi bi-hdd-network me-2"></i>
               {{ selectedServer()?.name || 'Server Details' }}
@@ -392,7 +392,7 @@
               <i class="bi" [class.bi-chevron-down]="!detailsPanelCollapsed()" [class.bi-chevron-up]="detailsPanelCollapsed()"></i>
             </button>
           </div>
-          <div class="card-body">
+          <div class="card-body" tabindex="-1">
             <app-server-details-content
               [server]="selectedServer()"
               [joiningServer]="joiningServer()"
@@ -410,7 +410,7 @@
     @if (detailsPanelPosition() === 'right') {
       <div class="server-details-panel right-panel" [class.collapsed]="detailsPanelCollapsed()">
         <div class="card bg-dark border-secondary mb-0 h-100">
-          <div class="card-header d-flex justify-content-between align-items-center">
+          <div class="card-header d-flex justify-content-between align-items-center" tabindex="-1">
             <h5 class="mb-0 header-title" id="server-details-title-right">
               <i class="bi bi-hdd-network me-2"></i>
               {{ selectedServer()?.name || 'Server Details' }}
@@ -423,7 +423,7 @@
               <i class="bi" [class.bi-chevron-left]="!detailsPanelCollapsed()" [class.bi-chevron-right]="detailsPanelCollapsed()"></i>
             </button>
           </div>
-          <div class="card-body">
+          <div class="card-body" tabindex="-1">
             <app-server-details-content
               [server]="selectedServer()"
               [joiningServer]="joiningServer()"

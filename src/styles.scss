@@ -105,6 +105,33 @@ i.bi + span {
   padding-left: 0.5rem;
 }
 
+/* Improved keyboard navigation focus styles */
+*:focus {
+  outline: none;
+}
+
+*:focus-visible {
+  outline: 2px solid #ffa300;
+  outline-offset: 2px;
+}
+
+// Better focus for buttons
+button:focus-visible,
+.btn:focus-visible {
+  outline: 2px solid #ffa300;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 0.2rem rgba(255, 163, 0, 0.25);
+}
+
+// Better focus for inputs
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  border-color: #ffa300;
+  box-shadow: 0 0 0 0.2rem rgba(255, 163, 0, 0.25);
+  outline: none;
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 16px; // Wider for easier grabbing, especially near window edge

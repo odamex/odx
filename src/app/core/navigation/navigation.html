@@ -1,7 +1,8 @@
-<nav class="nav-sidebar">
+<nav class="nav-sidebar" role="navigation" aria-label="Main navigation">
   <div class="nav-top">
     <!-- User Menu at top -->
     <a 
+      #navLink
       class="nav-item user-menu"
       title="User Profile"
       routerLink="/profile"
@@ -12,6 +13,7 @@
     <!-- Main navigation items -->
     @for (item of topNavItems(); track item.path) {
       <a 
+        #navLink
         class="nav-item"
         [title]="item.label"
         [routerLink]="item.path"
@@ -25,6 +27,7 @@
   <div class="nav-bottom">
     @for (item of bottomNavItems; track item.path) {
       <a 
+        #navLink
         class="nav-item"
         [title]="item.label"
         [routerLink]="item.path"

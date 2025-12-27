@@ -21,6 +21,7 @@
         type="button"
         class="window-control-btn minimize"
         (click)="onMinimize()"
+        tabindex="-1"
         title="Minimize">
         <ng-icon name="bootstrapDash" />
       </button>
@@ -28,6 +29,7 @@
         type="button"
         class="window-control-btn maximize"
         (click)="onMaximize()"
+        tabindex="-1"
         title="Maximize">
         <ng-icon name="bootstrapSquare" />
       </button>
@@ -35,6 +37,7 @@
         type="button"
         class="window-control-btn close"
         (click)="onClose()"
+        tabindex="-1"
         title="Close">
         <ng-icon name="bootstrapX" />
       </button>
