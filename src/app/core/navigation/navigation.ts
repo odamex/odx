@@ -5,6 +5,7 @@ import { AppSettingsService } from '@shared/services';
 import {
   bootstrapHouseFill,
   bootstrapController,
+  bootstrapKeyboard,
   bootstrapPeopleFill,
   bootstrapListUl,
   bootstrapHddStackFill,
@@ -27,6 +28,7 @@ interface NavItem {
     provideIcons({
       bootstrapHouseFill,
       bootstrapController,
+      bootstrapKeyboard,
       bootstrapPeopleFill,
       bootstrapListUl,
       bootstrapHddStackFill,
@@ -50,7 +52,7 @@ export class NavigationComponent implements AfterViewInit {
 
   protected readonly allNavItems: NavItem[] = [
     { path: '/home', icon: 'bootstrapHouseFill', label: 'Home' },
-    { path: '/singleplayer', icon: 'bootstrapController', label: 'Single Player' },
+    { path: '/singleplayer', icon: 'bootstrapKeyboard', label: 'Single Player' },
     { path: '/multiplayer', icon: 'bootstrapPeopleFill', label: 'Multiplayer' },
     { path: '/servers', icon: 'bootstrapListUl', label: 'Server Browser' },
     { path: '/hosting', icon: 'bootstrapHddStackFill', label: 'Server Hosting' },
@@ -60,9 +62,8 @@ export class NavigationComponent implements AfterViewInit {
   protected topNavItems = computed(() => {
     const items = this.allNavItems;
     if (!this.developerMode()) {
-      // Filter out Single Player, Community, and Server Hosting when not in developer mode
+      // Filter out Community and Server Hosting when not in developer mode
       return items.filter(item => 
-        item.path !== '/singleplayer' && 
         item.path !== '/community' && 
         item.path !== '/hosting'
       );
