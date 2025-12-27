@@ -69,11 +69,6 @@
       }
     ]
   },
-  "overrides": {
-    "@ngrx/signals": {
-      "@angular/core": "^21.0.0"
-    }
-  },
   "dependencies": {
     "@angular/animations": "^21.0.5",
     "@angular/common": "^21.0.5",
@@ -86,7 +81,7 @@
     "@ng-bootstrap/ng-bootstrap": "^20.0.0",
     "@ng-icons/bootstrap-icons": "^33.0.0",
     "@ng-icons/core": "^33.0.0",
-    "@ngrx/signals": "^20.1.0",
+    "@ngrx/signals": "^21.0.1",
     "@popperjs/core": "^2.11.8",
     "bootstrap": "^5.3.8",
     "bootstrap-icons": "^1.13.1",
