@@ -332,6 +332,26 @@
         </p>
       </div>
 
+      <div class="setting-item">
+        <h5>Application Logs</h5>
+        <p class="text-muted mb-3">
+          View application logs for troubleshooting. Logs include notification debugging, Electron events, and error information.
+        </p>
+        <div class="d-flex gap-2 flex-wrap">
+          <button class="btn btn-primary" (click)="openLogDirectory()">
+            <i class="bi bi-folder-open"></i>
+            <span>Open Log Folder</span>
+          </button>
+          <button class="btn btn-secondary" (click)="copyLogPath()">
+            <i class="bi bi-clipboard"></i>
+            <span>Copy Log Path</span>
+          </button>
+        </div>
+        <small class="text-muted d-block mt-2">
+          <strong>Windows:</strong> %USERPROFILE%\AppData\Roaming\odx-launcher\logs\main.log
+        </small>
+      </div>
+
       <div class="setting-item mb-0">
         <h5>Reset Configuration</h5>
         <p class="text-muted mb-3">

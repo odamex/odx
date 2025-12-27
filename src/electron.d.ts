@@ -2,6 +2,8 @@ export interface ElectronAPI {
   platform: NodeJS.Platform;
   getAppPath: () => Promise<string>;
   setQuitOnClose: (enabled: boolean) => Promise<void>;
+  openLogDirectory: () => Promise<string>;
+  getLogPath: () => Promise<string>;
   minimizeWindow: () => void;
   maximizeWindow: () => void;
   closeWindow: () => void;

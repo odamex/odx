@@ -22,23 +22,25 @@ if (!isDevelopment) {
   autoUpdater.allowPrerelease = false;
 }
 
-// Configure logging - only use electron-log in development
-let log: any;
-if (isDevelopment) {
-  // Dynamic import for development only
-  const electronLog = require('electron-log');
-  log = electronLog.default || electronLog;
-  log.transports.file.level = 'info';
+// Configure logging - use electron-log in both dev and production
+const electronLog = require('electron-log');
+const log = electronLog.default || electronLog;
+log.transports.file.level = 'info';
+log.transports.console.level = isDevelopment ? 'debug' : 'info';
+
+// Log file locations for reference:
+// Windows: %USERPROFILE%\AppData\Roaming\odx-launcher\logs\main.log
+// macOS: ~/Library/Logs/odx-launcher/main.log
+// Linux: ~/.config/odx-launcher/logs/main.log
+log.info('='.repeat(80));
+log.info('ODX Launcher starting...');
+log.info('Mode:', isDevelopment ? 'Development' : 'Production');
+log.info('Packaged:', app.isPackaged);
+log.info('Log file location:', log.transports.file.getFile().path);
+log.info('='.repeat(80));
+
+if (!isDevelopment) {
   autoUpdater.logger = log;
-} else {
-  // Simple console logger for production
-  log = {
-    info: console.log,
-    warn: console.warn,
-    error: console.error,
-    debug: console.debug
-  };
-  // electron-updater will use its own internal logger in production
 }
 
 // Notification queue for idle/locked periods
@@ -126,6 +128,11 @@ function createWindow(): void {
 
   // Set dark theme
   nativeTheme.themeSource = 'dark';
+
+  // Disable default menu in production to prevent F12/DevTools shortcuts
+  if (!isDevelopment) {
+    Menu.setApplicationMenu(null);
+  }
 
   // Load the app
   if (isDevelopment) {
@@ -431,36 +438,140 @@ ipcMain.on('update-notification-settings', (_event, queueLimit: number, idleThre
 });
 
 /**
+ * Generates Windows Toast XML with action buttons
+ */
+function generateWindowsToastXml(title: string, body: string, serverId: string): string {
+  // Escape XML special characters
+  const escapeXml = (str: string) => {
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&apos;');
+  };
+  
+  const escapedTitle = escapeXml(title);
+  const escapedBody = escapeXml(body);
+  const escapedServerId = escapeXml(serverId);
+  
+  return `
+    <toast launch="action=open&amp;serverId=${escapedServerId}">
+      <visual>
+        <binding template="ToastGeneric">
+          <text>${escapedTitle}</text>
+          <text>${escapedBody}</text>
+        </binding>
+      </visual>
+      <actions>
+        <action content="Join Server" arguments="action=join&amp;serverId=${escapedServerId}" activationType="foreground"/>
+        <action content="View Servers" arguments="action=open&amp;serverId=${escapedServerId}" activationType="foreground"/>
+      </actions>
+    </toast>
+  `.trim();
+}
+
+/**
  * Shows a system notification immediately
  */
 function showSystemNotification(title: string, body: string, serverId?: string) {
+  log.info('[Notification] Attempting to show notification:', { title, body, serverId, platform: process.platform });
+  log.info('[Notification] App state - isPackaged:', app.isPackaged, 'isDevelopment:', isDevelopment);
+  
   const { Notification } = require('electron');
-  if (Notification.isSupported()) {
-    // Try multiple icon paths for dev and production
-    const iconPath = app.isPackaged 
-      ? path.join(process.resourcesPath, 'app.asar.unpacked', 'build', 'icon.png')
-      : path.join(__dirname, '..', 'build', 'icon.png');
-    
-    const notificationOptions: any = {
-      title,
-      body,
-      icon: iconPath
-    };
-    
-    // Add action button for server notifications
-    if (serverId) {
+  
+  if (!Notification.isSupported()) {
+    log.error('[Notification] Notifications are not supported on this system');
+    return;
+  }
+  
+  log.info('[Notification] Notifications are supported');
+  
+  // For Windows Toast XML, don't specify an icon - Windows uses the app icon from the exe
+  // For other platforms or basic notifications, try to use an icon from public folder
+  let iconPath: string | undefined;
+  
+  if (process.platform !== 'win32' || !serverId) {
+    // Only use icon for non-Windows or basic notifications
+    if (app.isPackaged) {
+      // In packaged builds, use favicon from public folder (gets included in resources)
+      iconPath = path.join(process.resourcesPath, 'app.asar', 'dist', 'browser', 'favicon.256x256.png');
+    } else {
+      // In development, use from public folder
+      iconPath = path.join(__dirname, '..', 'public', 'favicon.256x256.png');
+    }
+    log.info('[Notification] Icon path:', iconPath, 'exists:', require('fs').existsSync(iconPath));
+  } else {
+    log.info('[Notification] Using app icon from exe for Toast notification (no explicit icon needed)');
+  }
+  
+  const notificationOptions: any = {
+    title,
+    body
+  };
+  
+  // Only add icon if we determined one
+  if (iconPath) {
+    notificationOptions.icon = iconPath;
+  }
+  
+  // Platform-specific handling for action buttons
+  if (serverId) {
+    log.info('[Notification] Adding action buttons for serverId:', serverId);
+    if (process.platform === 'win32') {
+      // Windows: Toast XML with action buttons requires code signing
+      // For now, use basic notification with helpful text
+      // TODO: Implement Toast XML when app is code-signed for release
+      log.info('[Notification] Using basic notification (Toast XML requires code signing)');
+      notificationOptions.body = `${body}\n\nClick to view in server browser`;
+    } else if (process.platform === 'darwin') {
+      // macOS: Use actions API
       notificationOptions.actions = [{
         type: 'button',
         text: 'Join Server'
       }];
+      log.info('[Notification] Added macOS action button');
     }
-    
+    // Linux doesn't support action buttons in Electron notifications
+  }
+  
+  try {
+    log.info('[Notification] Creating notification with options:', JSON.stringify(notificationOptions, null, 2));
     const notification = new Notification(notificationOptions);
     
+    log.info('[Notification] Notification created, calling show()');
+    
+    // Add event listeners BEFORE calling show()
+    notification.on('show', () => {
+      log.info('[Notification] ✓ Notification SHOW event fired - notification is visible to user');
+    });
+    
+    notification.on('close', () => {
+      log.info('[Notification] Notification CLOSE event fired');
+    });
+    
+    notification.on('failed', (event, error) => {
+      log.error('[Notification] ✗ FAILED event fired:', error);
+    });
+    
     notification.show();
+    log.info('[Notification] show() called successfully');
+    
+    // On Windows, check if we need to log additional info
+    if (process.platform === 'win32') {
+      log.info('[Notification] Windows Info:');
+      log.info('  - App Name:', app.name);
+      log.info('  - App User Model ID:', app.getAppUserModelId());
+      log.info('  ℹ️ Note: Toast XML with action buttons requires code signing');
+      log.info('  ℹ️ Click notification to open server browser');
+      log.info('  ℹ️ Check Windows Settings > System > Notifications');
+      log.info('  ℹ️ Check if Focus Assist (Do Not Disturb) is enabled');
+      log.info('  ℹ️ Check Action Center (Windows key + N) for the notification');
+    }
     
     // Handle notification click - open server browser
     notification.on('click', () => {
+      log.info('[Notification] Notification clicked');
       if (mainWindow) {
         if (mainWindow.isMinimized()) mainWindow.restore();
         mainWindow.show();
@@ -470,8 +581,9 @@ function showSystemNotification(title: string, body: string, serverId?: string) 
       }
     });
     
-    // Handle action button click - join specific server
+    // Handle action button click - macOS only
     notification.on('action', (event, index) => {
+      log.info('[Notification] Action button clicked, index:', index);
       if (index === 0 && serverId) {
         if (mainWindow) {
           if (mainWindow.isMinimized()) mainWindow.restore();
@@ -482,6 +594,8 @@ function showSystemNotification(title: string, body: string, serverId?: string) 
         }
       }
     });
+  } catch (error) {
+    console.error('[Notification] Error creating/showing notification:', error);
   }
 }
 
@@ -846,6 +960,24 @@ ipcMain.handle('file:open-directory', async (_event, dirPath: string) => {
   }
 });
 
+// Open log file directory
+ipcMain.handle('app:open-log-directory', async () => {
+  try {
+    const logPath = log.transports.file.getFile().path;
+    const logDir = path.dirname(logPath);
+    await shell.openPath(logDir);
+    return logDir;
+  } catch (err: any) {
+    log.error('[IPC] Failed to open log directory:', err);
+    throw new Error(err.message || 'Failed to open log directory');
+  }
+});
+
+// Get log file path
+ipcMain.handle('app:get-log-path', () => {
+  return log.transports.file.getFile().path;
+});
+
 ipcMain.handle('file:pick-directory', async () => {
   try {
     const result = await dialog.showOpenDialog(mainWindow!, {
@@ -1042,13 +1174,35 @@ const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
   app.quit();
 } else {
-  app.on('second-instance', () => {
+  // Handle second instance - includes Windows toast notification activations
+  app.on('second-instance', (event, commandLine, workingDirectory) => {
     if (mainWindow) {
       if (mainWindow.isMinimized()) {
         mainWindow.restore();
       }
       mainWindow.show();
       mainWindow.focus();
+      
+      // On Windows, check for toast notification activation arguments
+      if (process.platform === 'win32') {
+        // Toast activation arguments are passed as command line args
+        const args = commandLine.join(' ');
+        
+        // Parse action from toast XML arguments
+        if (args.includes('action=join')) {
+          const serverIdMatch = args.match(/serverId=([^&\s]+)/);
+          if (serverIdMatch && serverIdMatch[1]) {
+            const serverId = decodeURIComponent(serverIdMatch[1]);
+            console.log('[Toast] Join server action:', serverId);
+            mainWindow.webContents.send('notification-action', 'join-server', serverId);
+          }
+        } else if (args.includes('action=open')) {
+          const serverIdMatch = args.match(/serverId=([^&\s]+)/);
+          const serverId = serverIdMatch && serverIdMatch[1] ? decodeURIComponent(serverIdMatch[1]) : undefined;
+          console.log('[Toast] Open servers action:', serverId);
+          mainWindow.webContents.send('notification-click', serverId);
+        }
+      }
     }
   });
 }

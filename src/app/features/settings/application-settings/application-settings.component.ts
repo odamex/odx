@@ -88,6 +88,25 @@ export class ApplicationSettingsComponent implements OnInit {
     this.appSettings.setDeveloperMode(!this.developerMode());
   }
 
+  async openLogDirectory() {
+    try {
+      const logDir = await window.electron.openLogDirectory();
+      console.log('[Settings] Opened log directory:', logDir);
+    } catch (error) {
+      console.error('[Settings] Failed to open log directory:', error);
+    }
+  }
+
+  async copyLogPath() {
+    try {
+      const logPath = await window.electron.getLogPath();
+      await navigator.clipboard.writeText(logPath);
+      console.log('[Settings] Copied log path to clipboard:', logPath);
+    } catch (error) {
+      console.error('[Settings] Failed to copy log path:', error);
+    }
+  }
+
   toggleAutoRefresh() {
     const newValue = !this.refreshService.isEnabled();
     this.refreshService.setEnabled(newValue);

@@ -78,18 +78,29 @@
     <div class="update-content">
       <i class="bi bi-info-circle-fill"></i>
       <span class="update-message">
-        Odamex update available: <strong>{{ updatesService.updateDetails().latestVersion }}</strong>
-        <small class="ms-2 text-muted">
-          (current: {{ updatesService.updateDetails().currentVersion }})
-        </small>
+        @if (odamexDownloading()) {
+          Downloading Odamex <strong>{{ updatesService.updateDetails().latestVersion }}</strong>...
+        } @else {
+          Odamex update available: <strong>{{ updatesService.updateDetails().latestVersion }}</strong>
+          <small class="ms-2 text-muted">
+            (current: {{ updatesService.updateDetails().currentVersion }})
+          </small>
+        }
       </span>
       <div class="update-actions">
-        <button class="btn btn-sm btn-light" (click)="navigateToSettings()">
-          Update Now
-        </button>
-        <button class="btn btn-sm btn-link text-white" (click)="dismiss()">
-          Dismiss
-        </button>
+        @if (odamexDownloading()) {
+          <button class="btn btn-sm btn-light" disabled>
+            <span class="spinner-border spinner-border-sm me-1"></span>
+            Downloading...
+          </button>
+        } @else {
+          <button class="btn btn-sm btn-light" (click)="downloadOdamexUpdate()">
+            Update Now
+          </button>
+          <button class="btn btn-sm btn-link text-white" (click)="dismiss()">
+            Dismiss
+          </button>
+        }
       </div>
     </div>
   </div>

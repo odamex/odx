@@ -7,6 +7,8 @@ contextBridge.exposeInMainWorld('electron', {
   platform: process.platform,
   getAppPath: () => ipcRenderer.invoke('app:getPath'),
   setQuitOnClose: (enabled: boolean) => ipcRenderer.invoke('app:setQuitOnClose', enabled),
+  openLogDirectory: () => ipcRenderer.invoke('app:open-log-directory'),
+  getLogPath: () => ipcRenderer.invoke('app:get-log-path'),
 
   // Window controls
   minimizeWindow: () => ipcRenderer.send('window-minimize'),
