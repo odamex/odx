@@ -1,13 +1,13 @@
 /**
  * File management service for Electron main process
- * 
+ *
  * Handles:
  * - Odamex installation detection and management
  * - File extraction and installation
  * - Version management
- * 
+ *
  * Note: GitHub API calls are handled by GitHubService in the browser process
- * 
+ *
  * @module file-manager-main
  */
 import * as fs from 'fs';
@@ -18,12 +18,12 @@ const {app} = require('electron')
 
 /**
  * Odamex Client File Locations:
- * 
+ *
  * Client logs, downloaded WADs, and config files are stored in:
  * - Windows (Installer): ~\Documents\My Games\Odamex\downloads
  * - Windows (Portable):  <odamex.exe location>\downloads
  * - macOS/Linux/BSD:     ~/.odamex/downloads
- * 
+ *
  * Installation Type Detection:
  * - Portable install (zip): Contains odamex-installed.txt in the client directory
  * - System install (exe):   Does NOT contain odamex-installed.txt
@@ -90,7 +90,7 @@ export interface InstallationInfo {
   /** Path to server executable */
   serverPath: string | null;
   /** Installation source type */
-  source: 'odx' | 'system' | 'custom' | 'none';
+  source: 'odx' | 'system' | 'flatpak' | 'custom' | 'none';
   /** System installation path (if detected) */
   systemInstallPath: string | null;
   /** Whether an update is available */
@@ -101,15 +101,15 @@ export interface InstallationInfo {
 
 /**
  * File manager service for Odamex installation and update management
- * 
+ *
  * Manages:
  * - ODX directory structure
  * - Odamex installation detection
  * - File downloads with retry logic
  * - Version comparison and update checking
- * 
+ *
  * Note: GitHub API calls are handled by GitHubService in the browser process
- * 
+ *
  * @example
  * const fileManager = new FileManagerService();
  * const info = fileManager.getInstallationInfo();
@@ -126,16 +126,16 @@ export class FileManagerService {
   constructor() {
     // Determine platform-specific paths based on installation type
     let baseDir: string;
-    
+
     if (process.platform === 'win32') {
       // For Windows, check if we're running from a system-wide install with a data directory
       const exePath = app.getPath('exe');
       const exeDir = path.dirname(exePath);
-      
+
       // Check if we're installed in Program Files (system-wide install)
       const isProgramFiles = exeDir.toLowerCase().includes('program files');
       const dataDir = path.join(exeDir, 'data');
-      
+
       if (isProgramFiles && fs.existsSync(dataDir)) {
         // Use portable data directory next to the executable
         // This directory is created by the installer with proper write permissions
@@ -150,7 +150,7 @@ export class FileManagerService {
       // On non-Windows platforms, always use userData
       baseDir = path.join(app.getPath('userData'), 'ODX');
     }
-    
+
     // Set up ODX directory structure
     this.odxDir = baseDir;
     this.binDir = path.join(this.odxDir, 'bin');
@@ -252,6 +252,43 @@ export class FileManagerService {
   }
 
   /**
+   * Detect Odamex Flatpak installation
+   */
+  private detectFlatpakInstallation(): 'system' | 'user' | null {
+    const { execSync } = require('child_process');
+    try {
+      // Check system-wide Flatpak installation
+      const systemList = execSync('flatpak list --system --columns=application', { encoding: 'utf-8' });
+      if (systemList.includes('net.odamex.Odamex')) {
+        return 'system';
+      }
+
+      // Check user-specific Flatpak installation
+      const userList = execSync('flatpak list --user --columns=application', { encoding: 'utf-8' });
+      if (userList.includes('net.odamex.Odamex')) {
+        return 'user';
+      }
+    } catch (err) {
+      return null;
+    }
+    return null;
+  }
+
+  /**
+   * Get version of Odamex Flatpak installation
+   */
+  private detectFlatpakVersion(installType: 'user' | 'system'): string | null {
+    const { execSync } = require('child_process');
+    try {
+      // TODO: this is really slow, try and get version from flatpak info
+      const version = execSync(`flatpak run net.odamex.Odamex server --version`, { encoding: 'utf-8' });
+      return version.split(' ')[1].trim();
+    } catch (err) {
+      return null;
+    }
+  }
+
+  /**
    * Compare two version strings (e.g., "11.0.0" vs "11.1.0")
    * Returns: -1 if v1 < v2, 0 if equal, 1 if v1 > v2
    */
@@ -282,12 +319,12 @@ export class FileManagerService {
    */
   /**
    * Get information about the Odamex installation
-   * 
+   *
    * Checks for Odamex in the following order:
    * 1. Custom path (if provided)
    * 2. ODX directory
    * 3. System installation
-   * 
+   *
    * Installation Type Detection:
    * - Portable (zip): Contains odamex-installed.txt in the installation directory
    * - System (exe):  Does NOT contain odamex-installed.txt
@@ -351,8 +388,10 @@ export class FileManagerService {
       systemServerExists = fs.existsSync(systemServerPath);
     }
 
+    const flatpakInstallType = this.detectFlatpakInstallation();
+
     // Priority: ODX directory > System install
-    let source: 'odx' | 'system' | 'none' = 'none';
+    let source: 'odx' | 'system' | 'flatpak' | 'none' = 'none';
     let version: string | null = null;
     let installedPath: string | null = null;
     let clientPath: string | null = null;
@@ -370,6 +409,10 @@ export class FileManagerService {
       installedPath = systemInstallPath;
       clientPath = systemClientExists ? systemClientPath : null;
       serverPath = systemServerExists ? systemServerPath : null;
+    } else if (flatpakInstallType !== null) {
+      source = 'flatpak';
+      version = this.detectFlatpakVersion(flatpakInstallType);
+      installedPath = 'flatpak';
     }
 
     return {
@@ -386,7 +429,7 @@ export class FileManagerService {
   }
 
   async downloadFile(
-    url: string, 
+    url: string,
     destination: string,
     onProgress?: (progress: DownloadProgress) => void,
     retryCount: number = 0
@@ -415,7 +458,7 @@ export class FileManagerService {
         if (retryCount < MAX_RETRIES) {
           const delay = RETRY_DELAY * Math.pow(2, retryCount);
           console.warn(`Download failed: ${error.message}. Retrying in ${delay}ms... (attempt ${retryCount + 1}/${MAX_RETRIES})`);
-          
+
           setTimeout(async () => {
             try {
               await this.downloadFile(url, destination, onProgress, retryCount + 1);
@@ -451,7 +494,7 @@ export class FileManagerService {
 
         res.on('data', (chunk) => {
           downloadedBytes += chunk.length;
-          
+
           if (onProgress && totalBytes > 0) {
             const elapsed = (Date.now() - startTime) / 1000;
             const bytesPerSecond = downloadedBytes / elapsed;
@@ -557,6 +600,8 @@ export class FileManagerService {
       const { exec } = require('child_process');
       
       // Install flatpak with user scope (no root required)
+      // TODO: don't bother with single-file bundles, just use flathub
+      // const command = 'flatpak install --user -y --from https://dl.flathub.org/repo/appstream/net.odamex.Odamex.flatpakref';
       const command = `flatpak install --user -y "${flatpakPath}"`;
       console.log('Running flatpak install:', command);
 
@@ -595,7 +640,7 @@ export class FileManagerService {
 
     return new Promise((resolve, reject) => {
       const { exec } = require('child_process');
-      
+
       // Inno Setup command line parameters:
       // /VERYSILENT = Silent mode, no UI
       // /SUPPRESSMSGBOXES = Suppress message boxes
@@ -699,12 +744,12 @@ export class FileManagerService {
       customPath: customPath || null,
       configuredAt: new Date().toISOString()
     };
-    
+
     // Ensure config directory exists
     if (!fs.existsSync(this.configDir)) {
       fs.mkdirSync(this.configDir, { recursive: true });
     }
-    
+
     fs.writeFileSync(configFile, JSON.stringify(config, null, 2), 'utf-8');
   }
 
@@ -726,8 +771,25 @@ export class FileManagerService {
     const { spawn } = require('child_process');
     const installInfo = await this.getInstallationInfo();
 
-    if (!installInfo.installed || !installInfo.clientPath) {
-      throw new Error('Odamex is not installed or client path not found');
+    if (!installInfo.installed) {
+      throw new Error('Odamex is not installed');
+    }
+
+    if (installInfo.source === 'flatpak') {
+      // Launch via flatpak
+      const child = spawn("flatpak", ["run", "net.odamex.Odamex", "client", ...args], {
+        detached: true,
+        stdio: 'ignore',
+        cwd: path.dirname("~")
+      });
+
+      // Unref the child process so the parent can exit independently
+      child.unref();
+      return;
+    }
+
+    if (!installInfo.clientPath) {
+      throw new Error('Odamex client path was not found');
     }
 
     if (!fs.existsSync(installInfo.clientPath)) {
