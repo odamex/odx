@@ -10,7 +10,7 @@
   padding: 3rem 0 2rem;
   margin-bottom: 3rem;
   background: linear-gradient(135deg, rgba(255, 163, 0, 0.1) 0%, rgba(74, 158, 255, 0.1) 100%);
-  border-radius: 12px;
+  border-radius: 0.75rem;
   border: 1px solid rgba(255, 163, 0, 0.2);
 }
 
@@ -125,7 +125,7 @@
   gap: 1rem;
   background: #2c2c2c;
   border: 1px solid #444;
-  border-radius: 8px;
+  border-radius: 0.5rem;
   padding: 1.5rem;
   text-decoration: none;
   transition: all 0.2s ease;
@@ -137,7 +137,7 @@
     position: absolute;
     top: 0;
     left: 0;
-    width: 4px;
+    width: 0.25rem;
     height: 100%;
     background: #4a9eff;
     transform: scaleY(0);
@@ -146,14 +146,14 @@
   
   &:hover {
     border-color: #4a9eff;
-    transform: translateX(4px);
+    transform: translateX(0.25rem);
     
     &::before {
       transform: scaleY(1);
     }
     
     .action-arrow {
-      transform: translateX(4px);
+      transform: translateX(0.25rem);
     }
   }
   
@@ -182,7 +182,7 @@
     align-items: center;
     justify-content: center;
     background: rgba(74, 158, 255, 0.15);
-    border-radius: 8px;
+    border-radius: 0.5rem;
     font-size: 1.5rem;
     color: #4a9eff;
   }
@@ -225,14 +225,14 @@
 .info-card {
   background: #2c2c2c;
   border: 1px solid #444;
-  border-radius: 8px;
+  border-radius: 0.5rem;
   overflow: hidden;
   transition: all 0.2s ease;
   
   &:hover {
     border-color: #4a9eff;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(74, 158, 255, 0.2);
+    box-shadow: 0 0.25rem 0.75rem rgba(74, 158, 255, 0.2);
   }
   
   &.highlight {
@@ -240,7 +240,7 @@
     
     &:hover {
       border-color: #ffa300;
-      box-shadow: 0 4px 12px rgba(255, 163, 0, 0.3);
+      box-shadow: 0 0.25rem 0.75rem rgba(255, 163, 0, 0.3);
     }
     
     .info-header {

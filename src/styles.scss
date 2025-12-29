@@ -134,8 +134,8 @@ select:focus-visible {
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 16px; // Wider for easier grabbing, especially near window edge
-  height: 16px;
+  width: 1rem; // Wider for easier grabbing, especially near window edge
+  height: 1rem;
 }
 
 ::-webkit-scrollbar-track {
@@ -338,7 +338,7 @@ select:focus-visible {
   .modal-content {
     background: #2c2c2c;
     border: 1px solid #444;
-    border-radius: 12px;
+    border-radius: 0.75rem;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
     color: #fff;
   }
@@ -379,7 +379,7 @@ select:focus-visible {
       gap: 0.75rem;
       align-items: flex-start;
       padding: 1rem;
-      border-radius: 8px;
+      border-radius: 0.5rem;
       margin-bottom: 1.5rem;
 
       i {
@@ -394,7 +394,7 @@ select:focus-visible {
       code {
         background: rgba(0, 0, 0, 0.3);
         padding: 0.2rem 0.4rem;
-        border-radius: 4px;
+        border-radius: 0.25rem;
         font-size: 0.85rem;
       }
 
@@ -448,7 +448,7 @@ select:focus-visible {
     .info-banner {
       background: rgba(74, 158, 255, 0.1);
       border: 1px solid #4a9eff;
-      border-radius: 8px;
+      border-radius: 0.5rem;
       padding: 1rem 1.5rem;
       display: flex;
       align-items: flex-start;
@@ -481,7 +481,7 @@ select:focus-visible {
       border: 1px solid #555;
       color: #ffffff;
       padding: 0.5rem 0.75rem;
-      border-radius: 4px;
+      border-radius: 0.25rem;
 
       &:focus {
         outline: none;

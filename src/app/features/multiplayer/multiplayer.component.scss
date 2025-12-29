@@ -37,7 +37,7 @@
     min-width: 120px;
     background: rgba(74, 158, 255, 0.1);
     border: 1px solid rgba(74, 158, 255, 0.3);
-    border-radius: 8px;
+    border-radius: 0.5rem;
     padding: 0.75rem 1rem;
     text-align: center;
 
@@ -82,7 +82,7 @@
 .match-card {
   background: #2c2c2c;
   border: 1px solid #444;
-  border-radius: 12px;
+  border-radius: 0.75rem;
   padding: 1.5rem 2rem;
   text-align: center;
   transition: all 0.3s ease;
@@ -205,7 +205,7 @@
       gap: 0.5rem;
       padding: 1rem;
       background: rgba(74, 158, 255, 0.1);
-      border-radius: 8px;
+      border-radius: 0.5rem;
       margin: 1.5rem 0;
       color: #aaa;
       font-size: 0.9rem;
@@ -218,7 +218,7 @@
     .match-found-alert {
       background: rgba(0, 255, 0, 0.1);
       border: 1px solid rgba(0, 255, 0, 0.3);
-      border-radius: 8px;
+      border-radius: 0.5rem;
       padding: 1.5rem;
       margin: 1.5rem 0;
       display: flex;
@@ -270,7 +270,7 @@
 .info-card {
   background: #2c2c2c;
   border: 1px solid #444;
-  border-radius: 8px;
+  border-radius: 0.5rem;
   padding: 1.5rem;
   text-align: center;
 

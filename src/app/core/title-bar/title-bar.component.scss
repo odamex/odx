@@ -13,8 +13,8 @@
   flex: 1;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding-left: 12px;
+  gap: 0.5rem;
+  padding-left: 0.75rem;
   
   // macOS: Add padding for traffic light buttons
   @media (platform: macos) {
@@ -34,7 +34,7 @@
 }
 
 .title-text {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 500;
   color: #fff;
 }
@@ -43,14 +43,14 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0 12px;
+  padding: 0 0.75rem;
   -webkit-app-region: no-drag;
 }
 
 .controller-status {
   display: flex;
   align-items: center;
-  border-radius: 4px;
+  border-radius: 0.25rem;
   color: #666;
   font-size: 14px;
   transition: all 0.2s ease;
