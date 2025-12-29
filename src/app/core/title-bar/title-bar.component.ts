@@ -6,9 +6,10 @@ import {
   bootstrapX,
   bootstrapWifi,
   bootstrapWifiOff,
-  bootstrapCircleFill
+  bootstrapCircleFill,
+  bootstrapController
 } from '@ng-icons/bootstrap-icons';
-import { NetworkStatusService, OdamexServiceStatusService } from '@shared/services';
+import { NetworkStatusService, OdamexServiceStatusService, ControllerService } from '@shared/services';
 
 /**
  * Custom title bar component with window controls and network status indicator
@@ -19,7 +20,7 @@ import { NetworkStatusService, OdamexServiceStatusService } from '@shared/servic
 @Component({
   selector: 'app-title-bar',
   imports: [NgIconComponent],
-  viewProviders: [provideIcons({ bootstrapDash, bootstrapSquare, bootstrapX, bootstrapWifi, bootstrapWifiOff, bootstrapCircleFill })],
+  viewProviders: [provideIcons({ bootstrapDash, bootstrapSquare, bootstrapX, bootstrapWifi, bootstrapWifiOff, bootstrapCircleFill, bootstrapController })],
   templateUrl: './title-bar.component.html',
   styleUrls: ['./title-bar.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -27,10 +28,14 @@ import { NetworkStatusService, OdamexServiceStatusService } from '@shared/servic
 export class TitleBarComponent {
   private networkStatus = inject(NetworkStatusService);
   private serviceStatus = inject(OdamexServiceStatusService);
+  private controllerService = inject(ControllerService);
   
   protected readonly appTitle = signal('ODX');
   protected readonly isOnline = this.networkStatus.isOnline;
   protected readonly connectionStatus = this.serviceStatus.connectionStatus;
+  protected readonly controllerConnected = this.controllerService.connected;
+  protected readonly controllerName = this.controllerService.controllerName;
+  protected readonly controllerSchema = this.controllerService.schema;
   protected readonly platform = signal<string>(window.electron?.platform || 'unknown');
   protected readonly showWindowControls = signal(this.platform() === 'win32' || this.platform() === 'linux');
 

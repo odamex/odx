@@ -1,13 +1,8 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 import { NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
-import { TitleBarComponent } from '@core/title-bar/title-bar.component';
-import { NavigationComponent } from '@core/navigation/navigation';
-import { SplashComponent } from '@core/splash/splash.component';
-import { UpdateBannerComponent } from '@core/update-banner/update-banner.component';
-import { FirstRunDialogComponent, FirstRunChoice } from '@core/first-run-dialog/first-run-dialog.component';
-import { GameSelectionDialogComponent } from '@core/game-selection-dialog/game-selection-dialog.component';
-import { SplashService } from '@core/splash/splash.service';
+import { FirstRunDialogComponent, FirstRunChoice, GameSelectionDialogComponent, NavigationComponent, SplashComponent, SplashService, TitleBarComponent, UpdateBannerComponent } from '@app/core';
+import { ButtonPromptsComponent } from '@shared/components';
 import { 
   FileManagerService,
   OdalPapiService,
@@ -16,8 +11,6 @@ import {
   NetworkStatusService,
   OdamexServiceStatusService,
   AutoUpdateService,
-  LocalNetworkDiscoveryService,
-  CustomServersService,
   DialogService,
   DialogPresets
 } from '@shared/services';
@@ -26,7 +19,7 @@ import versions from '../_versions';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, TitleBarComponent, NavigationComponent, SplashComponent, UpdateBannerComponent],
+  imports: [RouterOutlet, TitleBarComponent, NavigationComponent, SplashComponent, UpdateBannerComponent, ButtonPromptsComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
@@ -40,8 +33,6 @@ export class App implements OnInit {
   private networkStatus = inject(NetworkStatusService);
   private serviceStatus = inject(OdamexServiceStatusService); // Initialize service status monitoring
   private autoUpdateService = inject(AutoUpdateService); // Initialize ODX auto-updater
-  private localNetworkDiscovery = inject(LocalNetworkDiscoveryService); // Initialize local network discovery
-  private customServers = inject(CustomServersService); // Initialize custom servers
   private dialogService = inject(DialogService);
   private router = inject(Router);
 

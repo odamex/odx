@@ -1,0 +1,17 @@
+<div class="button-prompts" 
+     [style.opacity]="opacity()"
+     [class.d-none]="!shouldShow()">
+  @for (prompt of prompts(); track prompt.button + '-' + prompt.action) {
+    <div class="prompt-item">
+      @if (prompt.button === 'dpad') {
+        <span class="button-badge dpad-badge">
+          <ng-icon name="bootstrapDpadFill" />
+        </span>
+      } @else {
+        <span class="button-badge" [class]="getButtonClass(prompt.button)"
+        >{{ getButtonSymbol(prompt.button) }}</span>
+      }
+      <span class="action-text">{{ prompt.action }}</span>
+    </div>
+  }
+</div>

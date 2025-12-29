@@ -4,6 +4,11 @@
     <span class="title-text">{{ appTitle() }}</span>
   </div>
   <div class="status-indicators">
+    <div class="controller-status" 
+         [class.connected]="controllerConnected()"
+         [title]="controllerConnected() ? (controllerName() || 'Controller') + ' (' + controllerSchema() + ')' : 'No controller'">
+      <ng-icon name="bootstrapController" />
+    </div>
     <div class="network-status" [class.offline]="!isOnline()" [title]="isOnline() ? 'Online' : 'Offline'">
       <ng-icon [name]="isOnline() ? 'bootstrapWifi' : 'bootstrapWifiOff'" />
     </div>

@@ -304,8 +304,9 @@
               </tr>
             </thead>
             <tbody>
-              @for (server of filteredServers(); track server.address.ip + ':' + server.address.port) {
+              @for (server of filteredServers(); track server.address.ip + ':' + server.address.port; let i = $index) {
                 <tr 
+                  #serverRow
                   [class.table-active]="selectedServer() && selectedServer()!.address.ip === server.address.ip && selectedServer()!.address.port === server.address.port"
                   [class.has-players]="server.players.length > 0"
                   (click)="handleServerClick(server)"

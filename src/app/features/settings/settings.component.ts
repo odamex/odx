@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, signal, computed, OnInit, AfterViewInit, inject } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, computed, effect, OnInit, AfterViewInit, OnDestroy, inject, ViewChildren, QueryList, ElementRef } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { 
@@ -11,9 +11,13 @@ import {
   AutoUpdateService, 
   QuickMatchService,
   LocalNetworkDiscoveryService,
+  ControllerService,
+  ControllerFocusService,
+  GamepadButton,
   OdalPapi,
   DialogService,
   DialogPresets,
+  type ControllerEvent,
   type GameMetadata,
   type QuickMatchCriteria
 } from '@shared/services';
@@ -22,6 +26,7 @@ import { LocalDiscoveryDialogComponent } from '@core/local-discovery-dialog/loca
 import { LoadingSpinnerComponent } from '@shared/components';
 import { InstallationSettingsComponent } from './installation-settings/installation-settings.component';
 import { ApplicationSettingsComponent } from './application-settings/application-settings.component';
+import { NavigationSettingsComponent } from './navigation-settings/navigation-settings.component';
 import { QuickMatchSettingsComponent } from './quick-match-settings/quick-match-settings.component';
 import { GameLibrarySettingsComponent } from './game-library-settings/game-library-settings.component';
 import { NetworkSettingsComponent } from './network-settings/network-settings.component';
@@ -30,12 +35,14 @@ import versions from '../../../_versions';
 
 @Component({
   selector: 'app-settings',
-  imports: [NgbNavModule, LoadingSpinnerComponent, FormsModule, InstallationSettingsComponent, ApplicationSettingsComponent, QuickMatchSettingsComponent, GameLibrarySettingsComponent, NetworkSettingsComponent, AboutSettingsComponent],
+  imports: [NgbNavModule, LoadingSpinnerComponent, FormsModule, InstallationSettingsComponent, ApplicationSettingsComponent, NavigationSettingsComponent, QuickMatchSettingsComponent, GameLibrarySettingsComponent, NetworkSettingsComponent, AboutSettingsComponent],
   templateUrl: './settings.component.html',
   styleUrls: ['./settings.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class SettingsComponent implements OnInit, AfterViewInit {
+export class SettingsComponent implements OnInit, AfterViewInit, OnDestroy {
+  @ViewChildren('settingsNavLink') navLinks!: QueryList<ElementRef<HTMLButtonElement>>;
+
   private route = inject(ActivatedRoute);
   private fileManager = inject(FileManagerService);
   protected updatesService = inject(UpdatesService);
@@ -47,6 +54,9 @@ export class SettingsComponent implements OnInit, AfterViewInit {
   private quickMatchService = inject(QuickMatchService);
   protected localNetworkDiscoveryService = inject(LocalNetworkDiscoveryService);
   private dialogService = inject(DialogService);
+  private controllerService = inject(ControllerService);
+  private focusService = inject(ControllerFocusService);
+  private controllerSubscription: (() => void) | null = null;
 
   // Use store signals
   readonly installationInfo = this.fileManager.installationInfo;
@@ -67,6 +77,15 @@ export class SettingsComponent implements OnInit, AfterViewInit {
   
   // Debounce timer for custom path updates
   private customPathDebounceTimer?: number;
+
+  constructor() {
+    // Auto-focus current tab when content gains focus
+    effect(() => {
+      if (this.focusService.focusArea() === 'content') {
+        setTimeout(() => this.focusCurrentTab(), 100);
+      }
+    });
+  }
   
   // Group IWADs by game type to avoid long lists - includes non-commercial games with 0 detected
   readonly groupedIWADs = computed(() => {
@@ -253,6 +272,62 @@ export class SettingsComponent implements OnInit, AfterViewInit {
     } else {
       // Data already loaded, ready immediately
       this.initializing.set(false);
+    }
+
+    // Setup controller event listener
+    this.controllerSubscription = this.controllerService.addEventListener((event: ControllerEvent) => {
+      // Only handle when content has focus (settings is a content area)
+      if (!this.focusService.hasFocus('content')) return;
+
+      if (event.type === 'direction') {
+        if (event.direction === 'up') {
+          this.navigateTabUp();
+        } else if (event.direction === 'down') {
+          this.navigateTabDown();
+        }
+      } else if (event.type === 'buttonpress' && event.button !== undefined) {
+        this.handleButtonPress(event.button);
+      }
+    });
+  }
+
+  ngOnDestroy() {
+    if (this.controllerSubscription) {
+      this.controllerSubscription();
+    }
+  }
+
+  private navigateTabUp() {
+    const maxTab = 7; // Total number of tabs
+    this.activeTab = this.activeTab > 1 ? this.activeTab - 1 : maxTab;
+    this.focusCurrentTab();
+  }
+
+  private navigateTabDown() {
+    const maxTab = 7; // Total number of tabs
+    this.activeTab = this.activeTab < maxTab ? this.activeTab + 1 : 1;
+    this.focusCurrentTab();
+  }
+
+  private focusCurrentTab() {
+    setTimeout(() => {
+      const navButtons = this.navLinks?.toArray();
+      if (navButtons && navButtons.length > 0) {
+        const index = this.activeTab - 1; // activeTab is 1-based
+        if (index >= 0 && index < navButtons.length) {
+          const button = navButtons[index].nativeElement;
+          button.focus();
+          button.setAttribute('data-focus-visible-added', 'true');
+        }
+      }
+    }, 0);
+  }
+
+  private handleButtonPress(button: GamepadButton) {
+    // B button: return focus to navigation
+    if (button === GamepadButton.B) {
+      this.focusService.returnToNavigation();
+      return;
     }
   }
   

@@ -76,6 +76,14 @@
         opacity: 0.5;
         cursor: not-allowed;
       }
+
+      // Controller focus styling
+      &:focus-visible,
+      &:focus[data-focus-visible-added] {
+        outline: 2px solid #ffa300;
+        outline-offset: 2px;
+        box-shadow: 0 0 8px rgba(255, 163, 0, 0.3);
+      }
     }
   }
   

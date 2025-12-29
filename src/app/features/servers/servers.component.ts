@@ -1,10 +1,10 @@
-import { Component, ChangeDetectionStrategy, inject, signal, computed, effect, NgZone } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, computed, effect, NgZone, OnInit, OnDestroy, QueryList, ViewChildren, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import { ServersStore } from '@app/store';
 import { CustomServersStore } from '@app/store/custom-servers.store';
-import { OdalPapi, FileManagerService, IWADService, ServerRefreshService, NetworkStatusService, CustomServersService, DialogService, DialogPresets, LocalNetworkDiscoveryService } from '@shared/services';
+import { OdalPapi, FileManagerService, IWADService, ServerRefreshService, NetworkStatusService, CustomServersService, DialogService, DialogPresets, LocalNetworkDiscoveryService, ControllerService, ControllerFocusService, ControllerEvent, GamepadButton } from '@shared/services';
 import { CustomServersModalComponent } from './custom-servers-modal/custom-servers-modal.component';
 import { ServerDetailsContentComponent } from './server-details-content/server-details-content.component';
 
@@ -15,7 +15,9 @@ import { ServerDetailsContentComponent } from './server-details-content/server-d
   templateUrl: './servers.component.html',
   styleUrl: './servers.component.scss',
 })
-export class ServersComponent {
+export class ServersComponent implements OnInit, OnDestroy {
+  @ViewChildren('serverRow') serverRows!: QueryList<ElementRef<HTMLTableRowElement>>;
+
   private fileManager = inject(FileManagerService);
   private refreshService = inject(ServerRefreshService);
   private customServersService = inject(CustomServersService);
@@ -26,6 +28,77 @@ export class ServersComponent {
   private ngZone = inject(NgZone);
   readonly store = inject(ServersStore);
   readonly customStore = inject(CustomServersStore);
+  private controllerService = inject(ControllerService);
+  private focusService = inject(ControllerFocusService);
+  private controllerSubscription: (() => void) | null = null;
+  private lastButtonPressTime = 0;
+  private lastPressedButton: GamepadButton | null = null;
+  private focusedIndex = signal(-1);
+
+  constructor() {
+    // Auto-focus first server when content gains focus
+    effect(() => {
+      if (this.focusService.focusArea() === 'content' && this.focusedIndex() === -1) {
+        setTimeout(() => {
+          if (this.filteredServers().length > 0) {
+            this.focusedIndex.set(0);
+            this.focusServerRow(0);
+          }
+        }, 100);
+      }
+    });
+
+    // Load version filter setting
+    const savedFilterByVersion = localStorage.getItem('filterByVersion');
+    if (savedFilterByVersion !== null) {
+      this.filterByVersion.set(savedFilterByVersion === 'true');
+    }
+    
+    // Load hideEmpty filter setting
+    const savedHideEmpty = localStorage.getItem('hideEmpty');
+    if (savedHideEmpty !== null) {
+      this.hideEmpty.set(savedHideEmpty === 'true');
+    }
+    
+    // Load maxPing filter setting
+    const savedMaxPing = localStorage.getItem('maxPing');
+    if (savedMaxPing !== null) {
+      const pingValue = parseInt(savedMaxPing, 10);
+      if (!isNaN(pingValue)) {
+        this.maxPing.set(pingValue);
+      }
+    }
+    
+    // Save filter settings to localStorage when they change
+    effect(() => {
+      localStorage.setItem('hideEmpty', String(this.hideEmpty()));
+    });
+    
+    effect(() => {
+      localStorage.setItem('detailsPanelPosition', this.detailsPanelPosition());
+    });
+    
+    effect(() => {
+      const ping = this.maxPing();
+      if (ping !== null) {
+        localStorage.setItem('maxPing', String(ping));
+      } else {
+        localStorage.removeItem('maxPing');
+      }
+    });
+    
+    // Save current version to localStorage when detected
+    effect(() => {
+      const major = this.currentMajorVersion();
+      const minor = this.currentMinorVersion();
+      if (major !== null && minor !== null) {
+        localStorage.setItem('currentVersion', `${major}.${minor}`);
+      }
+    });
+    
+    // Detect current Odamex version
+    this.detectCurrentVersion();
+  }
   
   selectedServer = signal<OdalPapi.ServerInfo | null>(null);
   joiningServer = signal(false);
@@ -304,70 +377,6 @@ export class ServersComponent {
       return a.displayName.localeCompare(b.displayName);
     });
   });
-
-  constructor() {
-    // Load version filter setting
-    const savedFilterByVersion = localStorage.getItem('filterByVersion');
-    if (savedFilterByVersion !== null) {
-      this.filterByVersion.set(savedFilterByVersion === 'true');
-    }
-    
-    // Load hideEmpty filter setting
-    const savedHideEmpty = localStorage.getItem('hideEmpty');
-    if (savedHideEmpty !== null) {
-      this.hideEmpty.set(savedHideEmpty === 'true');
-    }
-    
-    // Load maxPing filter setting
-    const savedMaxPing = localStorage.getItem('maxPing');
-    if (savedMaxPing !== null) {
-      const pingValue = parseInt(savedMaxPing, 10);
-      if (!isNaN(pingValue)) {
-        this.maxPing.set(pingValue);
-      }
-    }
-    
-    // Save filter settings to localStorage when they change
-    effect(() => {
-      localStorage.setItem('hideEmpty', String(this.hideEmpty()));
-    });
-    
-    effect(() => {
-      localStorage.setItem('detailsPanelPosition', this.detailsPanelPosition());
-    });
-    
-    effect(() => {
-      const ping = this.maxPing();
-      if (ping !== null) {
-        localStorage.setItem('maxPing', String(ping));
-      } else {
-        localStorage.removeItem('maxPing');
-      }
-    });
-    
-    // Save current version to localStorage when detected
-    effect(() => {
-      const major = this.currentMajorVersion();
-      const minor = this.currentMinorVersion();
-      if (major !== null && minor !== null) {
-        localStorage.setItem('currentVersion', `${major}.${minor}`);
-      }
-    });
-    
-    // Detect current Odamex version
-    this.detectCurrentVersion();
-    
-    // Listen for notification events to join servers
-    window.addEventListener('join-server-from-notification', ((event: CustomEvent) => {
-      const { server } = event.detail;
-      if (server) {
-        this.ngZone.run(() => {
-          console.log('[ServersComponent] Joining server from notification:', server.name);
-          this.joinServer(server);
-        });
-      }
-    }) as EventListener);
-  }
 
   private async detectCurrentVersion() {
     try {
@@ -783,4 +792,103 @@ export class ServersComponent {
   readonly getGameTypeNameFn = (gameType: OdalPapi.GameType) => this.getGameTypeName(gameType);
   readonly getPingClassFn = (ping: number) => this.getPingClass(ping);
   readonly getServerPWADsFn = (server: OdalPapi.ServerInfo) => this.getServerPWADs(server);
+
+  ngOnInit() {
+    this.controllerSubscription = this.controllerService.addEventListener((event: ControllerEvent) => {
+      // Only handle direction events if content has focus
+      if (event.type === 'direction' && this.focusService.hasFocus('content')) {
+        if (event.direction === 'up') {
+          this.navigateUp();
+        } else if (event.direction === 'down') {
+          this.navigateDown();
+        }
+      } else if (event.type === 'buttonpress' && event.button !== undefined) {
+        this.handleButtonPress(event.button);
+      }
+    });
+  }
+
+  ngOnDestroy() {
+    if (this.controllerSubscription) {
+      this.controllerSubscription();
+    }
+  }
+
+  private navigateUp() {
+    const servers = this.filteredServers();
+    if (servers.length === 0) return;
+
+    const currentIndex = this.focusedIndex();
+    const newIndex = currentIndex <= 0 ? servers.length - 1 : currentIndex - 1;
+    this.focusedIndex.set(newIndex);
+    this.focusServerRow(newIndex);
+  }
+
+  private navigateDown() {
+    const servers = this.filteredServers();
+    if (servers.length === 0) return;
+
+    const currentIndex = this.focusedIndex();
+    const newIndex = currentIndex >= servers.length - 1 ? 0 : currentIndex + 1;
+    this.focusedIndex.set(newIndex);
+    this.focusServerRow(newIndex);
+  }
+
+  private focusServerRow(index: number) {
+    const servers = this.filteredServers();
+    if (index < 0 || index >= servers.length) return;
+
+    // Update selected server
+    this.selectedServer.set(servers[index]);
+
+    // Focus the row element after view update
+    setTimeout(() => {
+      const rows = this.serverRows?.toArray();
+      if (rows && rows[index]) {
+        const row = rows[index].nativeElement;
+        row.focus();
+        row.setAttribute('data-focus-visible-added', 'true');
+        row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }, 0);
+  }
+
+  private handleButtonPress(button: GamepadButton) {
+    const now = Date.now();
+    const timeSinceLastPress = now - this.lastButtonPressTime;
+
+    // B button: return focus to navigation
+    if (button === GamepadButton.B) {
+      // Blur any focused server rows
+      const rows = this.serverRows?.toArray();
+      if (rows) {
+        rows.forEach(row => {
+          row.nativeElement.blur();
+          row.nativeElement.removeAttribute('data-focus-visible-added');
+        });
+      }
+      // Clear focused index
+      this.focusedIndex.set(-1);
+      // Return focus to navigation
+      this.focusService.returnToNavigation();
+      return;
+    }
+
+    // A button: select on single press, join on double press (within 500ms)
+    if (button === GamepadButton.A) {
+      if (this.lastPressedButton === GamepadButton.A && timeSinceLastPress < 500) {
+        // Double press - join server
+        const server = this.selectedServer();
+        if (server) {
+          this.handleServerDoubleClick(server);
+        }
+        this.lastPressedButton = null;
+        this.lastButtonPressTime = 0;
+      } else {
+        // Single press - just select (already handled by focusServerRow)
+        this.lastPressedButton = GamepadButton.A;
+        this.lastButtonPressTime = now;
+      }
+    }
+  }
 }

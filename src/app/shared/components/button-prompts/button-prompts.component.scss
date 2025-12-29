@@ -1,0 +1,124 @@
+    .button-prompts {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 1000;
+      pointer-events: none;
+      opacity: 1;
+      transition: opacity 0.5s ease;
+    }
+
+    .prompt-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 163, 0, 0.3);
+      border-radius: 0.5rem;
+      padding: 0.5rem 1rem;
+    }
+
+    .button-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 32px;
+      height: 32px;
+      background: linear-gradient(145deg, #ffa300, #ff8c00);
+      color: #000;
+      font-weight: 700;
+      font-size: 0.75rem;
+      border-radius: 50%;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .dpad-badge {
+      background: linear-gradient(145deg, #666, #555) !important;
+      color: #fff !important;
+      font-size: 1rem;
+    }
+    
+    // Xbox button colors
+    .btn-xbox-a {
+      background: linear-gradient(145deg, #5ac97e, #4ab06d) !important;
+      color: #000 !important;
+    }
+    
+    .btn-xbox-b {
+      background: linear-gradient(145deg, #e74c3c, #c0392b) !important;
+      color: #fff !important;
+    }
+    
+    .btn-xbox-x {
+      background: linear-gradient(145deg, #3498db, #2980b9) !important;
+      color: #fff !important;
+    }
+    
+    .btn-xbox-y {
+      background: linear-gradient(145deg, #f1c40f, #f39c12) !important;
+      color: #000 !important;
+    }
+    
+    // PlayStation button colors
+    .btn-ps-cross {
+      background: linear-gradient(145deg, #3498db, #2980b9) !important;
+      color: #ffffffcc !important;
+      font-size: 1rem;
+    }
+    
+    .btn-ps-circle {
+      background: linear-gradient(145deg, #e74c3c, #c0392b) !important;
+      color: #ffffffcc !important;
+      font-size: 1rem;
+    }
+    
+    .btn-ps-square {
+      background: linear-gradient(145deg, #e91e63, #c2185b) !important;
+      color: #ffffffcc !important;
+      font-size: 1rem;
+    }
+    
+    .btn-ps-triangle {
+      background: linear-gradient(145deg, #5ac97e, #4ab06d) !important;
+      color: #ffffffcc !important;
+      font-size: 1rem;
+    }
+    
+    // Nintendo button colors
+    .btn-nintendo-b {
+      background: linear-gradient(145deg, #5ac97e, #4ab06d) !important;
+      color: #000 !important;
+    }
+    
+    .btn-nintendo-a {
+      background: linear-gradient(145deg, #e74c3c, #c0392b) !important;
+      color: #fff !important;
+    }
+    
+    .btn-nintendo-y {
+      background: linear-gradient(145deg, #3498db, #2980b9) !important;
+      color: #fff !important;
+    }
+    
+    .btn-nintendo-x {
+      background: linear-gradient(145deg, #f1c40f, #f39c12) !important;
+      color: #000 !important;
+    }
+    
+    // Generic button colors
+    .btn-generic {
+      background: linear-gradient(145deg, #666, #555) !important;
+      color: #fff !important;
+    }
+
+    .action-text {
+      color: #fff;
+      font-size: 13px;
+      font-weight: 500;
+      white-space: nowrap;
+    }

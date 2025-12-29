@@ -1,0 +1,111 @@
+<div class="content-section">
+  <h2>Navigation Settings</h2>
+  <p class="text-muted mb-4">Configure navigation methods and controller support</p>
+
+  <!-- Controller Settings Card -->
+  <app-settings-card>
+    <div card-icon class="d-flex align-items-center justify-content-center flex-shrink-0">
+      <i class="bi bi-controller"></i>
+    </div>
+    <div card-title>
+      <h3>Controller</h3>
+    </div>
+    
+    <div class="setting-item">
+      <div class="form-check form-switch">
+        <input 
+          class="form-check-input" 
+          type="checkbox" 
+          id="controllerEnabled"
+          [checked]="controllerEnabled()"
+          (change)="toggleControllerEnabled()">
+        <label class="form-check-label" for="controllerEnabled">
+          Enable controller support
+        </label>
+      </div>
+      <small class="text-muted">
+        Allow navigation and interaction using a game controller
+      </small>
+    </div>
+
+    @if (controllerEnabled()) {
+      <div>
+        <!-- Connection Status -->
+        @if (controllerConnected()) {
+          <div class="success-banner mb-3">
+            <i class="bi bi-check-circle-fill"></i>
+            <div>
+              <strong>Controller Connected</strong>
+              <p class="mb-0 mt-1">{{ controllerName() }}</p>
+            </div>
+          </div>
+        } @else {
+          <div class="info-banner mb-3">
+            <i class="bi bi-controller"></i>
+            <div>
+              <strong>No Controller Detected</strong>
+              <p class="mb-0 mt-1">Connect a controller to use it with the application. Controllers will be automatically detected when plugged in or turned on.</p>
+            </div>
+          </div>
+        }
+
+        <div class="setting-item">
+          <label for="controllerSchema" class="form-label">
+            Button layout
+          </label>
+          <select 
+            class="form-select" 
+            id="controllerSchema"
+            [value]="controllerSchema()"
+            [disabled]="!controllerConnected()"
+            (change)="onControllerSchemaChange($event)">
+            <option value="xbox">Xbox (A/B/X/Y)</option>
+            <option value="playstation">PlayStation (Cross/Circle/Square/Triangle)</option>
+            <option value="nintendo">Nintendo (B/A/Y/X)</option>
+            <option value="generic">Generic Gamepad</option>
+          </select>
+          <small class="text-muted">
+            Choose button naming scheme that matches your controller
+          </small>
+        </div>
+
+        <div class="setting-item">
+          <label for="controllerDeadzone" class="form-label">
+            Analog stick deadzone: {{ controllerDeadzone() | number:'1.2-2' }}
+          </label>
+          <input 
+            type="range" 
+            class="form-range" 
+            id="controllerDeadzone"
+            min="0.05"
+            max="0.50"
+            step="0.05"
+            [value]="controllerDeadzone()"
+            [disabled]="!controllerConnected()"
+            (input)="onControllerDeadzoneChange($event)">
+          <small class="text-muted">
+            Adjust if analog stick drifts or feels unresponsive (0.05 - 0.50)
+          </small>
+        </div>
+
+        <div class="setting-item mb-0">
+          <div class="form-check form-switch">
+            <input 
+              class="form-check-input" 
+              type="checkbox" 
+              id="controllerShowButtonPrompts"
+              [checked]="controllerShowButtonPrompts()"
+              [disabled]="!controllerConnected()"
+              (change)="toggleControllerShowButtonPrompts()">
+            <label class="form-check-label" for="controllerShowButtonPrompts">
+              Show button prompts
+            </label>
+          </div>
+          <small class="text-muted">
+            Display on-screen hints for controller actions (e.g., "Ⓐ Select  Ⓑ Back")
+          </small>
+        </div>
+      </div>
+    }
+  </app-settings-card>
+</div>

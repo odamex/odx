@@ -41,7 +41,7 @@
               <td>PWADs:</td>
               <td>
                 <div class="d-flex flex-wrap gap-1">
-                  @for (pwad of getServerPWADs()(server()!); track pwad) {
+                  @for (pwad of getServerPWADs()(server()!); track $index) {
                     <span class="badge bg-secondary">{{ pwad }}</span>
                   }
                 </div>

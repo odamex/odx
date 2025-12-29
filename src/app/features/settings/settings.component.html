@@ -9,7 +9,7 @@
         <!-- Vertical Nav Pills -->
         <ul ngbNav #nav="ngbNav" [(activeId)]="activeTab" class="nav-pills flex-column settings-nav flex-shrink-0 mt-4" style="width: 200px;" [class.disabled]="initializing()">
           <li [ngbNavItem]="1">
-            <button ngbNavLink [disabled]="initializing()" class="d-flex align-items-center gap-2">
+            <button #settingsNavLink ngbNavLink [disabled]="initializing()" class="d-flex align-items-center gap-2">
               <i class="bi bi-box-seam"></i>
               <span>Installation</span>
             </button>
@@ -18,7 +18,7 @@
             </ng-template>
           </li>
           <li [ngbNavItem]="2">
-            <button ngbNavLink class="d-flex align-items-center gap-2">
+            <button #settingsNavLink ngbNavLink class="d-flex align-items-center gap-2">
               <i class="bi bi-sliders"></i>
               <span>Application</span>
             </button>
@@ -27,7 +27,16 @@
             </ng-template>
           </li>
           <li [ngbNavItem]="3">
-            <button ngbNavLink class="d-flex align-items-center gap-2">
+            <button #settingsNavLink ngbNavLink class="d-flex align-items-center gap-2">
+              <i class="bi bi-controller"></i>
+              <span>Navigation</span>
+            </button>
+            <ng-template ngbNavContent>
+              <app-navigation-settings />
+            </ng-template>
+          </li>
+          <li [ngbNavItem]="4">
+            <button #settingsNavLink ngbNavLink class="d-flex align-items-center gap-2">
               <i class="bi bi-lightning-charge-fill"></i>
               <span>Quick Match</span>
             </button>
@@ -35,9 +44,9 @@
               <app-quick-match-settings />
             </ng-template>
           </li>
-          <li [ngbNavItem]="4">
-            <button ngbNavLink class="d-flex align-items-center gap-2">
-              <i class="bi bi-controller"></i>
+          <li [ngbNavItem]="5">
+            <button #settingsNavLink ngbNavLink class="d-flex align-items-center gap-2">
+              <i class="bi bi-joystick"></i>
               <span>Games</span>
             </button>
             <ng-template ngbNavContent>
@@ -45,8 +54,8 @@
             </ng-template>
           </li>
 
-          <li [ngbNavItem]="5">
-            <button ngbNavLink class="d-flex align-items-center gap-2">
+          <li [ngbNavItem]="6">
+            <button #settingsNavLink ngbNavLink class="d-flex align-items-center gap-2">
               <i class="bi bi-hdd-network-fill"></i>
               <span>Network</span>
             </button>
@@ -54,8 +63,8 @@
               <app-network-settings />
             </ng-template>
           </li>
-          <li [ngbNavItem]="6">
-            <button ngbNavLink class="d-flex align-items-center gap-2">
+          <li [ngbNavItem]="7">
+            <button #settingsNavLink ngbNavLink class="d-flex align-items-center gap-2">
               <i class="bi bi-info-circle"></i>
               <span>About</span>
             </button>

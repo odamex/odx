@@ -358,6 +358,18 @@
       }
     }
 
+    // Controller focus styling
+    tr {
+      &:focus-visible,
+      &:focus[data-focus-visible-added] {
+        outline: 2px solid #ffa300;
+        outline-offset: -2px;
+        background-color: rgba(255, 163, 0, 0.2) !important;
+        position: relative;
+        z-index: 1;
+      }
+    }
+
     th.sortable {
       cursor: pointer;
       user-select: none;
