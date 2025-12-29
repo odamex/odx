@@ -106,14 +106,14 @@ export class NavigationComponent implements AfterViewInit, OnDestroy {
     this.router.events.subscribe(event => {
       if (event instanceof NavigationEnd) {
         // Content routes that should have content focus
-        const contentRoutes = ['/servers', '/multiplayer', '/singleplayer', '/hosting', '/community'];
+        const contentRoutes = ['/servers', '/multiplayer', '/singleplayer', '/hosting', '/community', '/settings'];
         const isContentRoute = contentRoutes.some(route => event.url.startsWith(route));
         
         if (isContentRoute) {
           // Navigated to a content area via keyboard/mouse
           setTimeout(() => this.focusService.setFocus('content'), 100);
         } else {
-          // Navigated away from content (home, settings, etc.)
+          // Navigated away from content (home, etc.)
           setTimeout(() => this.focusService.setFocus('navigation'), 100);
         }
       }
