@@ -30,9 +30,8 @@
   border-left: 3px solid transparent;
   outline: none;
 
-  // Improved focus indicator that won't get cut off
-  &:focus-visible,
-  &:focus[data-focus-visible-added] {
+  // Focus indicator for controller navigation
+  &:focus {
     background: rgba(255, 163, 0, 0.2);
     color: #ffa300;
     box-shadow: inset 0 0 0 2px #ffa300;
@@ -50,8 +49,7 @@
     color: #ffa300;
     border-left-color: #ffa300;
     
-    &:focus-visible,
-    &:focus[data-focus-visible-added] {
+    &:focus {
       box-shadow: inset 0 0 0 2px #ffa300;
     }
   }

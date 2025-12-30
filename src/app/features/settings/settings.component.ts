@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, signal, computed, effect, OnInit, AfterViewInit, OnDestroy, inject, ViewChildren, QueryList, ElementRef } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, computed, effect, OnInit, OnDestroy, inject, ViewChildren, QueryList, ElementRef } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { 
@@ -23,7 +23,6 @@ import {
 } from '@shared/services';
 import { NgbNavModule, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 import { LocalDiscoveryDialogComponent } from '@core/local-discovery-dialog/local-discovery-dialog.component';
-import { LoadingSpinnerComponent } from '@shared/components';
 import { InstallationSettingsComponent } from './installation-settings/installation-settings.component';
 import { ApplicationSettingsComponent } from './application-settings/application-settings.component';
 import { NavigationSettingsComponent } from './navigation-settings/navigation-settings.component';
@@ -35,12 +34,12 @@ import versions from '../../../_versions';
 
 @Component({
   selector: 'app-settings',
-  imports: [NgbNavModule, LoadingSpinnerComponent, FormsModule, InstallationSettingsComponent, ApplicationSettingsComponent, NavigationSettingsComponent, QuickMatchSettingsComponent, GameLibrarySettingsComponent, NetworkSettingsComponent, AboutSettingsComponent],
+  imports: [NgbNavModule, FormsModule, InstallationSettingsComponent, ApplicationSettingsComponent, NavigationSettingsComponent, QuickMatchSettingsComponent, GameLibrarySettingsComponent, NetworkSettingsComponent, AboutSettingsComponent],
   templateUrl: './settings.component.html',
   styleUrls: ['./settings.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class SettingsComponent implements OnInit, AfterViewInit, OnDestroy {
+export class SettingsComponent implements OnInit, OnDestroy {
   @ViewChildren('settingsNavLink') navLinks!: QueryList<ElementRef<HTMLButtonElement>>;
 
   private route = inject(ActivatedRoute);
@@ -57,6 +56,9 @@ export class SettingsComponent implements OnInit, AfterViewInit, OnDestroy {
   private controllerService = inject(ControllerService);
   private focusService = inject(ControllerFocusService);
   private controllerSubscription: (() => void) | null = null;
+  
+  // Settings navigation state: 'tabs' (navigating tabs) or 'content' (inside a tab)
+  settingsNavigationState = signal<'tabs' | 'content'>('tabs');
 
   // Use store signals
   readonly installationInfo = this.fileManager.installationInfo;
@@ -77,12 +79,16 @@ export class SettingsComponent implements OnInit, AfterViewInit, OnDestroy {
   
   // Debounce timer for custom path updates
   private customPathDebounceTimer?: number;
+  private hasInitialFocus = false;
 
   constructor() {
     // Auto-focus current tab when content gains focus
     effect(() => {
       if (this.focusService.focusArea() === 'content') {
-        setTimeout(() => this.focusCurrentTab(), 100);
+        // Reset to tabs state when entering settings
+        this.settingsNavigationState.set('tabs');
+        // Try to focus if we haven't done initial focus yet
+        this.focusCurrentTab();
       }
     });
   }
@@ -273,6 +279,14 @@ export class SettingsComponent implements OnInit, AfterViewInit, OnDestroy {
       // Data already loaded, ready immediately
       this.initializing.set(false);
     }
+    
+    // Subscribe to navLinks changes to focus once they're populated
+    this.navLinks.changes.subscribe(() => {
+      if (!this.hasInitialFocus && this.focusService.focusArea() === 'content') {
+        this.focusCurrentTab();
+        this.hasInitialFocus = true;
+      }
+    });
 
     // Setup controller event listener
     this.controllerSubscription = this.controllerService.addEventListener((event: ControllerEvent) => {
@@ -280,11 +294,15 @@ export class SettingsComponent implements OnInit, AfterViewInit, OnDestroy {
       if (!this.focusService.hasFocus('content')) return;
 
       if (event.type === 'direction') {
-        if (event.direction === 'up') {
-          this.navigateTabUp();
-        } else if (event.direction === 'down') {
-          this.navigateTabDown();
+        // Only handle up/down when in 'tabs' state
+        if (this.settingsNavigationState() === 'tabs') {
+          if (event.direction === 'up') {
+            this.navigateTabUp();
+          } else if (event.direction === 'down') {
+            this.navigateTabDown();
+          }
         }
+        // When in 'content' state, the child components handle navigation
       } else if (event.type === 'buttonpress' && event.button !== undefined) {
         this.handleButtonPress(event.button);
       }
@@ -298,15 +316,17 @@ export class SettingsComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private navigateTabUp() {
-    const maxTab = 7; // Total number of tabs
+    const maxTab = this.navLinks.length; // Total number of tabs
     this.activeTab = this.activeTab > 1 ? this.activeTab - 1 : maxTab;
     this.focusCurrentTab();
+    this.scrollContentToTop();
   }
 
   private navigateTabDown() {
-    const maxTab = 7; // Total number of tabs
+    const maxTab = this.navLinks.length; // Total number of tabs
     this.activeTab = this.activeTab < maxTab ? this.activeTab + 1 : 1;
     this.focusCurrentTab();
+    this.scrollContentToTop();
   }
 
   private focusCurrentTab() {
@@ -317,16 +337,47 @@ export class SettingsComponent implements OnInit, AfterViewInit, OnDestroy {
         if (index >= 0 && index < navButtons.length) {
           const button = navButtons[index].nativeElement;
           button.focus();
-          button.setAttribute('data-focus-visible-added', 'true');
         }
+      }
+    }, 0);
+  }
+  
+  private scrollContentToTop() {
+    setTimeout(() => {
+      const contentElement = document.querySelector('.settings-content');
+      if (contentElement) {
+        contentElement.scrollTop = 0;
       }
     }, 0);
   }
 
   private handleButtonPress(button: GamepadButton) {
-    // B button: return focus to navigation
+    // A button: enter content mode (if in tabs mode)
+    if (button === GamepadButton.A) {
+      if (this.settingsNavigationState() === 'tabs') {
+        this.settingsNavigationState.set('content');
+        // Emit a custom event that child components can listen for
+        setTimeout(() => {
+          const event = new CustomEvent('settingsEnterContent');
+          window.dispatchEvent(event);
+        }, 50);
+      }
+      return;
+    }
+    
+    // B button: go back one level
     if (button === GamepadButton.B) {
-      this.focusService.returnToNavigation();
+      if (this.settingsNavigationState() === 'content') {
+        // Go back to tabs mode
+        this.settingsNavigationState.set('tabs');
+        // Notify children to stop processing buttons
+        const event = new CustomEvent('settingsExitContent');
+        window.dispatchEvent(event);
+        this.focusCurrentTab();
+      } else {
+        // Go back to main navigation
+        this.focusService.returnToNavigation();
+      }
       return;
     }
   }

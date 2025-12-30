@@ -1,6 +1,6 @@
-import { Component, ChangeDetectionStrategy, inject, signal, OnInit, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, OnInit, computed, ViewChildren, QueryList, ElementRef, OnDestroy, effect } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { FileManagerService, GitHubService, type InstallationInfo, type GitHubDiscussion } from '@shared/services';
+import { FileManagerService, GitHubService, ControllerService, ControllerFocusService, GamepadButton, type InstallationInfo, type GitHubDiscussion, type ControllerEvent } from '@shared/services';
 import { ServersStore } from '@app/store';
 
 @Component({
@@ -10,11 +10,35 @@ import { ServersStore } from '@app/store';
   styleUrls: ['./home.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class HomeComponent implements OnInit {
+export class HomeComponent implements OnInit, OnDestroy {
+  @ViewChildren('actionLink') actionLinks!: QueryList<ElementRef>;
+  @ViewChildren('actionButton') actionButtons!: QueryList<ElementRef>;
+  
   private router = inject(Router);
   private fileManager = inject(FileManagerService);
   private serversStore = inject(ServersStore);
   protected githubService = inject(GitHubService);
+  private controllerService = inject(ControllerService);
+  private focusService = inject(ControllerFocusService);
+  
+  private controllerUnsubscribe?: () => void;
+  private currentFocusIndex = 0;
+  private justEnteredContent = false;
+
+  constructor() {
+    // Watch for content focus and auto-focus first action link
+    effect(() => {
+      if (this.focusService.focusArea() === 'content') {
+        // Set flag to prevent immediate activation
+        this.justEnteredContent = true;
+        setTimeout(() => {
+          this.focusCurrentItem();
+          // Clear flag after button press would have been processed
+          setTimeout(() => this.justEnteredContent = false, 100);
+        }, 50);
+      }
+    });
+  }
 
   installInfo = signal<InstallationInfo | null>(null);
   latestRelease = signal<any>(null);
@@ -99,6 +123,80 @@ export class HomeComponent implements OnInit {
 
     // Load latest news (non-blocking)
     this.loadLatestNews();
+    
+    // Setup controller event listener
+    this.controllerUnsubscribe = this.controllerService.addEventListener(
+      (event: ControllerEvent) => this.handleControllerEvent(event)
+    );
+  }
+
+  ngOnDestroy() {
+    this.controllerUnsubscribe?.();
+  }
+
+  private handleControllerEvent(event: ControllerEvent) {
+    // Only handle events when content area has focus
+    if (!this.focusService.hasFocus('content')) return;
+    
+    // Ignore events immediately after entering content to prevent the navigation A press from activating items
+    if (this.justEnteredContent) return;
+
+    // Handle direction events (D-pad and analog stick)
+    if (event.type === 'direction') {
+      switch (event.direction) {
+        case 'left':
+          this.navigateUp();
+          break;
+        case 'right':
+          this.navigateDown();
+          break;
+      }
+      return;
+    }
+
+    // Handle button press events
+    if (event.type === 'buttonpress') {
+      switch (event.button) {
+        case GamepadButton.A:
+          this.activateCurrentItem();
+          break;
+        case GamepadButton.B:
+          this.focusService.returnToNavigation();
+          break;
+      }
+    }
+  }
+
+  private navigateUp() {
+    const totalItems = this.getTotalItems();
+    if (totalItems === 0) return;
+    this.currentFocusIndex = (this.currentFocusIndex - 1 + totalItems) % totalItems;
+    this.focusCurrentItem();
+  }
+
+  private navigateDown() {
+    const totalItems = this.getTotalItems();
+    if (totalItems === 0) return;
+    this.currentFocusIndex = (this.currentFocusIndex + 1) % totalItems;
+    this.focusCurrentItem();
+  }
+
+  private getTotalItems(): number {
+    return this.actionLinks.length + this.actionButtons.length;
+  }
+
+  private focusCurrentItem() {
+    const allItems = [...this.actionLinks.toArray(), ...this.actionButtons.toArray()];
+    if (allItems.length > 0 && allItems[this.currentFocusIndex]) {
+      allItems[this.currentFocusIndex].nativeElement.focus();
+    }
+  }
+
+  private activateCurrentItem() {
+    const allItems = [...this.actionLinks.toArray(), ...this.actionButtons.toArray()];
+    if (allItems.length > 0 && allItems[this.currentFocusIndex]) {
+      allItems[this.currentFocusIndex].nativeElement.click();
+    }
   }
 
   async loadLatestNews() {

@@ -24,10 +24,11 @@
   }
   
   .settings-nav {
-    flex-shrink: 0;
+    min-width: 14rem;
     overflow-y: auto;
-    padding: 0 0.25rem 0;
-    margin: 0 -0.25rem 0;
+    padding: 0.25rem 0.25rem 0;
+    margin: -0.25rem -0.25rem 0;
+    transition: all 0.2s ease;
     
     &.disabled { 
       pointer-events: none; 
@@ -35,6 +36,7 @@
     
     li {
       margin-bottom: 0.5rem;
+      transition: all 0.2s ease;
     }
     
     button {
@@ -44,11 +46,11 @@
       color: #aaa;
       padding: 0.75rem 1rem;
       border-radius: 0.5rem;
-      cursor: pointer;
       transition: all 0.2s ease;
       font-size: 0.95rem;
       text-align: left;
       white-space: nowrap;
+      cursor: pointer;
       
       i {
         font-size: 1.1rem;
@@ -71,20 +73,32 @@
         border-color: #ffa300;
         color: #000;
         font-weight: 600;
+        cursor: default;
+        pointer-events: none;
       }
       
       &:disabled {
         opacity: 0.5;
         cursor: not-allowed;
       }
+    }
+        
+    /* Scrollbar for navigation */
+    &::-webkit-scrollbar {
+      width: 0.25rem;
+    }
 
-      // Controller focus styling
-      &:focus-visible,
-      &:focus[data-focus-visible-added] {
-        outline: 2px solid #ffa300;
-        outline-offset: 2px;
-        box-shadow: 0 0 0.5rem rgba(255, 163, 0, 0.3);
-      }
+    &::-webkit-scrollbar-track {
+      background: #1a1a1a;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: #333;
+      border-radius: 2px;
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+      background: #444;
     }
   }
   

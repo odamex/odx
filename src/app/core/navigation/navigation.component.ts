@@ -1,5 +1,6 @@
-import { Component, ChangeDetectionStrategy, inject, computed, effect, HostListener, ElementRef, ViewChildren, QueryList, AfterViewInit, OnDestroy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, computed, effect, HostListener, ElementRef, ViewChildren, QueryList, AfterViewInit, OnDestroy, DestroyRef } from '@angular/core';
 import { RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import { AppSettingsService, ControllerService, ControllerFocusService, GamepadButton, type ControllerEvent } from '@shared/services';
 import {
@@ -46,18 +47,21 @@ export class NavigationComponent implements AfterViewInit, OnDestroy {
   private controllerService = inject(ControllerService);
   private focusService = inject(ControllerFocusService);
   private router = inject(Router);
+  private destroyRef = inject(DestroyRef);
   protected developerMode = computed(() => this.appSettings.developerMode());
   
   @ViewChildren('navLink') navLinks!: QueryList<ElementRef<HTMLAnchorElement>>;
   private currentFocusIndex = 0; // Start with first item
   private isNavigatingWithKeyboard = false;
   private controllerUnsubscribe?: () => void;
+  private initialized = false;
 
   constructor() {
     // Watch for focus returning to navigation and refocus current nav item
     effect(() => {
-      if (this.focusService.focusArea() === 'navigation') {
-        setTimeout(() => this.focusCurrentNavItem(), 50);
+      if (this.focusService.focusArea() === 'navigation' && this.initialized) {
+        // Focus immediately to prevent missing button presses
+        this.focusCurrentNavItem();
       }
     });
   }
@@ -90,11 +94,30 @@ export class NavigationComponent implements AfterViewInit, OnDestroy {
   ngAfterViewInit() {
     // Initialize focus management
     this.setupFocusTracking();
+    
+    // Set current focus index to match the active route
+    // Build array that matches what's actually rendered: [profile, ...topNavItems, ...bottomNavItems]
+    let currentUrl = this.router.url;
+    // Handle root path - map to /home
+    if (currentUrl === '/') {
+      currentUrl = '/home';
+    }
+    const profileItem = { path: '/profile', icon: 'bootstrapPersonCircle', label: 'Account' };
+    const allItems = [profileItem, ...this.topNavItems(), ...this.bottomNavItems];
+    const activeIndex = allItems.findIndex(item => currentUrl.startsWith(item.path));
+    if (activeIndex !== -1) {
+      this.currentFocusIndex = activeIndex;
+    }
+    
     this.updateTabIndices();
     
-    // Focus the first nav item if navigation has focus and controller is enabled
-    if (this.focusService.hasFocus('navigation') && this.controllerService.enabled()) {
-      setTimeout(() => this.focusCurrentNavItem(), 0);
+    // Mark as initialized so the effect can now handle focus changes
+    this.initialized = true;
+    
+    // Only focus the current nav item on startup if controller is enabled
+    // Keyboard navigation will focus naturally when Tab is pressed
+    if (this.controllerService.enabled()) {
+      this.focusCurrentNavItem();
     }
     
     // Setup controller event listener
@@ -103,8 +126,16 @@ export class NavigationComponent implements AfterViewInit, OnDestroy {
     );
 
     // Watch for route changes to automatically manage focus
-    this.router.events.subscribe(event => {
+    this.router.events
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(event => {
       if (event instanceof NavigationEnd) {
+        // Scroll to top when route changes
+        const mainContent = document.querySelector('.main-content');
+        if (mainContent) {
+          mainContent.scrollTop = 0;
+        }
+        
         // Content routes that should have content focus
         const contentRoutes = ['/servers', '/multiplayer', '/singleplayer', '/hosting', '/community', '/settings'];
         const isContentRoute = contentRoutes.some(route => event.url.startsWith(route));
@@ -125,7 +156,6 @@ export class NavigationComponent implements AfterViewInit, OnDestroy {
     if (navItems.length > 0) {
       const element = navItems[this.currentFocusIndex].nativeElement;
       element.focus();
-      element.setAttribute('data-focus-visible-added', '');
     }
   }
   
@@ -185,7 +215,6 @@ export class NavigationComponent implements AfterViewInit, OnDestroy {
     this.currentFocusIndex = (this.currentFocusIndex + 1) % navItems.length;
     this.updateTabIndices();
     const element = navItems[this.currentFocusIndex].nativeElement;
-    element.setAttribute('data-focus-visible-added', '');
     element.focus();
     
     setTimeout(() => {
@@ -200,7 +229,6 @@ export class NavigationComponent implements AfterViewInit, OnDestroy {
     this.currentFocusIndex = (this.currentFocusIndex - 1 + navItems.length) % navItems.length;
     this.updateTabIndices();
     const element = navItems[this.currentFocusIndex].nativeElement;
-    element.setAttribute('data-focus-visible-added', '');
     element.focus();
     
     setTimeout(() => {

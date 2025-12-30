@@ -1,93 +1,98 @@
-<app-settings-card 
-  icon="info-circle" 
-  title="About ODX"
-  description="Credits and attribution for ODX Launcher">
+<div class="content-section">
+  <h2>About</h2>
+  <p class="text-muted mb-4"></p>
   
-  <!-- Odamex Attribution -->
-  <div class="mb-4">
-    <h5 class="mb-3">Odamex</h5>
-    <p class="text-muted mb-2">
-      ODX is a launcher for <strong>Odamex</strong>, a free, cross-platform modification of the Doom engine that allows players to easily join servers and play Doom online with people around the world.
-    </p>
-    <div class="d-flex gap-2 mb-3">
-      <button class="btn btn-sm btn-outline" (click)="openLink('https://github.com/odamex/odamex')">
-        <i class="bi bi-github"></i> Odamex GitHub
-      </button>
-      <button class="btn btn-sm btn-outline" (click)="openLink('https://github.com/odamex/odamex/blob/stable/MAINTAINERS')">
-        <i class="bi bi-people-fill"></i> Maintainers
-      </button>
-      <button class="btn btn-sm btn-outline" (click)="openLink('https://odamex.net')">
-        <i class="bi bi-globe"></i> Website
-      </button>
-    </div>
-  </div>
-
-  <!-- Development Attribution -->
-  <div class="mb-4">
-    <h5 class="mb-3">ODX Development</h5>
-    <p class="text-muted mb-2">
-      ODX was developed with assistance from <strong>Claude (Anthropic)</strong> and <strong>GitHub Copilot</strong>.
-    </p>
-    <div class="d-flex gap-2 mb-3">
-      <button class="btn btn-sm btn-outline" (click)="openLink('https://github.com/odamex/odx')">
-        <i class="bi bi-github"></i> ODX GitHub
-      </button>
-    </div>
-  </div>
-
-  <!-- Game Content Attribution -->
-  <div class="mb-4">
-    <h5 class="mb-3">Game Content & Trademarks</h5>
+  <app-settings-card 
+    icon="info-circle" 
+    title="About ODX"
+    description="Credits and attribution for ODX Launcher">
     
-    <div class="mb-3">
-      <h6>Doom, Doom II, Heretic, Hexen, Strife</h6>
-      <p class="text-muted small mb-1">
-        © id Software, Bethesda Softworks, and ZeniMax Media. All rights reserved. Doom and related logos are registered trademarks of id Software LLC.
+    <!-- Odamex Attribution -->
+    <div class="mb-4">
+      <h5 class="mb-3">Odamex</h5>
+      <p class="text-muted mb-2">
+        ODX is a launcher for <strong>Odamex</strong>, a free, cross-platform modification of the Doom engine that allows players to easily join servers and play Doom online with people around the world.
+      </p>
+      <div class="d-flex gap-2 mb-3">
+        <button class="btn btn-sm btn-outline" (click)="openLink('https://github.com/odamex/odamex')">
+          <i class="bi bi-github"></i> Odamex GitHub
+        </button>
+        <button class="btn btn-sm btn-outline" (click)="openLink('https://github.com/odamex/odamex/blob/stable/MAINTAINERS')">
+          <i class="bi bi-people-fill"></i> Maintainers
+        </button>
+        <button class="btn btn-sm btn-outline" (click)="openLink('https://odamex.net')">
+          <i class="bi bi-globe"></i> Website
+        </button>
+      </div>
+    </div>
+
+    <!-- Development Attribution -->
+    <div class="mb-4">
+      <h5 class="mb-3">ODX Development</h5>
+      <p class="text-muted mb-2">
+        ODX was developed with assistance from <strong>Claude (Anthropic)</strong> and <strong>GitHub Copilot</strong>.
+      </p>
+      <div class="d-flex gap-2 mb-3">
+        <button class="btn btn-sm btn-outline" (click)="openLink('https://github.com/odamex/odx')">
+          <i class="bi bi-github"></i> ODX GitHub
+        </button>
+      </div>
+    </div>
+
+    <!-- Game Content Attribution -->
+    <div class="mb-4">
+      <h5 class="mb-3">Game Content & Trademarks</h5>
+      
+      <div class="mb-3">
+        <h6>Doom, Doom II, Heretic, Hexen, Strife</h6>
+        <p class="text-muted small mb-1">
+          © id Software, Bethesda Softworks, and ZeniMax Media. All rights reserved. Doom and related logos are registered trademarks of id Software LLC.
+        </p>
+      </div>
+
+      <div class="mb-3">
+        <h6>Chex Quest</h6>
+        <p class="text-muted small mb-1">
+          © Digital Café and General Mills. Chex Quest is a trademark of General Mills.
+        </p>
+      </div>
+
+      <div class="mb-3">
+        <h6>HacX</h6>
+        <p class="text-muted small mb-1">
+          © Banjo Software. HacX is a standalone game based on the Doom engine.
+        </p>
+      </div>
+
+      <div class="mb-3">
+        <h6>REKKR</h6>
+        <p class="text-muted small mb-1">
+          © Revae Studios. REKKR is an original total conversion for Doom.
+        </p>
+      </div>
+
+      <div class="mb-3">
+        <h6>Freedoom</h6>
+        <p class="text-muted small mb-1">
+          Freedoom is a free and open source game. © Freedoom project contributors. Licensed under the BSD 3-Clause License.
+        </p>
+      </div>
+
+      <p class="text-muted small mt-3">
+        ODX is not affiliated with, endorsed by, or sponsored by any of the above trademark holders. All trademarks and copyrights are the property of their respective owners.
       </p>
     </div>
 
-    <div class="mb-3">
-      <h6>Chex Quest</h6>
-      <p class="text-muted small mb-1">
-        © Digital Café and General Mills. Chex Quest is a trademark of General Mills.
+    <!-- License -->
+    <div class="mb-4">
+      <h5 class="mb-3">License</h5>
+      <p class="text-muted mb-2">
+        ODX is licensed under the <strong>GPL-2.0</strong> license, consistent with Odamex.
       </p>
+      <button class="btn btn-sm btn-outline" (click)="openLink('https://github.com/odamex/odx/blob/main/LICENSE')">
+        <i class="bi bi-file-text"></i> View License
+      </button>
     </div>
 
-    <div class="mb-3">
-      <h6>HacX</h6>
-      <p class="text-muted small mb-1">
-        © Banjo Software. HacX is a standalone game based on the Doom engine.
-      </p>
-    </div>
-
-    <div class="mb-3">
-      <h6>REKKR</h6>
-      <p class="text-muted small mb-1">
-        © Revae Studios. REKKR is an original total conversion for Doom.
-      </p>
-    </div>
-
-    <div class="mb-3">
-      <h6>Freedoom</h6>
-      <p class="text-muted small mb-1">
-        Freedoom is a free and open source game. © Freedoom project contributors. Licensed under the BSD 3-Clause License.
-      </p>
-    </div>
-
-    <p class="text-muted small mt-3">
-      ODX is not affiliated with, endorsed by, or sponsored by any of the above trademark holders. All trademarks and copyrights are the property of their respective owners.
-    </p>
-  </div>
-
-  <!-- License -->
-  <div class="mb-4">
-    <h5 class="mb-3">License</h5>
-    <p class="text-muted mb-2">
-      ODX is licensed under the <strong>GPL-2.0</strong> license, consistent with Odamex.
-    </p>
-    <button class="btn btn-sm btn-outline" (click)="openLink('https://github.com/odamex/odx/blob/main/LICENSE')">
-      <i class="bi bi-file-text"></i> View License
-    </button>
-  </div>
-
-</app-settings-card>
+  </app-settings-card>
+</div>

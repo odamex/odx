@@ -42,11 +42,11 @@
         <p class="match-description">We'll automatically find the best server for you based on active players, low ping, your available games, and no password required.</p>
         
         <div class="actions-row">
-          <button class="btn btn-primary btn-lg" (click)="startQuickMatch()">
+          <button #actionButton class="btn btn-primary btn-lg" (click)="startQuickMatch()">
             <i class="bi bi-play-circle-fill"></i>
             Find Match
           </button>
-          <a routerLink="/settings" [queryParams]="{tab: 3}" class="btn btn-outline btn-sm">
+          <a #actionButton routerLink="/settings" [queryParams]="{tab: 3}" class="btn btn-outline btn-sm">
             <i class="bi bi-sliders"></i>
             Preferences
           </a>
@@ -74,15 +74,15 @@
         <h2>No Suitable Servers Found</h2>
         <p class="reason">{{ noMatchReason() }}</p>
         <div class="actions">
-          <button class="btn btn-secondary" (click)="reset()">
+          <button #actionButton class="btn btn-secondary" (click)="reset()">
             <i class="bi bi-arrow-left"></i>
             Try Again
           </button>
-          <button class="btn btn-primary" (click)="startMonitoring()">
+          <button #actionButton class="btn btn-primary" (click)="startMonitoring()">
             <i class="bi bi-clock-fill"></i>
             Keep Monitoring
           </button>
-          <a routerLink="/servers" class="btn btn-outline">
+          <a #actionButton routerLink="/servers" class="btn btn-outline">
             <i class="bi bi-list-ul"></i>
             Browse All Servers
           </a>
@@ -114,14 +114,14 @@
               <strong>Match Found!</strong>
               <span>{{ monitorMatchFound()!.name }}</span>
             </div>
-            <button class="btn btn-success" (click)="connectToMonitoredServer()">
+            <button #actionButton class="btn btn-success" (click)="connectToMonitoredServer()">
               <i class="bi bi-play-fill"></i>
               Connect Now
             </button>
           </div>
         }
         
-        <button class="btn btn-secondary" (click)="stopMonitoring()">
+        <button #actionButton class="btn btn-secondary" (click)="stopMonitoring()">
           <i class="bi bi-x-circle"></i>
           Stop Monitoring
         </button>

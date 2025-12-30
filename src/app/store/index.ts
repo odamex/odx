@@ -2,3 +2,4 @@
 export * from './servers.store';
 export * from './iwad.store';
 export * from './file-manager.store';
+export * from './quick-match.store';

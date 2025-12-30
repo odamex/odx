@@ -1,22 +1,39 @@
-import { Component, ChangeDetectionStrategy, signal, inject, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, inject, OnInit, OnDestroy, input, Signal, ElementRef, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { SettingsCardComponent, ExternalLinkConfirmComponent } from '@shared/components';
 import { 
   FileManagerService, 
   AutoUpdateService,
   DialogService,
-  DialogPresets
+  DialogPresets,
+  ControllerService,
+  SettingsFormControllerService,
+  ControllerEvent
 } from '@shared/services';
 import versions from '../../../../_versions';
 
 @Component({
   selector: 'app-installation-settings',
   imports: [FormsModule, SettingsCardComponent],
+  providers: [SettingsFormControllerService],
   templateUrl: './installation-settings.component.html',
   styleUrls: ['./installation-settings.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class InstallationSettingsComponent implements OnInit {
+export class InstallationSettingsComponent implements OnInit, OnDestroy {
+  private controllerService = inject(ControllerService);
+  private formControllerService = inject(SettingsFormControllerService);
+  private destroyRef = inject(ElementRef);
+  
+  // Parent navigation state input
+  parentNavigationState = input.required<Signal<'tabs' | 'content'>>();
+  
+  // Container reference for form controls
+  contentSection = viewChild<ElementRef>('contentSection');
+  
+  // Controller navigation state
+  private canProcessButtons = false;
+  private controllerSubscription: { unsubscribe: () => void } | null = null;
   protected fileManager = inject(FileManagerService);
   protected autoUpdateService = inject(AutoUpdateService);
   private dialogService = inject(DialogService);
@@ -69,6 +86,47 @@ export class InstallationSettingsComponent implements OnInit {
       this.initializing.set(true);
       this.loadData().finally(() => this.initializing.set(false));
     }
+    
+    // Subscribe to controller events
+    const removeListener = this.controllerService.addEventListener((event: ControllerEvent) => {
+      if (!this.canProcessButtons) return;
+      
+      if (event.type === 'buttonpress') {
+        this.formControllerService.handleButtonPress(event);
+      } else if (event.type === 'direction') {
+        this.formControllerService.handleDirection(event);
+      }
+    });
+    
+    // Store cleanup function
+    this.controllerSubscription = { unsubscribe: removeListener } as any;
+    
+    // Listen for enter/exit content events
+    window.addEventListener('settingsEnterContent', this.onEnterContent);
+    window.addEventListener('settingsExitContent', this.onExitContent);
+  }
+  
+  private onEnterContent = (): void => {
+    this.canProcessButtons = true;
+    const container = this.contentSection();
+    if (container) {
+      this.formControllerService.findFocusableElements(container);
+      this.formControllerService.focusFirst();
+    }
+  };
+  
+  private onExitContent = (): void => {
+    this.canProcessButtons = false;
+    this.formControllerService.cleanup();
+  };
+  
+  ngOnDestroy(): void {
+    if (this.controllerSubscription) {
+      this.controllerSubscription.unsubscribe();
+    }
+    window.removeEventListener('settingsEnterContent', this.onEnterContent);
+    window.removeEventListener('settingsExitContent', this.onExitContent);
+    this.formControllerService.cleanup();
   }
 
   async loadData() {

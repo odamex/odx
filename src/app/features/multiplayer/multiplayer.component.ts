@@ -1,8 +1,7 @@
-import { Component, ChangeDetectionStrategy, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
-
+import { Component, ChangeDetectionStrategy, inject, signal, computed, OnInit, OnDestroy, ViewChildren, QueryList, ElementRef, effect } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { QuickMatchService, OdalPapi } from '@shared/services';
-import { ServersStore } from '@app/store';
+import { QuickMatchService, OdalPapi, ControllerService, ControllerFocusService, GamepadButton, type ControllerEvent } from '@shared/services';
+import { ServersStore, QuickMatchStore } from '@app/store';
 
 /** Current state of the Quick Match flow */
 type QuickMatchState = 'idle' | 'searching' | 'found' | 'no-match' | 'monitoring';
@@ -35,9 +34,46 @@ type QuickMatchState = 'idle' | 'searching' | 'found' | 'no-match' | 'monitoring
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class MultiplayerComponent implements OnInit, OnDestroy {
+  @ViewChildren('actionButton') actionButtons!: QueryList<ElementRef<HTMLButtonElement | HTMLAnchorElement>>;
+  
   /** Quick Match service - public for template access */
   quickMatchService = inject(QuickMatchService);
+  private quickMatchStore = inject(QuickMatchStore);
   private serversStore = inject(ServersStore);
+  private controllerService = inject(ControllerService);
+  private focusService = inject(ControllerFocusService);
+  
+  private controllerUnsubscribe?: () => void;
+  private currentFocusIndex = 0;
+  private justEnteredContent = false;
+  private previousState: QuickMatchState = 'idle';
+  
+  constructor() {
+    // Watch for content focus and auto-focus first button/link
+    effect(() => {
+      if (this.focusService.focusArea() === 'content') {
+        // Set flag to prevent immediate activation
+        this.justEnteredContent = true;
+        setTimeout(() => {
+          this.focusCurrentItem();
+          // Clear flag after button press would have been processed
+          setTimeout(() => this.justEnteredContent = false, 100);
+        }, 50);
+      }
+    });
+    
+    // Reset focus index only when state actually changes
+    effect(() => {
+      const currentState = this.state();
+      if (currentState !== this.previousState) {
+        this.previousState = currentState;
+        this.currentFocusIndex = 0;
+        if (this.focusService.focusArea() === 'content') {
+          setTimeout(() => this.focusCurrentItem(), 50);
+        }
+      }
+    });
+  }
 
   /** Current state of the Quick Match UI */
   state = signal<QuickMatchState>('idle');
@@ -49,10 +85,10 @@ export class MultiplayerComponent implements OnInit, OnDestroy {
   noMatchReason = signal<string>('');
 
   /** Whether the service is actively monitoring for matches */
-  isMonitoring = this.quickMatchService.isMonitoring;
+  isMonitoring = this.quickMatchStore.isMonitoring;
   
   /** Server found during monitoring, if any */
-  monitorMatchFound = this.quickMatchService.matchFound;
+  monitorMatchFound = this.quickMatchStore.matchFound;
 
   /** Total number of servers available */
   serverCount = computed(() => this.serversStore.servers().length);
@@ -63,6 +99,11 @@ export class MultiplayerComponent implements OnInit, OnDestroy {
   );
 
   ngOnInit() {
+    // Check if monitoring is already active and restore state
+    if (this.isMonitoring()) {
+      this.state.set('monitoring');
+    }
+    
     // Listen for tray menu Quick Match action
     if (typeof window !== 'undefined' && window.electron) {
       window.electron.onTrayQuickMatch(() => {
@@ -74,12 +115,76 @@ export class MultiplayerComponent implements OnInit, OnDestroy {
         this.stopMonitoring();
       });
     }
+    
+    // Setup controller event listener
+    this.controllerUnsubscribe = this.controllerService.addEventListener(
+      (event: ControllerEvent) => this.handleControllerEvent(event)
+    );
   }
 
   ngOnDestroy() {
-    // Clean up monitoring if component is destroyed
-    if (this.isMonitoring()) {
-      this.quickMatchService.stopMonitoring();
+    // Don't stop monitoring - it should continue in the background
+    this.controllerUnsubscribe?.();
+  }
+
+  private handleControllerEvent(event: ControllerEvent) {
+    // Only handle events when content area has focus
+    if (!this.focusService.hasFocus('content')) return;
+    
+    // Ignore events immediately after entering content to prevent the navigation A press from activating items
+    if (this.justEnteredContent) return;
+
+    // Handle direction events (D-pad and analog stick)
+    if (event.type === 'direction') {
+      switch (event.direction) {
+        case 'up':
+        case 'left':
+          this.navigateUp();
+          break;
+        case 'down':
+        case 'right':
+          this.navigateDown();
+          break;
+      }
+      return;
+    }
+
+    // Handle button press events
+    if (event.type === 'buttonpress') {
+      switch (event.button) {
+        case GamepadButton.A:
+          this.activateCurrentItem();
+          break;
+        case GamepadButton.B:
+          this.focusService.returnToNavigation();
+          break;
+      }
+    }
+  }
+
+  private navigateUp() {
+    if (this.actionButtons.length === 0) return;
+    this.currentFocusIndex = (this.currentFocusIndex - 1 + this.actionButtons.length) % this.actionButtons.length;
+    this.focusCurrentItem();
+  }
+
+  private navigateDown() {
+    if (this.actionButtons.length === 0) return;
+    this.currentFocusIndex = (this.currentFocusIndex + 1) % this.actionButtons.length;
+    this.focusCurrentItem();
+  }
+
+  private focusCurrentItem() {
+    const buttons = this.actionButtons.toArray();
+    if (buttons.length > 0 && buttons[this.currentFocusIndex]) {
+      buttons[this.currentFocusIndex].nativeElement.focus();
+    }
+  }
+
+  private activateCurrentItem() {
+    const buttons = this.actionButtons.toArray();
+    if (buttons.length > 0 && buttons[this.currentFocusIndex]) {
+      buttons[this.currentFocusIndex].nativeElement.click();
     }
   }
 

@@ -103,7 +103,7 @@ export class GitHubService {
       const query = `
         query {
           repository(owner: "odamex", name: "odamex") {
-            discussions(first: ${limit}, categoryId: "DIC_kwDOABB-cc4CkQH7", orderBy: {field: CREATED_AT, direction: DESC}) {
+            discussions(first: 20, orderBy: {field: CREATED_AT, direction: DESC}) {
               nodes {
                 id
                 title
@@ -116,6 +116,7 @@ export class GitHubService {
                 }
                 category {
                   name
+                  slug
                 }
               }
             }
@@ -127,7 +128,10 @@ export class GitHubService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          // No auth token needed for public data
+          ...(typeof window !== 'undefined' && window.electron?.githubToken 
+            ? { 'Authorization': `Bearer ${window.electron.githubToken}` }
+            : {}
+          )
         },
         body: JSON.stringify({ query })
       });
@@ -142,7 +146,12 @@ export class GitHubService {
         throw new Error(`GraphQL error: ${data.errors[0]?.message || 'Unknown error'}`);
       }
 
-      const discussions = data.data?.repository?.discussions?.nodes || [];
+      const allDiscussions = data.data?.repository?.discussions?.nodes || [];
+      
+      // Filter for news-announcements category and take the requested limit
+      const discussions = allDiscussions
+        .filter((d: any) => d.category?.slug === 'news-announcements')
+        .slice(0, limit);
       
       this.discussionsCache.set(discussions);
       this.discussionsLastFetch = now;

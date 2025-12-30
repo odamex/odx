@@ -103,6 +103,9 @@ export class ServersComponent implements OnInit, OnDestroy {
   selectedServer = signal<OdalPapi.ServerInfo | null>(null);
   joiningServer = signal(false);
   
+  /** Context menu state */
+  contextMenu = signal<{ x: number; y: number; server: OdalPapi.ServerInfo } | null>(null);
+  
   /** Position of the server details panel: 'bottom' or 'right'. Persisted to localStorage. */
   detailsPanelPosition = signal<'bottom' | 'right'>((localStorage.getItem('detailsPanelPosition') as 'bottom' | 'right') || 'bottom');
   
@@ -142,6 +145,19 @@ export class ServersComponent implements OnInit, OnDestroy {
   
   // Search filtering
   searchText = signal('');
+  
+  // Voice search
+  private recognition: any = null;
+  private recognitionTimeout: any = null;
+  private microphonePermissionGranted = signal(false);
+  isListening = signal(false);
+  private previousSearchText = '';
+  private readonly VOICE_SEARCH_TIMEOUT = 5000; // 5 seconds
+  
+  // Computed: mic available only when online AND permission granted
+  microphoneAvailable = computed(() => 
+    this.isOnline() && this.microphonePermissionGranted()
+  );
   
   // Combined servers (local network servers + custom servers + master server servers)
   // Priority: local > custom > master
@@ -464,6 +480,44 @@ export class ServersComponent implements OnInit, OnDestroy {
 
   handleServerDoubleClick(server: OdalPapi.ServerInfo) {
     this.joinServer(server);
+  }
+
+  /**
+   * Open context menu at mouse position
+   */
+  openContextMenu(event: MouseEvent, server: OdalPapi.ServerInfo) {
+    event.preventDefault();
+    this.contextMenu.set({
+      x: event.clientX,
+      y: event.clientY,
+      server
+    });
+    
+    // Close menu when clicking anywhere
+    const closeHandler = () => {
+      this.closeContextMenu();
+      document.removeEventListener('click', closeHandler);
+    };
+    setTimeout(() => document.addEventListener('click', closeHandler), 0);
+  }
+
+  /**
+   * Close context menu
+   */
+  closeContextMenu() {
+    this.contextMenu.set(null);
+  }
+
+  /**
+   * Copy server address to clipboard in ip:port format
+   */
+  async copyServerAddress(server: OdalPapi.ServerInfo) {
+    const address = `${server.address.ip}:${server.address.port}`;
+    try {
+      await navigator.clipboard.writeText(address);
+    } catch (err) {
+      console.error('Failed to copy address:', err);
+    }
   }
 
   async joinServer(server: OdalPapi.ServerInfo) {
@@ -794,6 +848,9 @@ export class ServersComponent implements OnInit, OnDestroy {
   readonly getServerPWADsFn = (server: OdalPapi.ServerInfo) => this.getServerPWADs(server);
 
   ngOnInit() {
+    // Initialize voice search
+    this.initializeVoiceSearch();
+    
     this.controllerSubscription = this.controllerService.addEventListener((event: ControllerEvent) => {
       // Only handle direction events if content has focus
       if (event.type === 'direction' && this.focusService.hasFocus('content')) {
@@ -809,6 +866,9 @@ export class ServersComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    // Cleanup voice search
+    this.stopVoiceSearch();
+    
     if (this.controllerSubscription) {
       this.controllerSubscription();
     }
@@ -857,6 +917,12 @@ export class ServersComponent implements OnInit, OnDestroy {
     const now = Date.now();
     const timeSinceLastPress = now - this.lastButtonPressTime;
 
+    // Y button: toggle voice search
+    if (button === GamepadButton.Y) {
+      this.toggleVoiceSearch();
+      return;
+    }
+
     // B button: return focus to navigation
     if (button === GamepadButton.B) {
       // Blur any focused server rows
@@ -889,6 +955,129 @@ export class ServersComponent implements OnInit, OnDestroy {
         this.lastPressedButton = GamepadButton.A;
         this.lastButtonPressTime = now;
       }
+    }
+  }
+
+  /**
+   * Initialize voice search (Web Speech API)
+   */
+  private initializeVoiceSearch() {
+    // Check if Web Speech API is available
+    const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+    
+    if (!SpeechRecognition) {
+      this.microphonePermissionGranted.set(false);
+      return;
+    }
+
+    try {
+      this.recognition = new SpeechRecognition();
+      this.recognition.continuous = false;
+      this.recognition.interimResults = false;
+      this.recognition.lang = 'en-US';
+      this.recognition.maxAlternatives = 1;
+
+      this.recognition.onresult = (event: any) => {
+        this.clearVoiceSearchTimeout();
+        const transcript = event.results[0][0].transcript;
+        this.searchText.set(transcript);
+        this.stopVoiceSearch();
+      };
+
+      this.recognition.onerror = (event: any) => {
+        this.clearVoiceSearchTimeout();
+        
+        if (event.error === 'no-speech') {
+          // Timeout - restore previous search
+          this.searchText.set(this.previousSearchText);
+        } else if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+          // Permission denied - hide button
+          this.microphonePermissionGranted.set(false);
+        } else {
+          // Other errors - restore previous search
+          this.searchText.set(this.previousSearchText);
+          console.error('Voice search error:', event.error);
+        }
+        
+        this.stopVoiceSearch();
+      };
+
+      this.recognition.onend = () => {
+        this.clearVoiceSearchTimeout();
+        this.isListening.set(false);
+      };
+
+      // Microphone is available
+      this.microphonePermissionGranted.set(true);
+    } catch (error) {
+      console.error('Failed to initialize voice search:', error);
+      this.microphonePermissionGranted.set(false);
+    }
+  }
+
+  /**
+   * Toggle voice search on/off
+   */
+  toggleVoiceSearch() {
+    if (this.isListening()) {
+      this.stopVoiceSearch();
+    } else {
+      this.startVoiceSearch();
+    }
+  }
+
+  /**
+   * Start voice search
+   */
+  private startVoiceSearch() {
+    if (!this.recognition || !this.microphoneAvailable()) {
+      return;
+    }
+
+    try {
+      // Store current search text to restore on cancel/error
+      this.previousSearchText = this.searchText();
+      
+      this.isListening.set(true);
+      this.recognition.start();
+
+      // Set timeout to stop listening after 5 seconds
+      this.recognitionTimeout = setTimeout(() => {
+        if (this.isListening()) {
+          this.stopVoiceSearch();
+          // Restore previous search on timeout
+          this.searchText.set(this.previousSearchText);
+        }
+      }, this.VOICE_SEARCH_TIMEOUT);
+    } catch (error) {
+      console.error('Failed to start voice search:', error);
+      this.isListening.set(false);
+    }
+  }
+
+  /**
+   * Stop voice search
+   */
+  private stopVoiceSearch() {
+    if (this.recognition) {
+      try {
+        this.recognition.stop();
+      } catch (error) {
+        // Ignore errors when stopping
+      }
+    }
+    
+    this.clearVoiceSearchTimeout();
+    this.isListening.set(false);
+  }
+
+  /**
+   * Clear voice search timeout
+   */
+  private clearVoiceSearchTimeout() {
+    if (this.recognitionTimeout) {
+      clearTimeout(this.recognitionTimeout);
+      this.recognitionTimeout = null;
     }
   }
 }

@@ -47,7 +47,7 @@
   <div class="quick-actions">
     <h2 class="section-title">Get Started</h2>
     <div class="action-grid">
-      <a routerLink="/multiplayer" class="action-card primary">
+      <a #actionLink routerLink="/multiplayer" class="action-card primary">
         <div class="action-icon">
           <i class="bi bi-play-circle-fill"></i>
         </div>
@@ -58,7 +58,7 @@
         <i class="bi bi-chevron-right action-arrow"></i>
       </a>
       
-      <a routerLink="/servers" class="action-card">
+      <a #actionLink routerLink="/servers" class="action-card">
         <div class="action-icon">
           <i class="bi bi-list-ul"></i>
         </div>
@@ -69,7 +69,7 @@
         <i class="bi bi-chevron-right action-arrow"></i>
       </a>
       
-      <a routerLink="/singleplayer" class="action-card">
+      <a #actionLink routerLink="/singleplayer" class="action-card">
         <div class="action-icon">
           <i class="bi bi-person-fill"></i>
         </div>
@@ -80,7 +80,7 @@
         <i class="bi bi-chevron-right action-arrow"></i>
       </a>
       
-      <a routerLink="/settings" class="action-card">
+      <a #actionLink routerLink="/settings" class="action-card">
         <div class="action-icon">
           <i class="bi bi-gear-fill"></i>
         </div>
@@ -124,12 +124,12 @@
                 <span>You're up to date!</span>
               </div>
             } @else if (!installInfo()?.installed) {
-              <button class="btn btn-primary btn-sm" (click)="navigateToSettings()">
+              <button #actionButton class="btn btn-primary btn-sm" (click)="navigateToSettings()">
                 <i class="bi bi-{{ getPlatformIcon() }}"></i>
                 <span>{{ getPlatformText() }}</span>
               </button>
             } @else {
-              <button class="btn btn-warning btn-sm" (click)="navigateToSettings()">
+              <button #actionButton class="btn btn-warning btn-sm" (click)="navigateToSettings()">
                 <i class="bi bi-arrow-up-circle-fill"></i>
                 <span>Update Available</span>
               </button>
@@ -156,12 +156,12 @@
             <p class="news-date text-muted small">
               <i class="bi bi-clock"></i> {{ githubService.getRelativeTime(latestNews()!.createdAt) }}
             </p>
-            <button class="info-link" (click)="openNewsLink(latestNews()!.url)">
+            <button #actionButton class="info-link" (click)="openNewsLink(latestNews()!.url)">
               Read more <i class="bi bi-box-arrow-up-right"></i>
             </button>
           } @else {
             <p class="text-muted">No recent announcements</p>
-            <button class="info-link" (click)="openNewsLink('https://github.com/odamex/odamex/discussions/categories/news-announcements')">
+            <button #actionButton class="info-link" (click)="openNewsLink('https://github.com/odamex/odamex/discussions/categories/news-announcements')">
               View all news <i class="bi bi-box-arrow-up-right"></i>
             </button>
           }
@@ -176,7 +176,7 @@
         </div>
         <div class="info-body">
           <p>Join our Discord server for events, discussions, and more!</p>
-          <a (click)="openNewsLink('https://discord.gg/aMTk7fh')" class="info-link" style="cursor: pointer;">
+          <a #actionButton (click)="openNewsLink('https://discord.com/invite/3mKEnjx5P9')" class="info-link" tabindex="0" role="button">
             Join Discord <i class="bi bi-box-arrow-up-right"></i>
           </a>
         </div>

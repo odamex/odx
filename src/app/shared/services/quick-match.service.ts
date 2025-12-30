@@ -1,6 +1,6 @@
 import { Injectable, signal, computed, effect, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { ServersStore } from '@app/store';
+import { ServersStore, QuickMatchStore } from '@app/store';
 import { OdalPapi, IWADService, FileManagerService, type DetectedIWAD } from '@shared/services';
 
 /**
@@ -89,15 +89,15 @@ const DEFAULT_CRITERIA: QuickMatchCriteria = {
 })
 export class QuickMatchService {
   private serversStore = inject(ServersStore);
+  private quickMatchStore = inject(QuickMatchStore);
   private iwadService = inject(IWADService);
   private fileManager = inject(FileManagerService);
   private router = inject(Router);
 
   /** Whether the service is currently monitoring for matches */
-  isMonitoring = signal(false);
+  isMonitoring = this.quickMatchStore.isMonitoring;
   
   private monitoringTimer: any = null;
-  private monitoringStartTime: number = 0;
   
   // Current client version for compatibility checking
   private currentMajorVersion: number | null = null;
@@ -105,7 +105,7 @@ export class QuickMatchService {
   private currentPatchVersion: number | null = null;
 
   /** The server that was found during monitoring, null if none */
-  matchFound = signal<OdalPapi.ServerInfo | null>(null);
+  matchFound = this.quickMatchStore.matchFound;
   
   /** Match criteria - can be customized in settings */
   criteria = signal<QuickMatchCriteria>(DEFAULT_CRITERIA);
@@ -265,7 +265,7 @@ export class QuickMatchService {
 
     if (result.server) {
       // Found a match - connect immediately
-      this.matchFound.set(result.server);
+      this.quickMatchStore.setMatchFound(result.server);
       await this.connectToServer(result.server);
       return 'connected';
     }
@@ -287,9 +287,7 @@ export class QuickMatchService {
   startMonitoring() {
     if (this.isMonitoring()) return;
 
-    this.isMonitoring.set(true);
-    this.monitoringStartTime = Date.now();
-    this.matchFound.set(null);
+    this.quickMatchStore.startMonitoring();
 
     // Notify Electron about queue state
     if (typeof window !== 'undefined' && window.electron) {
@@ -317,8 +315,7 @@ export class QuickMatchService {
       clearInterval(this.monitoringTimer);
       this.monitoringTimer = null;
     }
-    this.isMonitoring.set(false);
-    this.matchFound.set(null);
+    this.quickMatchStore.stopMonitoring();
 
     // Notify Electron about queue state
     if (typeof window !== 'undefined' && window.electron) {
@@ -346,7 +343,7 @@ export class QuickMatchService {
       const maxMonitoringTime = timeoutMinutes * 60 * 1000;
       
       // Check if we've exceeded max monitoring time
-      const elapsed = Date.now() - this.monitoringStartTime;
+      const elapsed = Date.now() - this.quickMatchStore.monitoringStartTime();
       if (elapsed > maxMonitoringTime) {
         // Prompt user to continue or stop
         if (typeof window !== 'undefined' && window.electron) {
@@ -362,7 +359,7 @@ export class QuickMatchService {
           
           if (response.response === 0) {
             // Reset start time to continue for another period
-            this.monitoringStartTime = Date.now();
+            this.quickMatchStore.startMonitoring();
           } else {
             // User chose to stop
             this.stopMonitoring();
@@ -378,7 +375,7 @@ export class QuickMatchService {
 
     const result = this.findBestMatch();
     if (result.server) {
-      this.matchFound.set(result.server);
+      this.quickMatchStore.setMatchFound(result.server);
       this.stopMonitoring();
       // Don't auto-connect - let user choose via notification
     }

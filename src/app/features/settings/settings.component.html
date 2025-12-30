@@ -1,20 +1,18 @@
 
     <div class="page-container">
       <!-- Loading spinner - viewport-centered -->
-      @if (initializing()) {
-        <app-loading-spinner [fixed]="true" message="Loading settings..." />
-      }
+
       
-      <div class="settings-layout d-flex gap-4" [class.initializing]="initializing()">
+      <div class="settings-layout d-flex gap-4">
         <!-- Vertical Nav Pills -->
-        <ul ngbNav #nav="ngbNav" [(activeId)]="activeTab" class="nav-pills flex-column settings-nav flex-shrink-0 mt-4" style="width: 200px;" [class.disabled]="initializing()">
+        <ul ngbNav #nav="ngbNav" [(activeId)]="activeTab" class="nav-pills flex-column settings-nav flex-shrink-0 mt-4">
           <li [ngbNavItem]="1">
-            <button #settingsNavLink ngbNavLink [disabled]="initializing()" class="d-flex align-items-center gap-2">
+            <button #settingsNavLink ngbNavLink class="d-flex align-items-center gap-2">
               <i class="bi bi-box-seam"></i>
               <span>Installation</span>
             </button>
             <ng-template ngbNavContent>
-              <app-installation-settings />
+              <app-installation-settings [parentNavigationState]="settingsNavigationState" />
             </ng-template>
           </li>
           <li [ngbNavItem]="2">
@@ -23,16 +21,16 @@
               <span>Application</span>
             </button>
             <ng-template ngbNavContent>
-              <app-application-settings />
+              <app-application-settings [parentNavigationState]="settingsNavigationState" />
             </ng-template>
           </li>
           <li [ngbNavItem]="3">
             <button #settingsNavLink ngbNavLink class="d-flex align-items-center gap-2">
-              <i class="bi bi-controller"></i>
+              <i class="bi bi-dpad"></i>
               <span>Navigation</span>
             </button>
             <ng-template ngbNavContent>
-              <app-navigation-settings />
+              <app-navigation-settings [parentNavigationState]="settingsNavigationState" />
             </ng-template>
           </li>
           <li [ngbNavItem]="4">
@@ -41,7 +39,7 @@
               <span>Quick Match</span>
             </button>
             <ng-template ngbNavContent>
-              <app-quick-match-settings />
+              <app-quick-match-settings [parentNavigationState]="settingsNavigationState" />
             </ng-template>
           </li>
           <li [ngbNavItem]="5">
@@ -60,7 +58,7 @@
               <span>Network</span>
             </button>
             <ng-template ngbNavContent>
-              <app-network-settings />
+              <app-network-settings [parentNavigationState]="settingsNavigationState" />
             </ng-template>
           </li>
           <li [ngbNavItem]="7">

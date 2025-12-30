@@ -157,6 +157,20 @@
     }
   }
   
+  &:focus {
+    outline: none;
+    border-color: #4a9eff;
+    transform: translateX(0.25rem);
+    
+    &::before {
+      transform: scaleY(1);
+    }
+    
+    .action-arrow {
+      transform: translateX(0.25rem);
+    }
+  }
+  
   &.primary {
     border-color: rgba(255, 163, 0, 0.5);
     

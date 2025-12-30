@@ -4,6 +4,7 @@ export * from './auto-update.service';
 export * from './controller.service';
 export * from './controller-focus.service';
 export * from './custom-servers.service';
+export * from './settings-form-controller.service';
 export * from './dialog.service';
 export * from './file-manager.service';
 export * from './github.service';

@@ -48,13 +48,36 @@ export class ButtonPromptsComponent implements OnInit, OnDestroy {
 
   protected prompts = computed<ButtonPrompt[]>(() => {
     const inContent = this.focusService.focusArea() === 'content';
+    const elementType = this.focusService.focusedElementType();
     
     if (inContent) {
-      return [
-        { button: 'dpad' as const, action: 'Navigate' },
-        { button: GamepadButton.A, action: 'Select' },
-        { button: GamepadButton.B, action: 'Back' }
+      const prompts: ButtonPrompt[] = [
+        { button: 'dpad' as const, action: 'Navigate' }
       ];
+      
+      // Add contextual prompts based on focused element type
+      switch (elementType) {
+        case 'checkbox':
+          prompts.push({ button: GamepadButton.A, action: 'Toggle' });
+          break;
+        case 'numeric':
+        case 'range':
+          prompts.push({ button: GamepadButton.Y, action: 'Increase' });
+          prompts.push({ button: GamepadButton.X, action: 'Decrease' });
+          break;
+        case 'select':
+          prompts.push({ button: GamepadButton.A, action: 'Open' });
+          break;
+        case 'button':
+          prompts.push({ button: GamepadButton.A, action: 'Activate' });
+          break;
+        default:
+          prompts.push({ button: GamepadButton.A, action: 'Select' });
+          break;
+      }
+      
+      prompts.push({ button: GamepadButton.B, action: 'Back' });
+      return prompts;
     } else {
       return [
         { button: 'dpad' as const, action: 'Navigate' },
