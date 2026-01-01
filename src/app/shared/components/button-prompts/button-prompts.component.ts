@@ -43,7 +43,7 @@ export class ButtonPromptsComponent implements OnInit, OnDestroy {
       this.isFaded = true;
     }
     
-    return shouldBeFaded ? 0 : 1;
+    return shouldBeFaded ? 0 : 0.85;
   });
 
   protected prompts = computed<ButtonPrompt[]>(() => {
@@ -57,6 +57,13 @@ export class ButtonPromptsComponent implements OnInit, OnDestroy {
       
       // Add contextual prompts based on focused element type
       switch (elementType) {
+        case 'server-browser':
+          prompts.push({ button: GamepadButton.A, action: 'Select' });
+          prompts.push({ button: GamepadButton.X, action: 'Launch' });
+          prompts.push({ button: GamepadButton.Select, action: 'Menu' });
+          prompts.push({ button: GamepadButton.Start, action: 'Filter' });
+          prompts.push({ button: GamepadButton.Y, action: 'Refresh' });
+          break;
         case 'checkbox':
           prompts.push({ button: GamepadButton.A, action: 'Toggle' });
           break;
@@ -90,6 +97,14 @@ export class ButtonPromptsComponent implements OnInit, OnDestroy {
     // Set initial visibility
     this.updateVisibility();
     
+    // Start with faded out, then fade in after a brief delay
+    this.isFaded = true;
+    setTimeout(() => {
+      this.lastActivity.set(Date.now());
+      this.isFaded = false;
+      this.startTimer();
+    }, 50);
+    
     this.controllerUnsubscribe = this.controllerService.addEventListener((event: ControllerEvent) => {
       // Update visibility on connection changes
       if (event.type === 'connected' || event.type === 'disconnected') {
@@ -106,9 +121,34 @@ export class ButtonPromptsComponent implements OnInit, OnDestroy {
         }
       }
     });
-
-    this.startTimer();
   }
+
+  /** Computed prompt groups for display */
+  protected readonly promptGroups = computed(() => {
+    const allPrompts = this.prompts();
+    const groups: ButtonPrompt[][] = [];
+    
+    // Group prompts by type
+    const dpad = allPrompts.filter(p => p.button === 'dpad');
+    const faceButtons = allPrompts.filter(p => 
+      p.button === GamepadButton.A || 
+      p.button === GamepadButton.X || 
+      p.button === GamepadButton.Y
+    );
+    const specialButtons = allPrompts.filter(p => 
+      p.button === GamepadButton.Select || 
+      p.button === GamepadButton.Start
+    );
+    const backButton = allPrompts.filter(p => p.button === GamepadButton.B);
+    
+    // Add non-empty groups
+    if (dpad.length > 0) groups.push(dpad);
+    if (faceButtons.length > 0) groups.push(faceButtons);
+    if (specialButtons.length > 0) groups.push(specialButtons);
+    if (backButton.length > 0) groups.push(backButton);
+    
+    return groups;
+  });
 
   private updateVisibility(): void {
     const visible = (

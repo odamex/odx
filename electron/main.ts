@@ -123,6 +123,8 @@ function createWindow(): void {
       nodeIntegration: false,
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js'),
+      webSecurity: true,
+      allowRunningInsecureContent: false,
     }
   });
 
@@ -336,7 +338,6 @@ ipcMain.handle('open-external', async (_event, url: string) => {
 
 // Update queue monitoring state for tray menu
 ipcMain.on('update-queue-state', (_event, isMonitoring: boolean) => {
-  console.log('[Main] Queue monitoring state:', isMonitoring);
   isMonitoringQueue = isMonitoring;
   updateTrayMenu();
 });

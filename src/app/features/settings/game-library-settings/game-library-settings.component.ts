@@ -1,6 +1,6 @@
-import { Component, ChangeDetectionStrategy, inject, computed, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, computed, signal, OnInit, OnDestroy } from '@angular/core';
 import { SettingsCardComponent } from '@shared/components';
-import { IWADService, type GameMetadata } from '@shared/services';
+import { IWADService, type GameMetadata, ControllerService, SettingsFormControllerService, ControllerEvent } from '@shared/services';
 import { GameSelectionDialogComponent } from '@core/game-selection-dialog/game-selection-dialog.component';
 
 @Component({
@@ -8,10 +8,14 @@ import { GameSelectionDialogComponent } from '@core/game-selection-dialog/game-s
   imports: [GameSelectionDialogComponent, SettingsCardComponent],
   templateUrl: './game-library-settings.component.html',
   styleUrls: ['./game-library-settings.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [SettingsFormControllerService]
 })
-export class GameLibrarySettingsComponent {
+export class GameLibrarySettingsComponent implements OnInit, OnDestroy {
   protected iwadService = inject(IWADService);
+  private controllerService = inject(ControllerService);
+  private formControllerService = inject(SettingsFormControllerService);
+  private controllerSubscription: (() => void) | null = null;
 
   // Computed properties for IWAD grouping
   readonly groupedIWADs = computed(() => {
@@ -80,6 +84,20 @@ export class GameLibrarySettingsComponent {
   });
 
   showGameSelection = signal(false);
+
+  ngOnInit() {
+    this.controllerSubscription = this.controllerService.addEventListener((event: ControllerEvent) => {
+      if (event.type === 'buttonpress' && event.button !== undefined) {
+        this.formControllerService.handleButtonPress(event);
+      } else if (event.type === 'direction') {
+        this.formControllerService.handleDirection(event);
+      }
+    });
+  }
+
+  ngOnDestroy() {
+    this.controllerSubscription?.();
+  }
 
   /**
    * Get game metadata by type

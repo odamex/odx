@@ -5,6 +5,7 @@ import { ipcRenderer, contextBridge } from 'electron';
 contextBridge.exposeInMainWorld('electron', {
   // Platform info
   platform: process.platform,
+  githubToken: process.env.ODX_GITHUB_TOKEN || '',
   getAppPath: () => ipcRenderer.invoke('app:getPath'),
   setQuitOnClose: (enabled: boolean) => ipcRenderer.invoke('app:setQuitOnClose', enabled),
   openLogDirectory: () => ipcRenderer.invoke('app:open-log-directory'),

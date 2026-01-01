@@ -34,6 +34,10 @@ export class ServersComponent implements OnInit, OnDestroy {
   private lastButtonPressTime = 0;
   private lastPressedButton: GamepadButton | null = null;
   private focusedIndex = signal(-1);
+  protected inFilterMode = signal(false); // Whether user is in filter bar navigation mode
+  protected focusedContextMenuItem = signal(-1); // -1 = none, 0+ = menu item index
+  protected addressCopied = signal(false); // Brief flash when address is copied
+  protected focusedFilterIndex = signal(0); // 0: Game dropdown, 1: Game Type dropdown, 2: Max Ping, 3: Hide Empty, 4: Custom Servers
 
   constructor() {
     // Auto-focus first server when content gains focus
@@ -45,6 +49,13 @@ export class ServersComponent implements OnInit, OnDestroy {
             this.focusServerRow(0);
           }
         }, 100);
+      }
+    });
+    
+    // Set element type for server browser to customize prompts
+    effect(() => {
+      if (this.focusService.focusArea() === 'content') {
+        this.focusService.setFocusedElementType('server-browser' as any);
       }
     });
 
@@ -155,9 +166,8 @@ export class ServersComponent implements OnInit, OnDestroy {
   private readonly VOICE_SEARCH_TIMEOUT = 5000; // 5 seconds
   
   // Computed: mic available only when online AND permission granted
-  microphoneAvailable = computed(() => 
-    this.isOnline() && this.microphonePermissionGranted()
-  );
+  // Disabled for now as Web Speech API doesn't work in Electron
+  microphoneAvailable = computed(() => false);
   
   // Combined servers (local network servers + custom servers + master server servers)
   // Priority: local > custom > master
@@ -506,6 +516,42 @@ export class ServersComponent implements OnInit, OnDestroy {
    */
   closeContextMenu() {
     this.contextMenu.set(null);
+    this.focusedContextMenuItem.set(-1);
+  }
+
+  /**
+   * Activate the currently focused filter control
+   * 0: Game dropdown, 1: Game Type dropdown, 2: Max Ping input, 3: Hide Empty toggle, 4: Custom Servers button
+   */
+  private activateFocusedFilter() {
+    const index = this.focusedFilterIndex();
+    
+    switch (index) {
+      case 0:
+        // Game dropdown - trigger click to open
+        document.getElementById('gameFilterDropdown')?.click();
+        break;
+      case 1:
+        // Game Type dropdown - trigger click to open
+        document.getElementById('gameTypeFilterDropdown')?.click();
+        break;
+      case 2:
+        // Max Ping input - focus and allow input
+        const maxPingInput = document.getElementById('maxPingInput') as HTMLInputElement;
+        if (maxPingInput) {
+          maxPingInput.focus();
+          maxPingInput.select();
+        }
+        break;
+      case 3:
+        // Hide Empty toggle - toggle the checkbox
+        this.hideEmpty.update(val => !val);
+        break;
+      case 4:
+        // Custom Servers button - open custom servers modal
+        this.openCustomServers();
+        break;
+    }
   }
 
   /**
@@ -515,6 +561,9 @@ export class ServersComponent implements OnInit, OnDestroy {
     const address = `${server.address.ip}:${server.address.port}`;
     try {
       await navigator.clipboard.writeText(address);
+      // Show toast notification
+      this.addressCopied.set(true);
+      setTimeout(() => this.addressCopied.set(false), 2000);
     } catch (err) {
       console.error('Failed to copy address:', err);
     }
@@ -852,12 +901,25 @@ export class ServersComponent implements OnInit, OnDestroy {
     this.initializeVoiceSearch();
     
     this.controllerSubscription = this.controllerService.addEventListener((event: ControllerEvent) => {
-      // Only handle direction events if content has focus
+      // Only handle direction events if content has focus AND not in context menu or filter mode
       if (event.type === 'direction' && this.focusService.hasFocus('content')) {
-        if (event.direction === 'up') {
-          this.navigateUp();
-        } else if (event.direction === 'down') {
-          this.navigateDown();
+        // In filter mode, handle left/right to navigate between filter controls
+        if (this.inFilterMode()) {
+          if (event.direction === 'left' && this.focusedFilterIndex() > 0) {
+            this.focusedFilterIndex.update(i => i - 1);
+          } else if (event.direction === 'right' && this.focusedFilterIndex() < 4) {
+            this.focusedFilterIndex.update(i => i + 1);
+          }
+          return;
+        }
+        
+        // Don't navigate servers if context menu is open or in filter mode
+        if (!this.contextMenu() && !this.inFilterMode()) {
+          if (event.direction === 'up') {
+            this.navigateUp();
+          } else if (event.direction === 'down') {
+            this.navigateDown();
+          }
         }
       } else if (event.type === 'buttonpress' && event.button !== undefined) {
         this.handleButtonPress(event.button);
@@ -917,9 +979,117 @@ export class ServersComponent implements OnInit, OnDestroy {
     const now = Date.now();
     const timeSinceLastPress = now - this.lastButtonPressTime;
 
-    // Y button: toggle voice search
+    // Handle context menu navigation if open
+    if (this.contextMenu()) {
+      if (button === GamepadButton.DPadUp) {
+        const current = this.focusedContextMenuItem();
+        if (current > 0) {
+          this.focusedContextMenuItem.set(current - 1);
+        }
+        return;
+      }
+      if (button === GamepadButton.DPadDown) {
+        const current = this.focusedContextMenuItem();
+        const maxIndex = 2; // Copy Address, Open, Launch
+        if (current < maxIndex) {
+          this.focusedContextMenuItem.set(current + 1);
+        }
+        return;
+      }
+      if (button === GamepadButton.A) {
+        // Activate focused menu item
+        const server = this.contextMenu()!.server;
+        const index = this.focusedContextMenuItem();
+        switch (index) {
+          case 0:
+            this.copyServerAddress(server);
+            break;
+          case 1:
+            this.handleServerClick(server);
+            break;
+          case 2:
+            this.handleServerDoubleClick(server);
+            break;
+        }
+        this.closeContextMenu();
+        return;
+      }
+      if (button === GamepadButton.Select || button === GamepadButton.B) {
+        // Close context menu
+        this.closeContextMenu();
+        return;
+      }
+      return; // Consume all other inputs while menu is open
+    }
+
+    // Handle filter mode if active
+    if (this.inFilterMode()) {
+      // A button: activate focused filter control
+      if (button === GamepadButton.A) {
+        this.activateFocusedFilter();
+        return;
+      }
+      // B or Start: exit filter mode
+      if (button === GamepadButton.B || button === GamepadButton.Start) {
+        this.inFilterMode.set(false);
+        return;
+      }
+      return; // Consume all other inputs
+    }
+
+    // Y button: refresh server list
     if (button === GamepadButton.Y) {
-      this.toggleVoiceSearch();
+      if (!this.store.loading() && this.isOnline()) {
+        this.refreshServers();
+      }
+      return;
+    }
+
+    // Select button: open context menu on selected server
+    if (button === GamepadButton.Select) {
+      const server = this.selectedServer();
+      const index = this.focusedIndex();
+      if (server && index >= 0) {
+        const rows = this.serverRows?.toArray();
+        if (rows && rows[index]) {
+          const rowElement = rows[index].nativeElement;
+          const rect = rowElement.getBoundingClientRect();
+          // Position context menu at the row
+          this.contextMenu.set({
+            x: rect.left + 20,
+            y: rect.top + rect.height / 2,
+            server
+          });
+          this.focusedContextMenuItem.set(0); // Start with first item focused
+          
+          // Close menu when clicking anywhere
+          const closeHandler = () => {
+            this.closeContextMenu();
+            document.removeEventListener('click', closeHandler);
+          };
+          setTimeout(() => document.addEventListener('click', closeHandler), 0);
+        }
+      }
+      return;
+    }
+
+    // X button: launch selected server
+    if (button === GamepadButton.X) {
+      const server = this.selectedServer();
+      if (server) {
+        this.handleServerDoubleClick(server);
+      }
+      return;
+    }
+
+    // Start button: toggle filter mode
+    if (button === GamepadButton.Start) {
+      if (this.inFilterMode()) {
+        this.inFilterMode.set(false);
+      } else {
+        this.inFilterMode.set(true);
+        this.focusedFilterIndex.set(0); // Start at first filter
+      }
       return;
     }
 

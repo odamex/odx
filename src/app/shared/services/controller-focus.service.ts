@@ -1,7 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 
 export type FocusArea = 'navigation' | 'content';
-export type FocusedElementType = 'none' | 'checkbox' | 'numeric' | 'select' | 'button' | 'range';
+export type FocusedElementType = 'none' | 'checkbox' | 'numeric' | 'select' | 'button' | 'range' | 'server-browser';
 
 @Injectable({
   providedIn: 'root'

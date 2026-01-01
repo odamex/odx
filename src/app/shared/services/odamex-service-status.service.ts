@@ -1,5 +1,5 @@
 import { Injectable, inject, signal, computed, effect, untracked } from '@angular/core';
-import { NetworkStatusService } from '@shared/services';
+import { NetworkStatusService, NotificationService } from '@shared/services';
 
 /**
  * Status of Odamex online services
@@ -34,10 +34,13 @@ export type ConnectionStatus =
 })
 export class OdamexServiceStatusService {
   private readonly networkStatus = inject(NetworkStatusService);
+  private readonly notificationService = inject(NotificationService);
   
   private readonly MASTER_SERVER = 'master1.odamex.net';
   private readonly CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes
   private checkTimer: any = null;
+  private previousStatus: ConnectionStatus | null = null; // Track previous status for notifications
+  private statusChangeCount = 0; // Count status changes - only notify after the first change
 
   private readonly _serviceStatus = signal<OdamexServiceStatus>({
     masterAvailable: false,
@@ -120,6 +123,34 @@ export class OdamexServiceStatusService {
       const status = this.connectionStatus();
       const message = this.statusMessage();
       console.log(`[OdamexServiceStatus] Status changed: ${status} - ${message}`);
+      
+      // Track status changes
+      if (this.previousStatus !== null && this.previousStatus !== status) {
+        this.statusChangeCount++;
+        console.log(`[OdamexServiceStatus] Status change #${this.statusChangeCount}`);
+      }
+      
+      // Only send notifications after the first status change (skip initial startup transition)
+      if (this.statusChangeCount > 1) {
+        untracked(() => {
+          if (status === 'degraded' && this.previousStatus !== 'degraded') {
+            this.notificationService.show(
+              'Odamex Services Degraded',
+              'Connection to Odamex services is experiencing issues. Server browser may be unavailable.',
+              'update'
+            );
+          } else if (status === 'online' && this.previousStatus === 'degraded') {
+            this.notificationService.show(
+              'Odamex Services Restored',
+              'Connection to Odamex services has been restored.',
+              'update'
+            );
+          }
+        });
+      }
+      
+      // Update previous status for next comparison
+      this.previousStatus = status;
       
       // Update tray icon whenever status changes
       untracked(() => this.updateTrayIcon(status));

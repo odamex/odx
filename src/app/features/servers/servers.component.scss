@@ -360,8 +360,7 @@
 
     // Controller focus styling
     tr {
-      &:focus-visible,
-      &:focus[data-focus-visible-added] {
+      &:focus {
         outline: 2px solid #ffa300;
         outline-offset: -2px;
         background-color: rgba(255, 163, 0, 0.2) !important;
@@ -389,5 +388,131 @@
   .card-body {
     margin-left: -0.25rem;
     margin-right: -0.25rem;
+  }
+}
+
+// Filter control focus indicators (for controller navigation)
+.filter-focused {
+  outline: 2px solid #4a9eff !important;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(74, 158, 255, 0.2) !important;
+}
+
+.filter-control-focused {
+  padding: 0.25rem;
+  border-radius: 4px;
+  outline: 2px solid #4a9eff;
+  outline-offset: 2px;
+  background: rgba(74, 158, 255, 0.1);
+}
+
+.context-menu {
+  position: fixed;
+  background: #2c2c2c;
+  border: 1px solid #444;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  min-width: 180px;
+  z-index: 9999;
+  overflow: hidden;
+}
+
+.context-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: none;
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+
+  i {
+    font-size: 1rem;
+    color: #4a9eff;
+    transition: color 0.15s;
+  }
+
+  &:hover, &.focused {
+    background: #3a3a3a;
+  }
+
+  &:active {
+    background: #444;
+  }
+  
+  &.focused {
+    outline: 2px solid #4a9eff;
+    outline-offset: -2px;
+  }
+  
+  &.success {
+    color: #5ac97e;
+    
+    i {
+      color: #5ac97e;
+    }
+  }
+}
+
+// Voice search button styles
+.voice-search-btn {
+  &.listening {
+    background-color: #ffa300 !important;
+    border-color: #ffa300 !important;
+    color: #000 !important;
+  }
+
+  i.pulse {
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+// Toast notification
+.toast-notification {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  background: #2a2a2a;
+  color: #5ac97e;
+  padding: 0.75rem 1.25rem;
+  border-radius: 0.5rem;
+  border: 1px solid #5ac97e;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  z-index: 10000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  animation: slideInFade 0.3s ease-out;
+  
+  i {
+    font-size: 1.1rem;
+  }
+}
+
+@keyframes slideInFade {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

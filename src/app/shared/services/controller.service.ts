@@ -356,9 +356,9 @@ export class ControllerService {
       case GamepadButton.RightTrigger:
         return schema === 'playstation' ? 'R2' : schema === 'nintendo' ? 'ZR' : 'RT';
       case GamepadButton.Select:
-        return schema === 'playstation' ? 'Share' : schema === 'xbox' ? 'View' : schema === 'nintendo' ? '-' : 'Select';
+        return schema === 'playstation' ? 'Share' : schema === 'xbox' ? '⧉' : schema === 'nintendo' ? '-' : '⧉';
       case GamepadButton.Start:
-        return schema === 'playstation' ? 'Options' : schema === 'xbox' ? 'Menu' : schema === 'nintendo' ? '+' : 'Start';
+        return schema === 'playstation' ? 'Options' : schema === 'xbox' ? '☰' : schema === 'nintendo' ? '+' : '☰';
       case GamepadButton.LeftStick:
         return 'L3';
       case GamepadButton.RightStick:

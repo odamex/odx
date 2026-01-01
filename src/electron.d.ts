@@ -1,5 +1,6 @@
 export interface ElectronAPI {
   platform: NodeJS.Platform;
+  githubToken: string;
   getAppPath: () => Promise<string>;
   setQuitOnClose: (enabled: boolean) => Promise<void>;
   openLogDirectory: () => Promise<string>;
