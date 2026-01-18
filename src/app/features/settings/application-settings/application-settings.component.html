@@ -352,6 +352,33 @@
         </small>
       </div>
 
+      <div class="setting-item">
+        <h5>System Information</h5>
+        <p class="text-muted mb-2">
+          Hardware acceleration status for graphics rendering
+        </p>
+        @if (hardwareAcceleration() !== null) {
+          <div class="alert" [class.alert-success]="hardwareAcceleration()" [class.alert-warning]="!hardwareAcceleration()" role="status">
+            <i class="bi" [class.bi-check-circle-fill]="hardwareAcceleration()" [class.bi-exclamation-triangle-fill]="!hardwareAcceleration()"></i>
+            @if (hardwareAcceleration()) {
+              <strong>Hardware Acceleration:</strong> Enabled
+            } @else {
+              <strong>Hardware Acceleration:</strong> Disabled
+            }
+          </div>
+          @if (!hardwareAcceleration()) {
+            <small class="text-muted">
+              Hardware acceleration is disabled. This may impact performance. Check your graphics driver or Electron launch flags.
+            </small>
+          }
+        } @else {
+          <div class="alert alert-secondary" role="status">
+            <i class="bi bi-info-circle-fill"></i>
+            Unable to determine hardware acceleration status
+          </div>
+        }
+      </div>
+
       <div class="setting-item mb-0">
         <h5>Reset Configuration</h5>
         <p class="text-muted mb-3">

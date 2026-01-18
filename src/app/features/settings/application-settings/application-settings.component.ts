@@ -51,6 +51,7 @@ export class ApplicationSettingsComponent implements OnInit, OnDestroy, AfterVie
   // Application settings
   filterByVersion = signal(true);
   quitOnClose = signal(false);
+  hardwareAcceleration = signal<boolean | null>(null);
   
   // Developer mode (computed from service)
   developerMode = computed(() => this.appSettings.developerMode());
@@ -82,6 +83,9 @@ export class ApplicationSettingsComponent implements OnInit, OnDestroy, AfterVie
     if (savedQuitOnClose !== null) {
       this.quitOnClose.set(savedQuitOnClose === 'true');
     }
+
+    // Check hardware acceleration status
+    this.checkHardwareAcceleration();
 
     // Subscribe to controller events
     const removeListener = this.controllerService.addEventListener((event) => {
@@ -180,10 +184,20 @@ export class ApplicationSettingsComponent implements OnInit, OnDestroy, AfterVie
   async copyLogPath() {
     try {
       const logPath = await window.electron.getLogPath();
-      await navigator.clipboard.writeText(logPath);
+      await window.electron.clipboard.writeText(logPath);
       console.log('[Settings] Copied log path to clipboard:', logPath);
     } catch (error) {
       console.error('[Settings] Failed to copy log path:', error);
+    }
+  }
+
+  async checkHardwareAcceleration() {
+    try {
+      const enabled = await window.electron.isHardwareAccelerationEnabled();
+      this.hardwareAcceleration.set(enabled);
+    } catch (error) {
+      console.error('[Settings] Failed to check hardware acceleration:', error);
+      this.hardwareAcceleration.set(null);
     }
   }
 

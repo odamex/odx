@@ -979,6 +979,15 @@ ipcMain.handle('app:get-log-path', () => {
   return log.transports.file.getFile().path;
 });
 
+ipcMain.handle('app:is-hardware-acceleration-enabled', () => {
+  return app.isHardwareAccelerationEnabled();
+});
+
+ipcMain.handle('clipboard:write-text', async (_event, text: string) => {
+  const { clipboard } = await import('electron');
+  clipboard.writeText(text);
+});
+
 ipcMain.handle('file:pick-directory', async () => {
   try {
     const result = await dialog.showOpenDialog(mainWindow!, {

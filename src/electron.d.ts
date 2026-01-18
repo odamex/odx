@@ -4,8 +4,12 @@ export interface ElectronAPI {
   getAppPath: () => Promise<string>;
   setQuitOnClose: (enabled: boolean) => Promise<void>;
   openLogDirectory: () => Promise<string>;
-  getLogPath: () => Promise<string>;
-  minimizeWindow: () => void;
+  getLogPath: () => Promise<string>;  isHardwareAccelerationEnabled: () => Promise<boolean>;
+
+  // Clipboard
+  clipboard: {
+    writeText: (text: string) => Promise<void>;
+  };  minimizeWindow: () => void;
   maximizeWindow: () => void;
   closeWindow: () => void;
   restoreWindow: () => void;

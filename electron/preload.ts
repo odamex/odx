@@ -10,6 +10,12 @@ contextBridge.exposeInMainWorld('electron', {
   setQuitOnClose: (enabled: boolean) => ipcRenderer.invoke('app:setQuitOnClose', enabled),
   openLogDirectory: () => ipcRenderer.invoke('app:open-log-directory'),
   getLogPath: () => ipcRenderer.invoke('app:get-log-path'),
+  isHardwareAccelerationEnabled: () => ipcRenderer.invoke('app:is-hardware-acceleration-enabled'),
+
+  // Clipboard (moved from renderer for Electron 40 compatibility)
+  clipboard: {
+    writeText: (text: string) => ipcRenderer.invoke('clipboard:write-text', text),
+  },
 
   // Window controls
   minimizeWindow: () => ipcRenderer.send('window-minimize'),

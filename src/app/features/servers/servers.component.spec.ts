@@ -114,12 +114,12 @@ describe('ServersComponent - Context Menu', () => {
   };
 
   beforeEach(async () => {
-    // Mock clipboard API
-    Object.assign(navigator, {
+    // Mock window.electron for clipboard
+    (window as any).electron = {
       clipboard: {
         writeText: jasmine.createSpy('writeText').and.returnValue(Promise.resolve())
       }
-    });
+    };
 
     await TestBed.configureTestingModule({
       imports: [ServersComponent],
@@ -204,11 +204,11 @@ describe('ServersComponent - Context Menu', () => {
     it('should copy server address in ip:port format to clipboard', async () => {
       await component.copyServerAddress(mockServer);
 
-      expect(navigator.clipboard.writeText).toHaveBeenCalledWith('192.168.1.100:10666');
+      expect((window as any).electron.clipboard.writeText).toHaveBeenCalledWith('192.168.1.100:10666');
     });
 
     it('should handle clipboard write errors gracefully', async () => {
-      (navigator.clipboard.writeText as jasmine.Spy).and.returnValue(Promise.reject(new Error('Clipboard error')));
+      ((window as any).electron.clipboard.writeText as jasmine.Spy).and.returnValue(Promise.reject(new Error('Clipboard error')));
       spyOn(console, 'error');
 
       await component.copyServerAddress(mockServer);

@@ -560,7 +560,7 @@ export class ServersComponent implements OnInit, OnDestroy {
   async copyServerAddress(server: OdalPapi.ServerInfo) {
     const address = `${server.address.ip}:${server.address.port}`;
     try {
-      await navigator.clipboard.writeText(address);
+      await window.electron.clipboard.writeText(address);
       // Show toast notification
       this.addressCopied.set(true);
       setTimeout(() => this.addressCopied.set(false), 2000);
