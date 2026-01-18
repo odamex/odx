@@ -117,6 +117,7 @@
   "build": {
     "appId": "net.odamex.launcher",
     "productName": "ODX",
+    "icon": "build/icon.ico",
     "artifactName": "${productName}-${os}-${arch}-${version}.${ext}",
     "directories": {
       "output": "release",
@@ -153,6 +154,7 @@
         }
       ],
       "icon": "build/icon.ico",
+      "requestedExecutionLevel": "asInvoker",
       "signAndEditExecutable": false
     },
     "mac": {
@@ -227,6 +229,7 @@
       "allowToChangeInstallationDirectory": false,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
+      "shortcutName": "ODX",
       "artifactName": "${productName}-Setup-${version}.${ext}",
       "include": "build/installer.nsh",
       "deleteAppDataOnUninstall": false
