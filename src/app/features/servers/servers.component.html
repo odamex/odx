@@ -332,11 +332,11 @@
                   (keydown.space)="handleServerClick(server); $event.preventDefault()"
                   tabindex="0"
                   role="button"
-                  [attr.aria-label]="'Server: ' + (server.name || 'Unnamed Server') + ', ' + server.players.length + ' of ' + server.maxPlayers + ' players, ping ' + server.ping + 'ms'"
+                  [attr.aria-label]="'Server: ' + (server.name || 'Unnamed Server') + ', ' + server.players.length + ' of ' + server.maxClients + ' clients, ping ' + server.ping + 'ms'"
                   style="cursor: pointer;">
                   <td 
-                    [title]="server.players.length + ' active player(s) / ' + server.maxPlayers + ' max player slot(s)' + (server.maxClients && server.maxClients !== server.maxPlayers ? '\n' + (server.maxClients - (server.maxPlayers || 0)) + ' spectator slot(s) available' : '')">
-                    {{ server.players.length }} / {{ server.maxPlayers || 0 }}
+                    [title]="server.players.length + ' active player(s) / ' + server.maxClients + ' max client slot(s)' + (server.maxClients && server.maxClients !== server.maxPlayers ? ' (includes ' + (server.maxClients - (server.maxPlayers || 0)) + ' spectator slot(s))' : '')">
+                    {{ server.players.length }} / {{ server.maxClients || 0 }}
                   </td>
                   <td>
                     @if (server.ping > 0) {
