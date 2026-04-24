@@ -103,7 +103,7 @@
     "@types/node": "^25.0.9",
     "concurrently": "^9.1.2",
     "electron": "^40.0.0",
-    "electron-builder": "^26.4.0",
+    "electron-builder": "^26.9.0",
     "jasmine-core": "^5.13.0",
     "karma": "~6.4.0",
     "karma-chrome-launcher": "~3.2.0",
@@ -222,6 +222,9 @@
     },
     "deb": {
       "packageName": "odx-launcher"
+    },
+    "toolsets": {
+      "appimage": "1.0.2"
     },
     "nsis": {
       "oneClick": true,
